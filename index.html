@@ -1,271 +1,456 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Users, Wifi, WifiOff, Activity } from 'lucide-react';
-
-export default function GPSSpeedTracker() {
-  const [userId, setUserId] = useState('');
-  const [speed, setSpeed] = useState(0);
-  const [connected, setConnected] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [error, setError] = useState('');
-  const [gpsActive, setGpsActive] = useState(false);
-  const [serverUrl, setServerUrl] = useState('ws://localhost:3001');
-  
-  const wsRef = useRef(null);
-  const watchIdRef = useRef(null);
-
-  // Generar ID único para el usuario
-  useEffect(() => {
-    const storedId = localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('userId', storedId);
-    setUserId(storedId);
-  }, []);
-
-  // Conectar al servidor WebSocket
-  const connectWebSocket = () => {
-    try {
-      const ws = new WebSocket(serverUrl);
-      
-      ws.onopen = () => {
-        setConnected(true);
-        setError('');
-        ws.send(JSON.stringify({ type: 'register', userId }));
-      };
-
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'users') {
-          setUsers(data.users);
-        }
-      };
-
-      ws.onerror = () => {
-        setError('Error de conexión con el servidor');
-        setConnected(false);
-      };
-
-      ws.onclose = () => {
-        setConnected(false);
-        setTimeout(() => {
-          if (gpsActive) connectWebSocket();
-        }, 3000);
-      };
-
-      wsRef.current = ws;
-    } catch (err) {
-      setError('No se pudo conectar al servidor');
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>GPS Speed Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      overscroll-behavior: contain;
+      -webkit-tap-highlight-color: transparent;
     }
-  };
-
-  // Iniciar seguimiento GPS
-  const startTracking = () => {
-    if (!navigator.geolocation) {
-      setError('GPS no disponible en este dispositivo');
-      return;
+    * {
+      box-sizing: border-box;
     }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 m-0 p-0">
+  <div id="app" class="min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
+        <p class="text-gray-600">Telemetría de velocidad en tiempo real</p>
+        <p class="text-xs text-gray-400 mt-2">v1.0 - App cargada correctamente ✓</p>
+      </div>
 
-    connectWebSocket();
-
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0
-    };
-
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const currentSpeed = position.coords.speed !== null 
-          ? Math.round(position.coords.speed * 3.6) // Convertir m/s a km/h
-          : 0;
+      <!-- Configuración -->
+      <div id="config-section" class="bg-white rounded-lg shadow-lg p-6 mb-4">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Tu Nombre
+          </label>
+          <input
+            id="user-name"
+            type="text"
+            maxlength="20"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Ej: Juan, María, Alex..."
+          />
+          <p class="text-xs text-gray-500 mt-1">Así te verán los demás usuarios</p>
+        </div>
         
-        setSpeed(currentSpeed);
-        setGpsActive(true);
-        setError('');
-
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({
-            type: 'speed',
-            userId,
-            speed: currentSpeed,
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-            timestamp: Date.now()
-          }));
-        }
-      },
-      (err) => {
-        setError(`Error GPS: ${err.message}`);
-        setGpsActive(false);
-      },
-      options
-    );
-  };
-
-  // Detener seguimiento
-  const stopTracking = () => {
-    if (watchIdRef.current) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
-    
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    
-    setGpsActive(false);
-    setConnected(false);
-    setSpeed(0);
-  };
-
-  // Limpiar al desmontar
-  useEffect(() => {
-    return () => {
-      stopTracking();
-    };
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-4">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
-            <Activity className="text-indigo-600" />
-            GPS Speed Tracker
-          </h1>
-          <p className="text-gray-600">Telemetría de velocidad en tiempo real</p>
-        </div>
-
-        {/* Configuración del servidor */}
-        {!gpsActive && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL del Servidor WebSocket
-            </label>
-            <input
-              type="text"
-              value={serverUrl}
-              onChange={(e) => setServerUrl(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="ws://tu-servidor.com:3001"
-            />
-            <p className="text-sm text-gray-500 mt-2">
-              ID de Usuario: <span className="font-mono text-xs">{userId}</span>
-            </p>
-          </div>
-        )}
-
-        {/* Estado y velocidad actual */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              {connected ? (
-                <Wifi className="text-green-500" size={20} />
-              ) : (
-                <WifiOff className="text-red-500" size={20} />
-              )}
-              <span className="text-sm font-medium">
-                {connected ? 'Conectado' : 'Desconectado'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className={gpsActive ? 'text-green-500' : 'text-gray-400'} size={20} />
-              <span className="text-sm font-medium">
-                {gpsActive ? 'GPS Activo' : 'GPS Inactivo'}
-              </span>
-            </div>
-          </div>
-
-          <div className="text-center py-8">
-            <div className="text-7xl font-bold text-indigo-600 mb-2">
-              {speed}
-            </div>
-            <div className="text-2xl text-gray-600">km/h</div>
-          </div>
-
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="mt-6">
-            {!gpsActive ? (
-              <button
-                onClick={startTracking}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-              >
-                Iniciar Seguimiento
-              </button>
-            ) : (
-              <button
-                onClick={stopTracking}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-              >
-                Detener Seguimiento
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Lista de usuarios conectados */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Users size={24} className="text-indigo-600" />
-            Usuarios Conectados ({users.length})
-          </h2>
-          
-          {users.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No hay usuarios conectados
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {users.map((user) => (
-                <div
-                  key={user.userId}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    user.userId === userId
-                      ? 'bg-indigo-50 border-indigo-300'
-                      : 'bg-gray-50 border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="font-mono text-xs text-gray-600 mb-1">
-                        {user.userId}
-                        {user.userId === userId && (
-                          <span className="ml-2 text-indigo-600 font-semibold">(Tú)</span>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Última actualización: {new Date(user.timestamp).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-indigo-600">
-                        {user.speed}
-                      </div>
-                      <div className="text-sm text-gray-600">km/h</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Instrucciones */}
-        <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-          <p className="font-semibold mb-2">💡 Consejos:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Asegúrate de tener el GPS activado en tu dispositivo</li>
-            <li>Permite el acceso a la ubicación cuando te lo solicite el navegador</li>
-            <li>Para mejores resultados, úsalo en exteriores con cielo despejado</li>
-            <li>La velocidad se actualiza automáticamente cada segundo</li>
-          </ul>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            URL del Servidor WebSocket
+          </label>
+          <input
+            id="server-url"
+            type="text"
+            value="ws://192.168.1.100:3001"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-2"
+            placeholder="ws://tu-ip:3001"
+          />
+          <p class="text-sm text-gray-500">
+            ID: <span id="user-id" class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"></span>
+          </p>
         </div>
       </div>
+
+      <!-- Estado -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span id="wifi-icon" class="text-2xl">📡</span>
+            <span id="connection-status" class="text-sm font-medium">Desconectado</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="gps-icon" class="text-2xl">📍</span>
+            <span id="gps-status" class="text-sm font-medium">GPS Inactivo</span>
+          </div>
+        </div>
+
+        <!-- Velocidad -->
+        <div class="text-center py-8">
+          <div id="speed-display" class="text-7xl font-bold text-indigo-600 mb-2">0</div>
+          <div class="text-2xl text-gray-600">km/h</div>
+        </div>
+
+        <!-- Error -->
+        <div id="error-box" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
+
+        <!-- Success -->
+        <div id="success-box" class="hidden mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"></div>
+
+        <!-- Info adicional -->
+        <div id="gps-info" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+          <p class="mb-1"><strong>Precisión GPS:</strong> <span id="accuracy">--</span> metros</p>
+          <p class="mb-1"><strong>Coordenadas:</strong> <span id="coords" class="text-xs">--</span></p>
+          <p><strong>Satélites:</strong> Buscando señal...</p>
+        </div>
+
+        <!-- Botón -->
+        <div class="mt-6">
+          <button
+            id="track-button"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            Iniciar Seguimiento
+          </button>
+        </div>
+      </div>
+
+      <!-- Usuarios -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="text-2xl">👥</span>
+          Usuarios Conectados (<span id="user-count">0</span>)
+        </h2>
+        <div id="users-list" class="space-y-3">
+          <p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>
+        </div>
+      </div>
+
+      <!-- Instrucciones -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 mb-4">
+        <p class="font-semibold mb-2">💡 Pasos para usar:</p>
+        <ol class="list-decimal list-inside space-y-1">
+          <li>Activa el GPS en tu móvil (Ajustes → Ubicación)</li>
+          <li>Cambia la IP del servidor arriba por la IP de tu PC</li>
+          <li>Presiona "Iniciar Seguimiento"</li>
+          <li>Permite acceso a ubicación cuando te lo pida</li>
+          <li>Sal al exterior para mejor señal GPS</li>
+        </ol>
+      </div>
+
+      <!-- Debug Info -->
+      <div class="bg-gray-100 rounded-lg p-4 text-xs text-gray-600">
+        <p class="font-semibold mb-2">🔧 Información de Debug:</p>
+        <p id="debug-info">Sistema cargado correctamente</p>
+      </div>
     </div>
-  );
-}
+  </div>
+
+  <script>
+    console.log('🚀 GPS Tracker iniciado');
+    
+    // Variables globales
+    let userId = localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('userId', userId);
+    
+    let userName = localStorage.getItem('userName') || '';
+    let ws = null;
+    let watchId = null;
+    let isTracking = false;
+    let users = [];
+
+    // Elementos DOM
+    const elements = {
+      userId: document.getElementById('user-id'),
+      userName: document.getElementById('user-name'),
+      serverUrl: document.getElementById('server-url'),
+      configSection: document.getElementById('config-section'),
+      wifiIcon: document.getElementById('wifi-icon'),
+      connectionStatus: document.getElementById('connection-status'),
+      gpsIcon: document.getElementById('gps-icon'),
+      gpsStatus: document.getElementById('gps-status'),
+      speedDisplay: document.getElementById('speed-display'),
+      errorBox: document.getElementById('error-box'),
+      successBox: document.getElementById('success-box'),
+      gpsInfo: document.getElementById('gps-info'),
+      trackButton: document.getElementById('track-button'),
+      userCount: document.getElementById('user-count'),
+      usersList: document.getElementById('users-list'),
+      accuracy: document.getElementById('accuracy'),
+      coords: document.getElementById('coords'),
+      debugInfo: document.getElementById('debug-info')
+    };
+
+    // Verificar que todos los elementos existen
+    console.log('✓ Elementos DOM cargados');
+    
+    // Inicializar
+    elements.userId.textContent = userId.substring(0, 30);
+    elements.userName.value = userName;
+    elements.debugInfo.textContent = `GPS disponible: ${!!navigator.geolocation}`;
+
+    // Guardar nombre cuando cambie
+    elements.userName.addEventListener('input', (e) => {
+      userName = e.target.value.trim();
+      localStorage.setItem('userName', userName);
+    });
+
+    // Mostrar error
+    function showError(message) {
+      console.error('❌ Error:', message);
+      elements.errorBox.textContent = message;
+      elements.errorBox.classList.remove('hidden');
+      elements.successBox.classList.add('hidden');
+      setTimeout(() => elements.errorBox.classList.add('hidden'), 8000);
+    }
+
+    // Mostrar éxito
+    function showSuccess(message) {
+      console.log('✓', message);
+      elements.successBox.textContent = message;
+      elements.successBox.classList.remove('hidden');
+      elements.errorBox.classList.add('hidden');
+      setTimeout(() => elements.successBox.classList.add('hidden'), 3000);
+    }
+
+    // Actualizar estado de conexión
+    function updateConnectionStatus(connected) {
+      elements.wifiIcon.textContent = connected ? '✅' : '❌';
+      elements.connectionStatus.textContent = connected ? 'Conectado' : 'Desconectado';
+      elements.connectionStatus.className = `text-sm font-medium ${connected ? 'text-green-600' : 'text-red-600'}`;
+    }
+
+    // Actualizar estado GPS
+    function updateGpsStatus(active) {
+      elements.gpsIcon.textContent = active ? '✅' : '📍';
+      elements.gpsStatus.textContent = active ? 'GPS Activo' : 'GPS Inactivo';
+      elements.gpsStatus.className = `text-sm font-medium ${active ? 'text-green-600' : 'text-gray-600'}`;
+    }
+
+    // Conectar WebSocket
+    function connectWebSocket() {
+      const serverUrl = elements.serverUrl.value;
+      console.log('🔌 Conectando a:', serverUrl);
+      
+      try {
+        ws = new WebSocket(serverUrl);
+        
+        ws.onopen = () => {
+          updateConnectionStatus(true);
+          showSuccess('✓ Conectado al servidor');
+          ws.send(JSON.stringify({ 
+            type: 'register', 
+            userId,
+            userName: userName || 'Usuario'
+          }));
+          console.log('✓ Registrado en servidor');
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'users') {
+            users = data.users;
+            updateUsersList();
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('❌ Error WebSocket:', error);
+          showError('⚠️ Error de conexión. Verifica que el servidor esté corriendo.');
+          updateConnectionStatus(false);
+        };
+
+        ws.onclose = () => {
+          console.log('🔌 Conexión cerrada');
+          updateConnectionStatus(false);
+          if (isTracking) {
+            console.log('↻ Reconectando en 3 segundos...');
+            setTimeout(connectWebSocket, 3000);
+          }
+        };
+      } catch (error) {
+        console.error('❌ Error al crear WebSocket:', error);
+        showError('No se pudo conectar: ' + error.message);
+      }
+    }
+
+    // Actualizar lista de usuarios
+    function updateUsersList() {
+      elements.userCount.textContent = users.length;
+      
+      if (users.length === 0) {
+        elements.usersList.innerHTML = '<p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>';
+        return;
+      }
+
+      elements.usersList.innerHTML = users.map(user => {
+        const displayName = user.userName || user.userId.substring(0, 15);
+        const isCurrentUser = user.userId === userId;
+        
+        return `
+        <div class="p-4 rounded-lg border-2 ${isCurrentUser ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50 border-gray-200'}">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg font-semibold text-gray-800">${displayName}</span>
+                ${isCurrentUser ? '<span class="text-xs bg-indigo-500 text-white px-2 py-1 rounded-full">Tú</span>' : ''}
+              </div>
+              <div class="text-xs text-gray-500 font-mono truncate">
+                ID: ${user.userId.substring(0, 20)}...
+              </div>
+              <div class="text-sm text-gray-500 mt-1">
+                ${new Date(user.timestamp).toLocaleTimeString()}
+              </div>
+            </div>
+            <div class="text-right ml-4">
+              <div class="text-3xl font-bold text-indigo-600">${user.speed}</div>
+              <div class="text-sm text-gray-600">km/h</div>
+            </div>
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    // Iniciar seguimiento GPS
+    function startTracking() {
+      console.log('🎯 Iniciando seguimiento GPS...');
+      
+      // Validar nombre
+      if (!userName || userName.trim() === '') {
+        showError('⚠️ Por favor, introduce tu nombre antes de comenzar');
+        elements.userName.focus();
+        return;
+      }
+      
+      if (!navigator.geolocation) {
+        showError('❌ GPS no disponible en este dispositivo');
+        console.error('Geolocation no soportado');
+        return;
+      }
+
+      // Ocultar configuración
+      elements.configSection.classList.add('hidden');
+      
+      // Conectar WebSocket
+      connectWebSocket();
+
+      // Opciones GPS
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      };
+
+      console.log('📍 Solicitando permisos de ubicación...');
+      showSuccess('Solicitando acceso al GPS...');
+
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          console.log('📍 Posición obtenida:', position);
+          
+          const speed = position.coords.speed !== null 
+            ? Math.max(0, Math.round(position.coords.speed * 3.6))
+            : 0;
+          
+          elements.speedDisplay.textContent = speed;
+          updateGpsStatus(true);
+          elements.gpsInfo.classList.remove('hidden');
+          
+          // Actualizar info GPS
+          const accuracy = Math.round(position.coords.accuracy);
+          elements.accuracy.textContent = accuracy;
+          elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+          elements.debugInfo.textContent = `GPS OK - Precisión: ${accuracy}m - Velocidad: ${speed}km/h`;
+
+          // Enviar al servidor
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'speed',
+              userId,
+              userName: userName || 'Usuario',
+              speed,
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+              timestamp: Date.now()
+            }));
+          }
+        },
+        (error) => {
+          console.error('❌ Error GPS:', error);
+          let errorMsg = '';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg = '❌ PERMISOS DENEGADOS\n\n1. Ve a Configuración de Chrome\n2. Configuración del sitio → Ubicación\n3. Permite ubicación para este sitio';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg = '⚠️ GPS no disponible. Sal al exterior con cielo despejado.';
+              break;
+            case error.TIMEOUT:
+              errorMsg = '⏱️ Tiempo de espera agotado. Asegúrate de tener GPS activado.';
+              break;
+            default:
+              errorMsg = '❌ Error GPS: ' + error.message;
+          }
+          showError(errorMsg);
+          updateGpsStatus(false);
+          elements.debugInfo.textContent = `Error GPS (código ${error.code})`;
+        },
+        options
+      );
+
+      isTracking = true;
+      elements.trackButton.textContent = 'Detener Seguimiento';
+      elements.trackButton.className = 'w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
+      console.log('✓ Seguimiento GPS iniciado');
+    }
+
+    // Detener seguimiento
+    function stopTracking() {
+      console.log('⏹️ Deteniendo seguimiento...');
+      
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+      
+      isTracking = false;
+      updateGpsStatus(false);
+      updateConnectionStatus(false);
+      elements.speedDisplay.textContent = '0';
+      elements.gpsInfo.classList.add('hidden');
+      elements.configSection.classList.remove('hidden');
+      elements.trackButton.textContent = 'Iniciar Seguimiento';
+      elements.trackButton.className = 'w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
+      elements.debugInfo.textContent = 'Seguimiento detenido';
+      console.log('✓ Seguimiento detenido');
+    }
+
+    // Evento del botón
+    elements.trackButton.addEventListener('click', () => {
+      console.log('🖱️ Botón presionado');
+      if (isTracking) {
+        stopTracking();
+      } else {
+        startTracking();
+      }
+    });
+
+    // Mantener pantalla activa
+    if ('wakeLock' in navigator) {
+      let wakeLock = null;
+      const requestWakeLock = async () => {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('✓ Wake Lock activado');
+        } catch (err) {
+          console.log('Wake Lock error:', err);
+        }
+      };
+      
+      document.addEventListener('visibilitychange', () => {
+        if (isTracking && document.visibilityState === 'visible') {
+          requestWakeLock();
+        }
+      });
+    }
+
+    // Log de inicialización completo
+    console.log('✓ GPS Tracker completamente cargado');
+    console.log('User ID:', userId);
+    console.log('Geolocation disponible:', !!navigator.geolocation);
+  </script>
+</body>
+</html>
