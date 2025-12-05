@@ -5,15 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GPS Tracker">
+  <meta name="theme-color" content="#4F46E5">
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiR1BTIFNwZWVkIFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiR1BTIFRyYWNrZXIiLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzRGNDZFNSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnJTNFJTNDY2lyY2xlIGN4PSc1MCcgY3k9JzUwJyByPSc0MCcgZmlsbD0nJTIzNEY0NkU1Jy8lM0UlM0N0ZXh0IHg9JzUwJyB5PSc2MCcgZm9udC1zaXplPSc0MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnJTNF8J+agCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn0seyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnJTNFJTNDY2lyY2xlIGN4PSc1MCcgY3k9JzUwJyByPSc0MCcgZmlsbD0nJTIzNEY0NkU1Jy8lM0UlM0N0ZXh0IHg9JzUwJyB5PSc2MCcgZm9udC1zaXplPSc0MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnJTNF8J+agCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <title>GPS Speed Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
       overscroll-behavior: contain;
       -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
     }
     * {
       box-sizing: border-box;
+    }
+    @media (display-mode: standalone) {
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
     }
   </style>
 </head>
@@ -24,7 +36,7 @@
       <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
         <p class="text-gray-600">Telemetría de velocidad en tiempo real</p>
-        <p class="text-xs text-gray-400 mt-2">v1.0 - App cargada correctamente ✓</p>
+        <p class="text-xs text-gray-400 mt-2">v2.0 - Con nombres de usuario ✓</p>
       </div>
 
       <!-- Configuración -->
@@ -52,7 +64,7 @@
             type="text"
             value="wss://gps-tracker-server-production-5900.up.railway.app"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-2"
-            placeholder="ws://tu-ip:3001"
+            placeholder="wss://tu-servidor.up.railway.app"
           />
           <p class="text-sm text-gray-500">
             ID: <span id="user-id" class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"></span>
@@ -89,7 +101,6 @@
         <div id="gps-info" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
           <p class="mb-1"><strong>Precisión GPS:</strong> <span id="accuracy">--</span> metros</p>
           <p class="mb-1"><strong>Coordenadas:</strong> <span id="coords" class="text-xs">--</span></p>
-          <p><strong>Satélites:</strong> Buscando señal...</p>
         </div>
 
         <!-- Botón -->
@@ -118,24 +129,19 @@
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 mb-4">
         <p class="font-semibold mb-2">💡 Pasos para usar:</p>
         <ol class="list-decimal list-inside space-y-1">
-          <li>Activa el GPS en tu móvil (Ajustes → Ubicación)</li>
-          <li>Cambia la IP del servidor arriba por la IP de tu PC</li>
+          <li>Introduce tu nombre</li>
+          <li>Activa el GPS en tu móvil</li>
+          <li>Configura la URL del servidor</li>
           <li>Presiona "Iniciar Seguimiento"</li>
           <li>Permite acceso a ubicación cuando te lo pida</li>
           <li>Sal al exterior para mejor señal GPS</li>
         </ol>
       </div>
-
-      <!-- Debug Info -->
-      <div class="bg-gray-100 rounded-lg p-4 text-xs text-gray-600">
-        <p class="font-semibold mb-2">🔧 Información de Debug:</p>
-        <p id="debug-info">Sistema cargado correctamente</p>
-      </div>
     </div>
   </div>
 
   <script>
-    console.log('🚀 GPS Tracker iniciado');
+    console.log('🚀 GPS Tracker v2.0 iniciado');
     
     // Variables globales
     let userId = localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -165,17 +171,12 @@
       userCount: document.getElementById('user-count'),
       usersList: document.getElementById('users-list'),
       accuracy: document.getElementById('accuracy'),
-      coords: document.getElementById('coords'),
-      debugInfo: document.getElementById('debug-info')
+      coords: document.getElementById('coords')
     };
 
-    // Verificar que todos los elementos existen
-    console.log('✓ Elementos DOM cargados');
-    
     // Inicializar
     elements.userId.textContent = userId.substring(0, 30);
     elements.userName.value = userName;
-    elements.debugInfo.textContent = `GPS disponible: ${!!navigator.geolocation}`;
 
     // Guardar nombre cuando cambie
     elements.userName.addEventListener('input', (e) => {
@@ -185,7 +186,7 @@
 
     // Mostrar error
     function showError(message) {
-      console.error('❌ Error:', message);
+      console.error('❌', message);
       elements.errorBox.textContent = message;
       elements.errorBox.classList.remove('hidden');
       elements.successBox.classList.add('hidden');
@@ -244,7 +245,7 @@
 
         ws.onerror = (error) => {
           console.error('❌ Error WebSocket:', error);
-          showError('⚠️ Error de conexión. Verifica que el servidor esté corriendo.');
+          showError('⚠️ Error de conexión. Verifica el servidor.');
           updateConnectionStatus(false);
         };
 
@@ -252,7 +253,7 @@
           console.log('🔌 Conexión cerrada');
           updateConnectionStatus(false);
           if (isTracking) {
-            console.log('↻ Reconectando en 3 segundos...');
+            console.log('↻ Reconectando...');
             setTimeout(connectWebSocket, 3000);
           }
         };
@@ -312,30 +313,20 @@
       
       if (!navigator.geolocation) {
         showError('❌ GPS no disponible en este dispositivo');
-        console.error('Geolocation no soportado');
         return;
       }
 
-      // Ocultar configuración
       elements.configSection.classList.add('hidden');
-      
-      // Conectar WebSocket
       connectWebSocket();
 
-      // Opciones GPS
       const options = {
         enableHighAccuracy: true,
         timeout: 15000,
         maximumAge: 0
       };
 
-      console.log('📍 Solicitando permisos de ubicación...');
-      showSuccess('Solicitando acceso al GPS...');
-
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          console.log('📍 Posición obtenida:', position);
-          
           const speed = position.coords.speed !== null 
             ? Math.max(0, Math.round(position.coords.speed * 3.6))
             : 0;
@@ -344,13 +335,10 @@
           updateGpsStatus(true);
           elements.gpsInfo.classList.remove('hidden');
           
-          // Actualizar info GPS
           const accuracy = Math.round(position.coords.accuracy);
           elements.accuracy.textContent = accuracy;
           elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-          elements.debugInfo.textContent = `GPS OK - Precisión: ${accuracy}m - Velocidad: ${speed}km/h`;
 
-          // Enviar al servidor
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
               type: 'speed',
@@ -364,24 +352,22 @@
           }
         },
         (error) => {
-          console.error('❌ Error GPS:', error);
           let errorMsg = '';
           switch(error.code) {
             case error.PERMISSION_DENIED:
-              errorMsg = '❌ PERMISOS DENEGADOS\n\n1. Ve a Configuración de Chrome\n2. Configuración del sitio → Ubicación\n3. Permite ubicación para este sitio';
+              errorMsg = '❌ Permisos denegados. Ve a Configuración → Permisos → Ubicación';
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMsg = '⚠️ GPS no disponible. Sal al exterior con cielo despejado.';
+              errorMsg = '⚠️ GPS no disponible. Sal al exterior.';
               break;
             case error.TIMEOUT:
-              errorMsg = '⏱️ Tiempo de espera agotado. Asegúrate de tener GPS activado.';
+              errorMsg = '⏱️ Tiempo agotado. Verifica que el GPS esté activado.';
               break;
             default:
               errorMsg = '❌ Error GPS: ' + error.message;
           }
           showError(errorMsg);
           updateGpsStatus(false);
-          elements.debugInfo.textContent = `Error GPS (código ${error.code})`;
         },
         options
       );
@@ -389,13 +375,10 @@
       isTracking = true;
       elements.trackButton.textContent = 'Detener Seguimiento';
       elements.trackButton.className = 'w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
-      console.log('✓ Seguimiento GPS iniciado');
     }
 
     // Detener seguimiento
     function stopTracking() {
-      console.log('⏹️ Deteniendo seguimiento...');
-      
       if (watchId) {
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
@@ -414,13 +397,10 @@
       elements.configSection.classList.remove('hidden');
       elements.trackButton.textContent = 'Iniciar Seguimiento';
       elements.trackButton.className = 'w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
-      elements.debugInfo.textContent = 'Seguimiento detenido';
-      console.log('✓ Seguimiento detenido');
     }
 
     // Evento del botón
     elements.trackButton.addEventListener('click', () => {
-      console.log('🖱️ Botón presionado');
       if (isTracking) {
         stopTracking();
       } else {
@@ -428,29 +408,7 @@
       }
     });
 
-    // Mantener pantalla activa
-    if ('wakeLock' in navigator) {
-      let wakeLock = null;
-      const requestWakeLock = async () => {
-        try {
-          wakeLock = await navigator.wakeLock.request('screen');
-          console.log('✓ Wake Lock activado');
-        } catch (err) {
-          console.log('Wake Lock error:', err);
-        }
-      };
-      
-      document.addEventListener('visibilitychange', () => {
-        if (isTracking && document.visibilityState === 'visible') {
-          requestWakeLock();
-        }
-      });
-    }
-
-    // Log de inicialización completo
-    console.log('✓ GPS Tracker completamente cargado');
-    console.log('User ID:', userId);
-    console.log('Geolocation disponible:', !!navigator.geolocation);
+    console.log('✓ GPS Tracker listo');
   </script>
 </body>
 </html>
