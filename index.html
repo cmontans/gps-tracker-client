@@ -516,15 +516,17 @@
       
       return L.divIcon({
         html: `
-          <div style="position: relative; transform: rotate(${bearing}deg); width: ${size}px; height: ${size}px;">
-            <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-              <path d="M12 2L4 20L12 16L20 20L12 2Z" stroke="white" stroke-width="2"/>
-            </svg>
+          <div style="position: relative; width: ${size}px; height: ${size + 25}px;">
+            <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%) rotate(${bearing}deg); width: ${size}px; height: ${size}px;">
+              <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+                <path d="M12 2L4 20L12 16L20 20L12 2Z" stroke="white" stroke-width="2"/>
+              </svg>
+            </div>
             <div style="
               position: absolute;
-              top: -22px;
+              top: -20px;
               left: 50%;
-              transform: translateX(-50%) rotate(${-bearing}deg);
+              transform: translateX(-50%);
               background: ${color};
               color: white;
               padding: 2px 6px;
@@ -540,7 +542,7 @@
         `,
         className: 'custom-marker',
         iconSize: [size, size + 25],
-        iconAnchor: [size/2, size/2]
+        iconAnchor: [size/2, size + 25]
       });
     }
 
@@ -696,12 +698,15 @@
     // Pantalla completa
     elements.fullscreenButton.addEventListener('click', () => {
       isFullscreen = true;
+      elements.mapContainer.classList.add('hidden'); // Ocultar mapa normal
       elements.mapFullscreen.classList.remove('hidden');
       
       const firstUser = users.length > 0 ? users[0] : null;
       if (firstUser) {
         initMap(firstUser.lat, firstUser.lon, 'map-fullscreen-container');
-        updateMap();
+        setTimeout(() => {
+          updateMap();
+        }, 200);
       } else {
         initMap(40.4168, -3.7038, 'map-fullscreen-container');
       }
@@ -714,12 +719,14 @@
     elements.exitFullscreenButton.addEventListener('click', () => {
       isFullscreen = false;
       elements.mapFullscreen.classList.add('hidden');
+      elements.mapContainer.classList.remove('hidden'); // Mostrar mapa normal
       
       // Limpiar marcadores del mapa fullscreen
       Object.keys(userMarkers).forEach(markerId => {
         if (markerId.includes('_fs') && mapFullscreen) {
           mapFullscreen.removeLayer(userMarkers[markerId]);
           delete userMarkers[markerId];
+          delete userTracks[markerId];
           
           const polylineId = `${markerId}_polyline`;
           if (trackPolylines[polylineId]) {
@@ -728,6 +735,14 @@
           }
         }
       });
+      
+      // Actualizar mapa normal
+      setTimeout(() => {
+        if (map) {
+          map.invalidateSize();
+          updateMap();
+        }
+      }, 100);
     });
 
     // Limpiar tracks
@@ -1016,7 +1031,8 @@
           elements.accuracy.textContent = accuracy;
           elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
 
-          if (ws && ws.readyState === WebSocket.OPEN) {
+          // Solo enviar si NO es modo visualizador
+          if (ws && ws.readyState === WebSocket.OPEN && !viewerMode) {
             ws.send(JSON.stringify({
               type: 'speed',
               userId,
