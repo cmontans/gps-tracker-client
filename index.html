@@ -845,13 +845,26 @@
           updateConnectionStatus(true);
           showSuccess('✓ Conectado al servidor');
           reconnectAttempts = 0;
-          ws.send(JSON.stringify({ 
-            type: 'register', 
-            userId,
-            userName: userName || 'Usuario',
-            groupName: groupName || 'default'
-          }));
-          console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
+          
+          // Solo registrar si NO es modo visualizador
+          if (!viewerMode) {
+            ws.send(JSON.stringify({ 
+              type: 'register', 
+              userId,
+              userName: userName || 'Usuario',
+              groupName: groupName || 'default'
+            }));
+            console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
+          } else {
+            // En modo visualizador, solo escuchar
+            ws.send(JSON.stringify({
+              type: 'join',
+              groupName: groupName || 'default',
+              viewerMode: true
+            }));
+            console.log('👁️ Modo visualizador - Grupo:', groupName || 'default');
+          }
+          
           startKeepAlive();
         };
 
