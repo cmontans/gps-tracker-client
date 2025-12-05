@@ -13,6 +13,17 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          screens: {
+            'xs': '475px',
+          }
+        }
+      }
+    }
+  </script>
   <style>
     body {
       overscroll-behavior: contain;
@@ -32,20 +43,61 @@
   </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 m-0 p-0">
-  <div id="app" class="min-h-screen p-4">
-    <div class="max-w-4xl mx-auto">
-      <!-- Header -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
-        <p class="text-gray-600">Telemetría de velocidad en tiempo real</p>
-        <p class="text-xs text-gray-400 mt-2">v2.1 - Optimizado para segundo plano ✓</p>
+  <div id="app" class="min-h-screen p-2 sm:p-4">
+    <div class="max-w-7xl mx-auto">
+      <!-- Header with Settings -->
+      <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
+            <p class="text-sm sm:text-base text-gray-600">Telemetría de velocidad en tiempo real</p>
+            <p class="text-xs text-gray-400 mt-2">v4.0 - Modo visualizador y pantalla completa ✓</p>
+          </div>
+          <button
+            id="settings-button"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          >
+            ⚙️ Ajustes
+          </button>
+        </div>
         <div id="wake-lock-status" class="hidden mt-2 text-xs">
           <span class="bg-green-100 text-green-800 px-2 py-1 rounded">🔒 Pantalla bloqueada</span>
         </div>
       </div>
 
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div class="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-800">⚙️ Configuración</h2>
+            <button id="close-settings" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">
+              ✕
+            </button>
+          </div>
+          <div class="p-4 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                URL del Servidor WebSocket
+              </label>
+              <input
+                id="server-url"
+                type="text"
+                value="wss://gps-tracker-server-production-5900.up.railway.app"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                placeholder="wss://tu-servidor.up.railway.app"
+              />
+            </div>
+            <div class="pt-4 border-t">
+              <p class="text-sm text-gray-500 mb-2">
+                ID: <span id="user-id" class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"></span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Configuración -->
-      <div id="config-section" class="bg-white rounded-lg shadow-lg p-6 mb-4">
+      <div id="config-section" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Tu Nombre
@@ -59,57 +111,85 @@
           />
           <p class="text-xs text-gray-500 mt-1">Así te verán los demás usuarios</p>
         </div>
-        
-        <div>
+
+        <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            URL del Servidor WebSocket
+            🔐 Nombre del Grupo
           </label>
           <input
-            id="server-url"
+            id="group-name"
             type="text"
-            value="wss://gps-tracker-server-production-5900.up.railway.app"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-2"
-            placeholder="wss://tu-servidor.up.railway.app"
+            maxlength="30"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Ej: Amigos, Carrera2024, Familia..."
           />
-          <p class="text-sm text-gray-500">
-            ID: <span id="user-id" class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"></span>
-          </p>
+          <p class="text-xs text-gray-500 mt-1">Solo verás usuarios de tu mismo grupo</p>
+        </div>
+
+        <div class="mb-4">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              id="viewer-mode"
+              type="checkbox"
+              class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <span class="text-sm font-medium text-gray-700">
+              👁️ Modo Visualizador (Solo ver, sin emitir posición)
+            </span>
+          </label>
+          <p class="text-xs text-gray-500 mt-1 ml-6">Ideal para seguir la carrera sin participar</p>
+        </div>
+        
+        <div class="flex gap-2">
+          <button
+            id="track-button"
+            class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            Iniciar Seguimiento
+          </button>
         </div>
       </div>
 
       <!-- Estado -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+      <div id="status-section" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div class="flex items-center gap-2">
-            <span id="wifi-icon" class="text-2xl">📡</span>
-            <span id="connection-status" class="text-sm font-medium">Desconectado</span>
+            <span id="wifi-icon" class="text-xl sm:text-2xl">📡</span>
+            <span id="connection-status" class="text-xs sm:text-sm font-medium">Desconectado</span>
           </div>
-          <div class="flex items-center gap-2">
-            <span id="gps-icon" class="text-2xl">📍</span>
-            <span id="gps-status" class="text-sm font-medium">GPS Inactivo</span>
+          <div id="gps-status-container" class="flex items-center gap-2">
+            <span id="gps-icon" class="text-xl sm:text-2xl">📍</span>
+            <span id="gps-status" class="text-xs sm:text-sm font-medium">GPS Inactivo</span>
           </div>
         </div>
 
         <!-- Velocidad -->
-        <div class="text-center py-8">
+        <div class="text-center py-4 sm:py-8">
           <div class="mb-4">
             <div class="text-sm text-gray-600 mb-1">Velocidad Actual</div>
-            <div id="speed-display" class="text-7xl font-bold text-indigo-600 mb-2">0</div>
-            <div class="text-2xl text-gray-600">km/h</div>
+            <div id="speed-display" class="text-5xl sm:text-7xl font-bold text-indigo-600 mb-2">0</div>
+            <div class="text-xl sm:text-2xl text-gray-600">km/h</div>
           </div>
           
-          <div class="grid grid-cols-2 gap-4 mt-6">
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+          <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-6">
+            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 sm:p-4">
               <div class="text-xs text-green-600 font-semibold mb-1">🏆 MÁXIMA SESIÓN</div>
-              <div id="max-speed" class="text-3xl font-bold text-green-700">0</div>
-              <div class="text-sm text-green-600">km/h</div>
+              <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700">0</div>
+              <div class="text-xs sm:text-sm text-green-600">km/h</div>
             </div>
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 sm:p-4">
               <div class="text-xs text-blue-600 font-semibold mb-1">📊 PROMEDIO</div>
-              <div id="avg-speed" class="text-3xl font-bold text-blue-700">0</div>
-              <div class="text-sm text-blue-600">km/h</div>
+              <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700">0</div>
+              <div class="text-xs sm:text-sm text-blue-600">km/h</div>
             </div>
           </div>
+
+          <button
+            id="reset-stats-button"
+            class="mt-4 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          >
+            🔄 Resetear Estadísticas
+          </button>
         </div>
 
         <!-- Error -->
@@ -121,30 +201,30 @@
         <!-- Info adicional -->
         <div id="gps-info" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
           <p class="mb-1"><strong>Precisión GPS:</strong> <span id="accuracy">--</span> metros</p>
-          <p class="mb-1"><strong>Coordenadas:</strong> <span id="coords" class="text-xs">--</span></p>
+          <p class="mb-1"><strong>Coordenadas:</strong> <span id="coords" class="text-xs break-all">--</span></p>
         </div>
 
         <!-- Botón -->
         <div class="mt-6">
           <button
-            id="track-button"
-            class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            id="stop-button"
+            class="hidden w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
-            Iniciar Seguimiento
+            Detener Seguimiento
           </button>
         </div>
       </div>
 
       <!-- Usuarios -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span class="text-2xl">👥</span>
-            Usuarios Conectados (<span id="user-count">0</span>)
+      <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+          <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span class="text-xl sm:text-2xl">👥</span>
+            Usuarios (<span id="user-count">0</span>)
           </h2>
           <button
             id="toggle-map-button"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             🗺️ Ver Mapa
           </button>
@@ -155,29 +235,43 @@
       </div>
 
       <!-- Mapa -->
-      <div id="map-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-4">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span class="text-2xl">🗺️</span>
+      <div id="map-container" class="hidden bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+          <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span class="text-xl sm:text-2xl">🗺️</span>
             Mapa en Tiempo Real
           </h2>
-          <button
-            id="close-map-button"
-            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            ✕ Cerrar
-          </button>
+          <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <button
+              id="fullscreen-button"
+              class="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              ⛶ Pantalla Completa
+            </button>
+            <button
+              id="clear-tracks-button"
+              class="flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              🗑️ Limpiar
+            </button>
+            <button
+              id="close-map-button"
+              class="flex-1 sm:flex-none bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              ✕ Cerrar
+            </button>
+          </div>
         </div>
-        <div id="map" class="w-full h-96 rounded-lg border-2 border-gray-200"></div>
-        <div class="mt-4 text-sm text-gray-600">
+        <div id="map" class="w-full h-64 sm:h-96 lg:h-[500px] rounded-lg border-2 border-gray-200"></div>
+        <div class="mt-4 text-xs sm:text-sm text-gray-600">
           <p class="font-semibold mb-2">Leyenda:</p>
-          <div class="flex flex-wrap gap-4">
+          <div class="flex flex-wrap gap-3 sm:gap-4">
             <div class="flex items-center gap-2">
-              <span class="text-2xl">📍</span>
+              <span class="text-xl sm:text-2xl">📍</span>
               <span>Tu posición</span>
             </div>
             <div class="flex items-center gap-2">
-              <span class="text-2xl">👤</span>
+              <span class="text-xl sm:text-2xl">👤</span>
               <span>Otros usuarios</span>
             </div>
             <div class="flex items-center gap-2">
@@ -188,17 +282,44 @@
         </div>
       </div>
 
+      <!-- Fullscreen Map -->
+      <div id="map-fullscreen" class="hidden fixed inset-0 bg-white z-50">
+        <div class="h-full flex flex-col">
+          <div class="bg-white border-b p-3 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-800">🗺️ Mapa - Pantalla Completa</h2>
+            <button
+              id="exit-fullscreen-button"
+              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              ✕ Salir
+            </button>
+          </div>
+          <div id="map-fullscreen-container" class="flex-1"></div>
+        </div>
+      </div>
+
       <!-- Instrucciones -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 mb-4">
         <p class="font-semibold mb-2">💡 Pasos para usar:</p>
         <ol class="list-decimal list-inside space-y-1">
           <li>Introduce tu nombre</li>
+          <li><strong>Introduce el nombre del grupo</strong> (debe ser igual para todos los participantes)</li>
           <li>Activa el GPS en tu móvil</li>
-          <li>Configura la URL del servidor</li>
           <li>Presiona "Iniciar Seguimiento"</li>
           <li>Permite acceso a ubicación cuando te lo pida</li>
           <li>Sal al exterior para mejor señal GPS</li>
         </ol>
+      </div>
+
+      <!-- Info sobre grupos -->
+      <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 mb-4">
+        <p class="font-semibold mb-2">🔐 Sistema de Grupos:</p>
+        <ul class="list-disc list-inside space-y-1">
+          <li>Solo verás usuarios que estén en tu mismo grupo</li>
+          <li>El nombre del grupo distingue mayúsculas/minúsculas</li>
+          <li>Ejemplos: "Amigos", "Carrera2024", "Familia"</li>
+          <li>Todos los participantes deben usar el <strong>mismo nombre exacto</strong></li>
+        </ul>
       </div>
 
       <!-- Instrucciones pantalla encendida -->
@@ -243,6 +364,9 @@
     localStorage.setItem('userId', userId);
     
     let userName = localStorage.getItem('userName') || '';
+    let groupName = localStorage.getItem('groupName') || '';
+    let serverUrl = localStorage.getItem('serverUrl') || 'wss://gps-tracker-server-production-5900.up.railway.app';
+    let viewerMode = false;
     let ws = null;
     let watchId = null;
     let isTracking = false;
@@ -257,16 +381,23 @@
     
     // Variables para el mapa
     let map = null;
+    let mapFullscreen = null;
     let userMarkers = {};
     let userTracks = {};
+    let trackPolylines = {};
     let mapVisible = false;
+    let isFullscreen = false;
 
     // Elementos DOM
     const elements = {
       userId: document.getElementById('user-id'),
       userName: document.getElementById('user-name'),
+      groupName: document.getElementById('group-name'),
+      viewerMode: document.getElementById('viewer-mode'),
       serverUrl: document.getElementById('server-url'),
       configSection: document.getElementById('config-section'),
+      statusSection: document.getElementById('status-section'),
+      gpsStatusContainer: document.getElementById('gps-status-container'),
       wifiIcon: document.getElementById('wifi-icon'),
       connectionStatus: document.getElementById('connection-status'),
       gpsIcon: document.getElementById('gps-icon'),
@@ -278,6 +409,8 @@
       successBox: document.getElementById('success-box'),
       gpsInfo: document.getElementById('gps-info'),
       trackButton: document.getElementById('track-button'),
+      stopButton: document.getElementById('stop-button'),
+      resetStatsButton: document.getElementById('reset-stats-button'),
       userCount: document.getElementById('user-count'),
       usersList: document.getElementById('users-list'),
       accuracy: document.getElementById('accuracy'),
@@ -285,12 +418,21 @@
       wakeLockStatus: document.getElementById('wake-lock-status'),
       mapContainer: document.getElementById('map-container'),
       toggleMapButton: document.getElementById('toggle-map-button'),
-      closeMapButton: document.getElementById('close-map-button')
+      closeMapButton: document.getElementById('close-map-button'),
+      clearTracksButton: document.getElementById('clear-tracks-button'),
+      fullscreenButton: document.getElementById('fullscreen-button'),
+      exitFullscreenButton: document.getElementById('exit-fullscreen-button'),
+      mapFullscreen: document.getElementById('map-fullscreen'),
+      settingsButton: document.getElementById('settings-button'),
+      settingsModal: document.getElementById('settings-modal'),
+      closeSettings: document.getElementById('close-settings')
     };
 
     // Inicializar
     elements.userId.textContent = userId.substring(0, 30);
     elements.userName.value = userName;
+    elements.groupName.value = groupName;
+    elements.serverUrl.value = serverUrl;
 
     // Guardar nombre cuando cambie
     elements.userName.addEventListener('input', (e) => {
@@ -298,18 +440,63 @@
       localStorage.setItem('userName', userName);
     });
 
+    // Guardar grupo cuando cambie
+    elements.groupName.addEventListener('input', (e) => {
+      groupName = e.target.value.trim();
+      localStorage.setItem('groupName', groupName);
+    });
+
+    // Guardar URL del servidor
+    elements.serverUrl.addEventListener('change', (e) => {
+      serverUrl = e.target.value.trim();
+      localStorage.setItem('serverUrl', serverUrl);
+    });
+
+    // Modal de configuración
+    elements.settingsButton.addEventListener('click', () => {
+      elements.settingsModal.classList.remove('hidden');
+    });
+
+    elements.closeSettings.addEventListener('click', () => {
+      elements.settingsModal.classList.add('hidden');
+    });
+
+    elements.settingsModal.addEventListener('click', (e) => {
+      if (e.target === elements.settingsModal) {
+        elements.settingsModal.classList.add('hidden');
+      }
+    });
+
+    // Resetear estadísticas
+    elements.resetStatsButton.addEventListener('click', () => {
+      maxSpeed = 0;
+      speedReadings = [];
+      elements.maxSpeed.textContent = '0';
+      elements.avgSpeed.textContent = '0';
+      showSuccess('✓ Estadísticas reseteadas');
+      console.log('🔄 Estadísticas reseteadas');
+    });
+
     // Inicializar mapa con Leaflet (OpenStreetMap)
-    function initMap(lat, lon) {
-      if (map) return; // Ya está inicializado
+    function initMap(lat, lon, container = 'map') {
+      const targetMap = container === 'map-fullscreen-container' ? 'mapFullscreen' : 'map';
       
-      map = L.map('map').setView([lat, lon], 15);
+      if (eval(targetMap)) return; // Ya está inicializado
+      
+      const mapInstance = L.map(container).setView([lat, lon], 15);
       
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
-      }).addTo(map);
+      }).addTo(mapInstance);
       
-      console.log('✓ Mapa inicializado');
+      if (targetMap === 'mapFullscreen') {
+        mapFullscreen = mapInstance;
+      } else {
+        map = mapInstance;
+      }
+      
+      console.log('✓ Mapa inicializado:', container);
     }
 
     // Calcular ángulo de dirección entre dos puntos
@@ -322,52 +509,71 @@
       return (bearing + 360) % 360;
     }
 
-    // Crear icono de flecha para dirección
+    // Crear icono de flecha para dirección con velocidad visible
     function createArrowIcon(speed, isCurrentUser, bearing = 0) {
       const color = isCurrentUser ? '#4F46E5' : '#10B981';
-      const size = isCurrentUser ? 30 : 25;
+      const size = isCurrentUser ? 35 : 30;
       
       return L.divIcon({
         html: `
-          <div style="transform: rotate(${bearing}deg); width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
-            <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg">
+          <div style="position: relative; transform: rotate(${bearing}deg); width: ${size}px; height: ${size}px;">
+            <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
               <path d="M12 2L4 20L12 16L20 20L12 2Z" stroke="white" stroke-width="2"/>
             </svg>
+            <div style="
+              position: absolute;
+              top: -22px;
+              left: 50%;
+              transform: translateX(-50%) rotate(${-bearing}deg);
+              background: ${color};
+              color: white;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-size: 11px;
+              font-weight: bold;
+              white-space: nowrap;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            ">
+              ${speed} km/h
+            </div>
           </div>
         `,
         className: 'custom-marker',
-        iconSize: [size, size],
+        iconSize: [size, size + 25],
         iconAnchor: [size/2, size/2]
       });
     }
 
     // Actualizar mapa con posiciones de usuarios
     function updateMap() {
-      if (!map || !mapVisible) return;
+      const activeMap = isFullscreen ? mapFullscreen : map;
+      if (!activeMap || (!mapVisible && !isFullscreen)) return;
 
       users.forEach(user => {
         const isCurrentUser = user.userId === userId;
+        const markerId = `${user.userId}_${isFullscreen ? 'fs' : 'normal'}`;
         
         // Crear o actualizar marcador
-        if (!userMarkers[user.userId]) {
+        if (!userMarkers[markerId]) {
           const marker = L.marker([user.lat, user.lon], {
             icon: createArrowIcon(user.speed, isCurrentUser, user.bearing || 0)
-          }).addTo(map);
+          }).addTo(activeMap);
           
           const displayName = user.userName || user.userId.substring(0, 15);
           marker.bindPopup(`
             <div class="text-center">
               <strong>${displayName}</strong><br>
               <span class="text-lg font-bold">${user.speed} km/h</span><br>
+              <span class="text-sm">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
               <span class="text-xs text-gray-500">${new Date(user.timestamp).toLocaleTimeString()}</span>
             </div>
           `);
           
-          userMarkers[user.userId] = marker;
-          userTracks[user.userId] = [];
+          userMarkers[markerId] = marker;
+          userTracks[markerId] = [];
         } else {
           // Actualizar posición y rotación
-          const marker = userMarkers[user.userId];
+          const marker = userMarkers[markerId];
           marker.setLatLng([user.lat, user.lon]);
           marker.setIcon(createArrowIcon(user.speed, isCurrentUser, user.bearing || 0));
           
@@ -376,46 +582,90 @@
             <div class="text-center">
               <strong>${displayName}</strong><br>
               <span class="text-lg font-bold">${user.speed} km/h</span><br>
+              <span class="text-sm">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
               <span class="text-xs text-gray-500">${new Date(user.timestamp).toLocaleTimeString()}</span>
             </div>
           `);
         }
         
-        // Agregar punto a la trayectoria
-        const track = userTracks[user.userId];
-        track.push([user.lat, user.lon]);
-        
-        // Mantener solo últimos 50 puntos
-        if (track.length > 50) {
-          track.shift();
-        }
-        
-        // Dibujar trayectoria
-        if (track.length > 1) {
-          const color = isCurrentUser ? '#4F46E5' : '#10B981';
-          L.polyline(track, {
-            color: color,
-            weight: 3,
-            opacity: 0.7,
-            smoothFactor: 1
-          }).addTo(map);
+        // Agregar punto a la trayectoria solo si velocidad > 1 m/s (~3.6 km/h)
+        if (user.speed > 3.6) {
+          const track = userTracks[markerId];
+          track.push([user.lat, user.lon]);
+          
+          // Mantener solo últimos 50 puntos
+          if (track.length > 50) {
+            track.shift();
+          }
+          
+          // Eliminar polyline anterior si existe
+          const polylineId = `${markerId}_polyline`;
+          if (trackPolylines[polylineId]) {
+            activeMap.removeLayer(trackPolylines[polylineId]);
+          }
+          
+          // Dibujar trayectoria
+          if (track.length > 1) {
+            const color = isCurrentUser ? '#4F46E5' : '#10B981';
+            trackPolylines[polylineId] = L.polyline(track, {
+              color: color,
+              weight: 3,
+              opacity: 0.7,
+              smoothFactor: 1
+            }).addTo(activeMap);
+          }
         }
       });
 
       // Eliminar marcadores de usuarios desconectados
-      Object.keys(userMarkers).forEach(uid => {
-        if (!users.find(u => u.userId === uid)) {
-          map.removeLayer(userMarkers[uid]);
-          delete userMarkers[uid];
-          delete userTracks[uid];
+      Object.keys(userMarkers).forEach(markerId => {
+        const userId = markerId.split('_')[0];
+        const mapType = markerId.includes('_fs') ? 'fs' : 'normal';
+        
+        if (!users.find(u => u.userId === userId) || 
+            (isFullscreen && mapType === 'normal') || 
+            (!isFullscreen && mapType === 'fs')) {
+          activeMap.removeLayer(userMarkers[markerId]);
+          
+          const polylineId = `${markerId}_polyline`;
+          if (trackPolylines[polylineId]) {
+            activeMap.removeLayer(trackPolylines[polylineId]);
+            delete trackPolylines[polylineId];
+          }
+          delete userMarkers[markerId];
+          delete userTracks[markerId];
         }
       });
 
       // Centrar en el usuario actual si existe
-      const currentUser = users.find(u => u.userId === userId);
-      if (currentUser) {
-        map.setView([currentUser.lat, currentUser.lon], map.getZoom());
+      if (!viewerMode) {
+        const currentUser = users.find(u => u.userId === userId);
+        if (currentUser) {
+          activeMap.setView([currentUser.lat, currentUser.lon], activeMap.getZoom());
+        }
       }
+    }
+
+    // Limpiar tracks del mapa
+    function clearMapTracks() {
+      const activeMap = isFullscreen ? mapFullscreen : map;
+      if (!activeMap) return;
+      
+      // Eliminar todas las polylines
+      Object.keys(trackPolylines).forEach(uid => {
+        if (trackPolylines[uid]) {
+          activeMap.removeLayer(trackPolylines[uid]);
+          delete trackPolylines[uid];
+        }
+      });
+      
+      // Vaciar arrays de tracks
+      Object.keys(userTracks).forEach(uid => {
+        userTracks[uid] = [];
+      });
+      
+      showSuccess('✓ Trayectorias limpiadas');
+      console.log('🗑️ Tracks del mapa limpiados');
     }
 
     // Toggle mapa
@@ -423,14 +673,13 @@
       mapVisible = true;
       elements.mapContainer.classList.remove('hidden');
       
-      // Inicializar mapa con posición del usuario actual
-      const currentUser = users.find(u => u.userId === userId);
-      if (currentUser) {
-        initMap(currentUser.lat, currentUser.lon);
+      // Inicializar mapa con posición del primer usuario disponible
+      const firstUser = users.length > 0 ? users[0] : null;
+      if (firstUser) {
+        initMap(firstUser.lat, firstUser.lon);
         updateMap();
-      } else if (users.length > 0) {
-        initMap(users[0].lat, users[0].lon);
-        updateMap();
+      } else if (users.length === 0) {
+        initMap(40.4168, -3.7038); // Madrid por defecto
       }
       
       // Ajustar tamaño del mapa
@@ -442,6 +691,48 @@
     elements.closeMapButton.addEventListener('click', () => {
       mapVisible = false;
       elements.mapContainer.classList.add('hidden');
+    });
+
+    // Pantalla completa
+    elements.fullscreenButton.addEventListener('click', () => {
+      isFullscreen = true;
+      elements.mapFullscreen.classList.remove('hidden');
+      
+      const firstUser = users.length > 0 ? users[0] : null;
+      if (firstUser) {
+        initMap(firstUser.lat, firstUser.lon, 'map-fullscreen-container');
+        updateMap();
+      } else {
+        initMap(40.4168, -3.7038, 'map-fullscreen-container');
+      }
+      
+      setTimeout(() => {
+        if (mapFullscreen) mapFullscreen.invalidateSize();
+      }, 100);
+    });
+
+    elements.exitFullscreenButton.addEventListener('click', () => {
+      isFullscreen = false;
+      elements.mapFullscreen.classList.add('hidden');
+      
+      // Limpiar marcadores del mapa fullscreen
+      Object.keys(userMarkers).forEach(markerId => {
+        if (markerId.includes('_fs') && mapFullscreen) {
+          mapFullscreen.removeLayer(userMarkers[markerId]);
+          delete userMarkers[markerId];
+          
+          const polylineId = `${markerId}_polyline`;
+          if (trackPolylines[polylineId]) {
+            mapFullscreen.removeLayer(trackPolylines[polylineId]);
+            delete trackPolylines[polylineId];
+          }
+        }
+      });
+    });
+
+    // Limpiar tracks
+    elements.clearTracksButton.addEventListener('click', () => {
+      clearMapTracks();
     });
 
     // Wake Lock API - Mantener pantalla encendida
@@ -557,9 +848,10 @@
           ws.send(JSON.stringify({ 
             type: 'register', 
             userId,
-            userName: userName || 'Usuario'
+            userName: userName || 'Usuario',
+            groupName: groupName || 'default'
           }));
-          console.log('✓ Registrado en servidor');
+          console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
           startKeepAlive();
         };
 
@@ -716,6 +1008,7 @@
               type: 'speed',
               userId,
               userName: userName || 'Usuario',
+              groupName: groupName || 'default',
               speed,
               maxSpeed,
               lat: position.coords.latitude,
@@ -768,30 +1061,29 @@
       stopKeepAlive();
       releaseWakeLock();
       
-      // Resetear estadísticas
-      maxSpeed = 0;
-      speedReadings = [];
-      elements.maxSpeed.textContent = '0';
-      elements.avgSpeed.textContent = '0';
+      // NO resetear estadísticas al detener
       
       isTracking = false;
+      viewerMode = false;
       reconnectAttempts = 0;
       updateGpsStatus(false);
       updateConnectionStatus(false);
       elements.speedDisplay.textContent = '0';
       elements.gpsInfo.classList.add('hidden');
       elements.configSection.classList.remove('hidden');
-      elements.trackButton.textContent = 'Iniciar Seguimiento';
-      elements.trackButton.className = 'w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
+      elements.statusSection.classList.add('hidden');
+      elements.stopButton.classList.add('hidden');
+      elements.gpsStatusContainer.classList.remove('hidden');
+      elements.viewerMode.checked = false;
     }
 
-    // Evento del botón
+    // Eventos de los botones
     elements.trackButton.addEventListener('click', () => {
-      if (isTracking) {
-        stopTracking();
-      } else {
-        startTracking();
-      }
+      startTracking();
+    });
+
+    elements.stopButton.addEventListener('click', () => {
+      stopTracking();
     });
 
     // Limpiar al cerrar/recargar página
