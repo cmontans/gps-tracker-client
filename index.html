@@ -180,12 +180,20 @@
             </div>
           </div>
 
-          <button
-            id="reset-stats-button"
-            class="mt-4 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            🔄 Resetear Estadísticas
-          </button>
+          <div class="flex gap-2 mt-4">
+            <button
+              id="reset-stats-button"
+              class="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              🔄 Resetear Estadísticas
+            </button>
+            <button
+              id="group-horn-button"
+              class="flex-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors transform active:scale-95"
+            >
+              📢 Bocina Grupal
+            </button>
+          </div>
         </div>
 
         <!-- Mensajes -->
@@ -443,6 +451,7 @@
       trackButton: document.getElementById('track-button'),
       stopButton: document.getElementById('stop-button'),
       resetStatsButton: document.getElementById('reset-stats-button'),
+      groupHornButton: document.getElementById('group-horn-button'),
       userCount: document.getElementById('user-count'),
       usersList: document.getElementById('users-list'),
       accuracy: document.getElementById('accuracy'),
@@ -520,6 +529,76 @@
       elements.avgSpeed.textContent = '0';
       showSuccess('✓ Estadísticas reseteadas');
       console.log('🔄 Estadísticas reseteadas');
+    });
+
+    // Función para generar y reproducir sonido de bocina potente
+    function playHornSound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Crear osciladores para un sonido de bocina más realista y potente
+        const oscillator1 = audioContext.createOscillator();
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        // Frecuencias de bocina de auto (más graves y potentes)
+        oscillator1.type = 'sawtooth';
+        oscillator1.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+
+        oscillator2.type = 'sawtooth';
+        oscillator2.frequency.setValueAtTime(330, audioContext.currentTime); // E4
+
+        // Conectar osciladores al gain
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Volumen inicial alto con fade out
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.8, audioContext.currentTime + 0.05); // Ataque rápido
+        gainNode.gain.exponentialRampToValueAtTime(0.6, audioContext.currentTime + 0.5); // Sostener
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5); // Fade out
+
+        // Iniciar sonido
+        oscillator1.start(audioContext.currentTime);
+        oscillator2.start(audioContext.currentTime);
+
+        // Detener después de 1.5 segundos
+        oscillator1.stop(audioContext.currentTime + 1.5);
+        oscillator2.stop(audioContext.currentTime + 1.5);
+
+        console.log('📢 Bocina reproducida');
+      } catch (error) {
+        console.error('❌ Error reproduciendo bocina:', error);
+        showError('Error al reproducir bocina: ' + error.message);
+      }
+    }
+
+    // Botón de bocina grupal
+    elements.groupHornButton.addEventListener('click', () => {
+      if (!isTracking) {
+        showError('⚠️ Debes estar en seguimiento para usar la bocina grupal');
+        return;
+      }
+
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        showError('⚠️ No hay conexión con el servidor');
+        return;
+      }
+
+      // Enviar señal de bocina a todos los usuarios del grupo
+      ws.send(JSON.stringify({
+        type: 'group-horn',
+        userId,
+        userName: userName || 'Usuario',
+        groupName: groupName || 'default',
+        timestamp: Date.now()
+      }));
+
+      // Reproducir sonido localmente también
+      playHornSound();
+      showSuccess('📢 Bocina activada para todo el grupo!');
+      console.log('📢 Señal de bocina enviada al grupo:', groupName || 'default');
     });
 
     // Inicializar mapa con Leaflet (OpenStreetMap)
@@ -935,6 +1014,16 @@
             updateMap();
           } else if (data.type === 'pong') {
             console.log('💓 Pong recibido');
+          } else if (data.type === 'group-horn') {
+            // Recibir señal de bocina de otro usuario del grupo
+            const senderName = data.userName || 'Usuario';
+            console.log('📢 Bocina recibida de:', senderName);
+
+            // Solo reproducir si no es el usuario actual quien la envió
+            if (data.userId !== userId) {
+              playHornSound();
+              showSuccess(`📢 ¡${senderName} ha activado la bocina grupal!`);
+            }
           }
         };
 
