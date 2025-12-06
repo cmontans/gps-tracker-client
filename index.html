@@ -163,19 +163,19 @@
         <div class="text-center py-4 sm:py-8">
           <div class="mb-4">
             <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Velocidad Actual</div>
-            <div id="speed-display" class="text-5xl sm:text-7xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">0</div>
+            <div id="speed-display" class="text-5xl sm:text-7xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">0.0</div>
             <div class="text-xl sm:text-2xl text-gray-600 dark:text-gray-400">km/h</div>
           </div>
 
           <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-6">
             <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-3 sm:p-4 transition-colors">
               <div class="text-xs text-green-600 dark:text-green-300 font-semibold mb-1">🏆 MÁXIMA SESIÓN</div>
-              <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-200">0</div>
+              <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-200">0.0</div>
               <div class="text-xs sm:text-sm text-green-600 dark:text-green-300">km/h</div>
             </div>
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-3 sm:p-4 transition-colors">
               <div class="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1">📊 PROMEDIO</div>
-              <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-200">0</div>
+              <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-200">0.0</div>
               <div class="text-xs sm:text-sm text-blue-600 dark:text-blue-300">km/h</div>
             </div>
           </div>
@@ -525,8 +525,8 @@
     elements.resetStatsButton.addEventListener('click', () => {
       maxSpeed = 0;
       speedReadings = [];
-      elements.maxSpeed.textContent = '0';
-      elements.avgSpeed.textContent = '0';
+      elements.maxSpeed.textContent = '0.0';
+      elements.avgSpeed.textContent = '0.0';
       showSuccess('✓ Estadísticas reseteadas');
       console.log('🔄 Estadísticas reseteadas');
     });
@@ -643,7 +643,7 @@
         <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
           <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: ${color}; color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 1000; text-align: center; line-height: 1.3;">
             <div style="font-size: 10px; opacity: 0.9;">${displayName}</div>
-            <div style="font-size: 13px; margin-top: 1px;">${speed} km/h</div>
+            <div style="font-size: 13px; margin-top: 1px;">${parseFloat(speed).toFixed(1)} km/h</div>
           </div>
           <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform: rotate(${bearing}deg); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
             <path d="M12 2 L4 20 L12 16 L20 20 Z" fill="${color}" stroke="white" stroke-width="1.5"/>
@@ -685,8 +685,8 @@
             marker.bindPopup(`
               <div style="text-align: center;">
                 <strong>${displayName}</strong><br>
-                <span style="font-size: 18px; font-weight: bold;">${user.speed} km/h</span><br>
-                <span style="font-size: 14px;">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
+                <span style="font-size: 18px; font-weight: bold;">${parseFloat(user.speed).toFixed(1)} km/h</span><br>
+                <span style="font-size: 14px;">🏆 Max: ${parseFloat(user.maxSpeed || 0).toFixed(1)} km/h</span><br>
                 <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             `);
@@ -709,8 +709,8 @@
             marker.setPopupContent(`
               <div style="text-align: center;">
                 <strong>${displayName}</strong><br>
-                <span style="font-size: 18px; font-weight: bold;">${user.speed} km/h</span><br>
-                <span style="font-size: 14px;">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
+                <span style="font-size: 18px; font-weight: bold;">${parseFloat(user.speed).toFixed(1)} km/h</span><br>
+                <span style="font-size: 14px;">🏆 Max: ${parseFloat(user.maxSpeed || 0).toFixed(1)} km/h</span><br>
                 <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             `);
@@ -1087,12 +1087,12 @@
               </div>
               <div class="flex items-center gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>🧭 ${direction || '--'}</span>
-                <span>🏆 ${user.maxSpeed || 0} km/h</span>
+                <span>🏆 ${parseFloat(user.maxSpeed || 0).toFixed(1)} km/h</span>
                 <span class="text-xs">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             </div>
             <div class="text-right ml-4">
-              <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">${user.speed}</div>
+              <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">${parseFloat(user.speed).toFixed(1)}</div>
               <div class="text-sm text-gray-600 dark:text-gray-400">km/h</div>
             </div>
           </div>
@@ -1133,24 +1133,25 @@
 
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          const speed = position.coords.speed !== null 
-            ? Math.max(0, Math.round(position.coords.speed * 3.6))
-            : 0;
+          const speed = position.coords.speed !== null
+            ? Math.max(0, (position.coords.speed * 3.6).toFixed(1))
+            : '0.0';
           
           elements.speedDisplay.textContent = speed;
           updateGpsStatus(true);
           elements.gpsInfo.classList.remove('hidden');
           
           // Actualizar velocidad máxima
-          if (speed > maxSpeed) {
-            maxSpeed = speed;
-            elements.maxSpeed.textContent = maxSpeed;
+          const speedNum = parseFloat(speed);
+          if (speedNum > maxSpeed) {
+            maxSpeed = speedNum;
+            elements.maxSpeed.textContent = maxSpeed.toFixed(1);
           }
           
           // Actualizar promedio
-          speedReadings.push(speed);
+          speedReadings.push(speedNum);
           if (speedReadings.length > 20) speedReadings.shift(); // Mantener últimos 20
-          const avgSpeed = Math.round(speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length);
+          const avgSpeed = (speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length).toFixed(1);
           elements.avgSpeed.textContent = avgSpeed;
           
           // Calcular dirección/rumbo
@@ -1174,7 +1175,7 @@
               userId,
               userName: userName || 'Usuario',
               groupName: groupName || 'default',
-              speed,
+              speed: speedNum,
               maxSpeed,
               lat: position.coords.latitude,
               lon: position.coords.longitude,
@@ -1232,7 +1233,7 @@
       reconnectAttempts = 0;
       updateGpsStatus(false);
       updateConnectionStatus(false);
-      elements.speedDisplay.textContent = '0';
+      elements.speedDisplay.textContent = '0.0';
       elements.gpsInfo.style.display = 'none';
       
       // Cambiar visibilidad
