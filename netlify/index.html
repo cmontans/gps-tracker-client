@@ -119,6 +119,15 @@
                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
               </label>
             </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <label for="visualizer-mode-toggle" class="text-sm font-medium text-gray-700 dark:text-gray-300" id="visualizer-mode-label">
+                Modo Visualizador (ver grupo sin publicar mi ubicación)
+              </label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="visualizer-mode-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
             <div class="pt-4 border-t dark:border-gray-700">
               <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 ID: <span id="user-id" class="font-mono text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded"></span>
@@ -391,6 +400,7 @@
         serverPlaceholder: 'wss://tu-servidor.up.railway.app',
         language: 'Idioma',
         autoCenterMap: 'Auto-centrar mapa en mi ubicación',
+        visualizerMode: 'Modo Visualizador (ver grupo sin publicar mi ubicación)',
 
         // Config Section
         yourName: 'Tu Nombre',
@@ -496,6 +506,7 @@
         serverPlaceholder: 'wss://your-server.up.railway.app',
         language: 'Language',
         autoCenterMap: 'Auto-center map on my location',
+        visualizerMode: 'Visualizer Mode (view group without publishing my location)',
 
         // Config Section
         yourName: 'Your Name',
@@ -601,6 +612,7 @@
         serverPlaceholder: 'wss://votre-serveur.up.railway.app',
         language: 'Langue',
         autoCenterMap: 'Centrer automatiquement la carte sur ma position',
+        visualizerMode: 'Mode Visualisateur (voir le groupe sans publier ma position)',
 
         // Config Section
         yourName: 'Votre Nom',
@@ -706,6 +718,7 @@
         serverPlaceholder: 'wss://ihr-server.up.railway.app',
         language: 'Sprache',
         autoCenterMap: 'Karte automatisch auf meinen Standort zentrieren',
+        visualizerMode: 'Visualisierungsmodus (Gruppe sehen ohne meinen Standort zu veröffentlichen)',
 
         // Config Section
         yourName: 'Ihr Name',
@@ -830,6 +843,7 @@
       document.getElementById('server-url').placeholder = t('serverPlaceholder');
       elements.languageLabel.textContent = t('language');
       document.getElementById('auto-center-label').textContent = t('autoCenterMap');
+      document.getElementById('visualizer-mode-label').textContent = t('visualizerMode');
 
       // Config section
       document.getElementById('your-name-label').textContent = t('yourName');
@@ -1088,7 +1102,8 @@
       closeSettings: document.getElementById('close-settings'),
       languageSelect: document.getElementById('language-select'),
       languageLabel: document.getElementById('language-label'),
-      autoCenterToggle: document.getElementById('auto-center-toggle')
+      autoCenterToggle: document.getElementById('auto-center-toggle'),
+      visualizerModeToggle: document.getElementById('visualizer-mode-toggle')
     };
 
     // Inicializar
@@ -1101,6 +1116,10 @@
     // Load auto-center preference (default: true)
     const autoCenterEnabled = localStorage.getItem('autoCenterMap') !== 'false';
     elements.autoCenterToggle.checked = autoCenterEnabled;
+
+    // Load visualizer mode preference (default: false)
+    const visualizerModeEnabled = localStorage.getItem('visualizerMode') === 'true';
+    elements.visualizerModeToggle.checked = visualizerModeEnabled;
 
     // Initialize UI language on load
     updateUILanguage();
@@ -1149,6 +1168,16 @@
       const isEnabled = e.target.checked;
       localStorage.setItem('autoCenterMap', isEnabled);
       console.log('🗺️ Auto-center map:', isEnabled ? 'enabled' : 'disabled');
+    });
+
+    // Visualizer mode toggle
+    elements.visualizerModeToggle.addEventListener('change', (e) => {
+      const isEnabled = e.target.checked;
+      localStorage.setItem('visualizerMode', isEnabled);
+      console.log('👁️ Visualizer mode:', isEnabled ? 'enabled' : 'disabled');
+      if (isEnabled) {
+        console.log('📍 Your location will NOT be published to the group');
+      }
     });
 
     // Modal de configuración
@@ -1815,7 +1844,11 @@
           elements.accuracy.textContent = accuracy;
           elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
 
-          if (ws && ws.readyState === WebSocket.OPEN) {
+          // Check if visualizer mode is enabled
+          const visualizerMode = localStorage.getItem('visualizerMode') === 'true';
+
+          // Only send location updates if NOT in visualizer mode
+          if (!visualizerMode && ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
               type: 'speed',
               userId,
@@ -1829,7 +1862,7 @@
               timestamp: Date.now()
             }));
           }
-          
+
           lastPosition = position;
         },
         (error) => {

@@ -160,12 +160,19 @@ class LocationTrackingService : Service() {
         serviceListener?.onSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
         serviceListener?.onLocationUpdate(location)
 
-        // Send to WebSocket
-        webSocketClient?.let {
-            if (it.isOpen) {
-                val bearing = if (location.hasBearing()) location.bearing else 0f
-                it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
+        // Send to WebSocket (only if NOT in visualizer mode)
+        val prefs = getSharedPreferences("gps_tracker_prefs", MODE_PRIVATE)
+        val visualizerMode = prefs.getBoolean(getString(R.string.pref_visualizer_mode_key), false)
+
+        if (!visualizerMode) {
+            webSocketClient?.let {
+                if (it.isOpen) {
+                    val bearing = if (location.hasBearing()) location.bearing else 0f
+                    it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
+                }
             }
+        } else {
+            Log.d(TAG, "Visualizer mode enabled - location NOT sent to server")
         }
 
         Log.d(TAG, "Location: ${location.latitude}, ${location.longitude}, Speed: $currentSpeed km/h")

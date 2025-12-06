@@ -12,6 +12,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var etServerUrl: TextInputEditText
     private lateinit var etUserId: TextInputEditText
     private lateinit var switchAutoCenter: SwitchMaterial
+    private lateinit var switchVisualizerMode: SwitchMaterial
     private lateinit var btnSave: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,6 +25,7 @@ class SettingsActivity : AppCompatActivity() {
         etServerUrl = findViewById(R.id.etServerUrl)
         etUserId = findViewById(R.id.etUserId)
         switchAutoCenter = findViewById(R.id.switchAutoCenter)
+        switchVisualizerMode = findViewById(R.id.switchVisualizerMode)
         btnSave = findViewById(R.id.btnSave)
 
         loadSettings()
@@ -42,10 +44,12 @@ class SettingsActivity : AppCompatActivity() {
         )
         val userId = prefs.getString(getString(R.string.pref_user_id_key), "")
         val autoCenter = prefs.getBoolean(getString(R.string.pref_auto_center_key), true)
+        val visualizerMode = prefs.getBoolean(getString(R.string.pref_visualizer_mode_key), false)
 
         etServerUrl.setText(serverUrl)
         etUserId.setText(userId)
         switchAutoCenter.isChecked = autoCenter
+        switchVisualizerMode.isChecked = visualizerMode
     }
 
     private fun saveSettings() {
@@ -53,6 +57,7 @@ class SettingsActivity : AppCompatActivity() {
         prefs.edit().apply {
             putString(getString(R.string.pref_server_url_key), etServerUrl.text.toString())
             putBoolean(getString(R.string.pref_auto_center_key), switchAutoCenter.isChecked)
+            putBoolean(getString(R.string.pref_visualizer_mode_key), switchVisualizerMode.isChecked)
             apply()
         }
     }

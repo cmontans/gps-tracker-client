@@ -41,6 +41,14 @@
         android:text="@string/auto_center_map"
         android:checked="true" />
 
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchVisualizerMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="@string/visualizer_mode"
+        android:checked="false" />
+
     <Button
         android:id="@+id/btnSave"
         android:layout_width="match_parent"
