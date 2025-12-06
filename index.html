@@ -15,6 +15,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           screens: {
@@ -42,23 +43,31 @@
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 m-0 p-0">
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 m-0 p-0 transition-colors">
   <div id="app" class="min-h-screen p-2 sm:p-4">
     <div class="max-w-7xl mx-auto">
       <!-- Header with Settings -->
-      <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
-            <p class="text-sm sm:text-base text-gray-600">Telemetría de velocidad en tiempo real</p>
-            <p class="text-xs text-gray-400 mt-2">v4.0 - Modo visualizador y pantalla completa ✓</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-2">🚀 GPS Speed Tracker</h1>
+            <p class="text-sm sm:text-base text-gray-600 dark:text-gray-300">Telemetría de velocidad en tiempo real</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">v4.1 - Modo oscuro, visualizador y pantalla completa ✓</p>
           </div>
-          <button
-            id="settings-button"
-            class="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            ⚙️ Ajustes
-          </button>
+          <div class="flex gap-2">
+            <button
+              id="dark-mode-toggle"
+              class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              🌙
+            </button>
+            <button
+              id="settings-button"
+              class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              ⚙️ Ajustes
+            </button>
+          </div>
         </div>
         <div id="wake-lock-status" class="hidden mt-2 text-xs">
           <span class="bg-green-100 text-green-800 px-2 py-1 rounded">🔒 Pantalla bloqueada</span>
@@ -67,29 +76,29 @@
 
       <!-- Settings Modal -->
       <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-          <div class="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-            <h2 class="text-xl font-bold text-gray-800">⚙️ Configuración</h2>
-            <button id="close-settings" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-colors">
+          <div class="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">⚙️ Configuración</h2>
+            <button id="close-settings" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl leading-none">
               ✕
             </button>
           </div>
           <div class="p-4 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 URL del Servidor WebSocket
               </label>
               <input
                 id="server-url"
                 type="text"
                 value="wss://gps-tracker-server-production-5900.up.railway.app"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-colors"
                 placeholder="wss://tu-servidor.up.railway.app"
               />
             </div>
-            <div class="pt-4 border-t">
-              <p class="text-sm text-gray-500 mb-2">
-                ID: <span id="user-id" class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"></span>
+            <div class="pt-4 border-t dark:border-gray-700">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                ID: <span id="user-id" class="font-mono text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded"></span>
               </p>
             </div>
           </div>
@@ -97,33 +106,33 @@
       </div>
 
       <!-- Configuración -->
-      <div id="config-section" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+      <div id="config-section" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tu Nombre
           </label>
           <input
             id="user-name"
             type="text"
             maxlength="20"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
             placeholder="Ej: Juan, María, Alex..."
           />
-          <p class="text-xs text-gray-500 mt-1">Así te verán los demás usuarios</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Así te verán los demás usuarios</p>
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             🔐 Nombre del Grupo
           </label>
           <input
             id="group-name"
             type="text"
             maxlength="30"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
             placeholder="Ej: Amigos, Carrera2024, Familia..."
           />
-          <p class="text-xs text-gray-500 mt-1">Solo verás usuarios de tu mismo grupo</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Solo verás usuarios de tu mismo grupo</p>
         </div>
         
         <div class="flex gap-2">
@@ -137,7 +146,7 @@
       </div>
 
       <!-- Estado y Estadísticas -->
-      <div id="status-section" style="display: none;" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+      <div id="status-section" style="display: none;" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <!-- Conexión y GPS -->
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div class="flex items-center gap-2">
@@ -153,21 +162,21 @@
         <!-- Velocidad y Estadísticas -->
         <div class="text-center py-4 sm:py-8">
           <div class="mb-4">
-            <div class="text-sm text-gray-600 mb-1">Velocidad Actual</div>
-            <div id="speed-display" class="text-5xl sm:text-7xl font-bold text-indigo-600 mb-2">0</div>
-            <div class="text-xl sm:text-2xl text-gray-600">km/h</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Velocidad Actual</div>
+            <div id="speed-display" class="text-5xl sm:text-7xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">0</div>
+            <div class="text-xl sm:text-2xl text-gray-600 dark:text-gray-400">km/h</div>
           </div>
-          
+
           <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-6">
-            <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 sm:p-4">
-              <div class="text-xs text-green-600 font-semibold mb-1">🏆 MÁXIMA SESIÓN</div>
-              <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700">0</div>
-              <div class="text-xs sm:text-sm text-green-600">km/h</div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-3 sm:p-4 transition-colors">
+              <div class="text-xs text-green-600 dark:text-green-300 font-semibold mb-1">🏆 MÁXIMA SESIÓN</div>
+              <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-200">0</div>
+              <div class="text-xs sm:text-sm text-green-600 dark:text-green-300">km/h</div>
             </div>
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 sm:p-4">
-              <div class="text-xs text-blue-600 font-semibold mb-1">📊 PROMEDIO</div>
-              <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700">0</div>
-              <div class="text-xs sm:text-sm text-blue-600">km/h</div>
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-3 sm:p-4 transition-colors">
+              <div class="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1">📊 PROMEDIO</div>
+              <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-200">0</div>
+              <div class="text-xs sm:text-sm text-blue-600 dark:text-blue-300">km/h</div>
             </div>
           </div>
 
@@ -180,11 +189,11 @@
         </div>
 
         <!-- Mensajes -->
-        <div id="error-box" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
-        <div id="success-box" class="hidden mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"></div>
+        <div id="error-box" class="hidden mt-4 p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg text-red-700 dark:text-red-200 text-sm transition-colors"></div>
+        <div id="success-box" class="hidden mt-4 p-3 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg text-green-700 dark:text-green-200 text-sm transition-colors"></div>
 
         <!-- Info GPS -->
-        <div id="gps-info" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+        <div id="gps-info" class="hidden mt-4 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-700 dark:text-blue-200 text-sm transition-colors">
           <p class="mb-1"><strong>Precisión GPS:</strong> <span id="accuracy">--</span> metros</p>
           <p class="mb-1"><strong>Coordenadas:</strong> <span id="coords" class="text-xs break-all">--</span></p>
         </div>
@@ -201,54 +210,54 @@
       </div>
 
       <!-- Usuarios -->
-      <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-          <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span class="text-xl sm:text-2xl">👥</span>
             Usuarios (<span id="user-count">0</span>)
           </h2>
           <button
             id="toggle-map-button"
-            class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
             🗺️ Ver Mapa
           </button>
         </div>
         <div id="users-list" class="space-y-3">
-          <p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>
+          <p class="text-gray-500 dark:text-gray-400 text-center py-8">No hay usuarios conectados</p>
         </div>
       </div>
 
       <!-- Mapa -->
-      <div id="map-container" class="hidden bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+      <div id="map-container" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-          <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span class="text-xl sm:text-2xl">🗺️</span>
             Mapa en Tiempo Real
           </h2>
           <div class="flex flex-wrap gap-2 w-full sm:w-auto">
             <button
               id="fullscreen-button"
-              class="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              class="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               ⛶ Pantalla Completa
             </button>
             <button
               id="clear-tracks-button"
-              class="flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              class="flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               🗑️ Limpiar
             </button>
             <button
               id="close-map-button"
-              class="flex-1 sm:flex-none bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              class="flex-1 sm:flex-none bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               ✕ Cerrar
             </button>
           </div>
         </div>
-        <div id="map" class="w-full h-64 sm:h-96 lg:h-[500px] rounded-lg border-2 border-gray-200"></div>
-        <div class="mt-4 text-xs sm:text-sm text-gray-600">
+        <div id="map" class="w-full h-64 sm:h-96 lg:h-[500px] rounded-lg border-2 border-gray-200 dark:border-gray-700"></div>
+        <div class="mt-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           <p class="font-semibold mb-2">Leyenda:</p>
           <div class="flex flex-wrap gap-3 sm:gap-4">
             <div class="flex items-center gap-2">
@@ -268,13 +277,13 @@
       </div>
 
       <!-- Fullscreen Map -->
-      <div id="map-fullscreen" class="hidden fixed inset-0 bg-white z-50">
+      <div id="map-fullscreen" class="hidden fixed inset-0 bg-white dark:bg-gray-900 z-50 transition-colors">
         <div class="h-full flex flex-col">
-          <div class="bg-white border-b p-3 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-gray-800">🗺️ Mapa - Pantalla Completa</h2>
+          <div class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-3 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white">🗺️ Mapa - Pantalla Completa</h2>
             <button
               id="exit-fullscreen-button"
-              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+              class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
               ✕ Salir
             </button>
@@ -284,7 +293,7 @@
       </div>
 
       <!-- Instrucciones -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 mb-4">
+      <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-200 mb-4 transition-colors">
         <p class="font-semibold mb-2">💡 Pasos para usar:</p>
         <ol class="list-decimal list-inside space-y-1">
           <li>Introduce tu nombre</li>
@@ -297,7 +306,7 @@
       </div>
 
       <!-- Info sobre grupos -->
-      <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 mb-4">
+      <div class="bg-purple-50 dark:bg-purple-900 border border-purple-200 dark:border-purple-700 rounded-lg p-4 text-sm text-purple-800 dark:text-purple-200 mb-4 transition-colors">
         <p class="font-semibold mb-2">🔐 Sistema de Grupos:</p>
         <ul class="list-disc list-inside space-y-1">
           <li>Solo verás usuarios que estén en tu mismo grupo</li>
@@ -308,7 +317,7 @@
       </div>
 
       <!-- Instrucciones pantalla encendida -->
-      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 mb-4">
+      <div class="bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg p-4 text-sm text-amber-800 dark:text-amber-200 mb-4 transition-colors">
         <p class="font-semibold mb-2">⚠️ Importante para GPS continuo:</p>
         <ul class="list-disc list-inside space-y-1">
           <li><strong>Android:</strong> La app mantendrá la pantalla encendida automáticamente. Baja el brillo para ahorrar batería.</li>
@@ -318,7 +327,7 @@
       </div>
 
       <!-- Instrucciones iOS -->
-      <div id="ios-instructions" class="hidden bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 mb-4">
+      <div id="ios-instructions" class="hidden bg-purple-50 dark:bg-purple-900 border border-purple-200 dark:border-purple-700 rounded-lg p-4 text-sm text-purple-800 dark:text-purple-200 mb-4 transition-colors">
         <p class="font-semibold mb-2">🍎 Usuarios de iPhone/iPad:</p>
         <ol class="list-decimal list-inside space-y-1">
           <li>Abre esta página en <strong>Safari</strong> (no Chrome)</li>
@@ -334,7 +343,43 @@
 
   <script>
     console.log('🚀 GPS Tracker v2.1 iniciado');
-    
+
+    // Dark Mode Management
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const html = document.documentElement;
+
+    // Función para actualizar el icono del botón
+    function updateDarkModeIcon(isDark) {
+      darkModeToggle.textContent = isDark ? '☀️' : '🌙';
+    }
+
+    // Inicializar el modo oscuro desde localStorage o preferencia del sistema
+    function initDarkMode() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        html.classList.add('dark');
+        updateDarkModeIcon(true);
+      } else {
+        html.classList.remove('dark');
+        updateDarkModeIcon(false);
+      }
+    }
+
+    // Toggle entre modo claro y oscuro
+    function toggleDarkMode() {
+      const isDark = html.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      updateDarkModeIcon(isDark);
+    }
+
+    // Event listener para el botón
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+
+    // Inicializar modo oscuro al cargar
+    initDarkMode();
+
     // Detectar iOS
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -925,7 +970,7 @@
       elements.usersList.innerHTML = users.map(user => {
         const displayName = user.userName || user.userId.substring(0, 15);
         const isCurrentUser = user.userId === userId;
-        
+
         // Calcular dirección en texto
         let direction = '';
         if (user.bearing !== undefined) {
@@ -933,27 +978,27 @@
           const index = Math.round(user.bearing / 45) % 8;
           direction = dirs[index];
         }
-        
+
         return `
-        <div class="p-4 rounded-lg border-2 ${isCurrentUser ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50 border-gray-200'}">
+        <div class="p-4 rounded-lg border-2 ${isCurrentUser ? 'bg-indigo-50 dark:bg-indigo-900 border-indigo-300 dark:border-indigo-700' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'} transition-colors">
           <div class="flex items-center justify-between">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-lg font-semibold text-gray-800">${displayName}</span>
-                ${isCurrentUser ? '<span class="text-xs bg-indigo-500 text-white px-2 py-1 rounded-full">Tú</span>' : ''}
+                <span class="text-lg font-semibold text-gray-800 dark:text-white">${displayName}</span>
+                ${isCurrentUser ? '<span class="text-xs bg-indigo-500 dark:bg-indigo-600 text-white px-2 py-1 rounded-full">Tú</span>' : ''}
               </div>
-              <div class="text-xs text-gray-500 font-mono truncate">
+              <div class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate">
                 ID: ${user.userId.substring(0, 20)}...
               </div>
-              <div class="flex items-center gap-3 mt-2 text-sm text-gray-600">
+              <div class="flex items-center gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>🧭 ${direction || '--'}</span>
                 <span>🏆 ${user.maxSpeed || 0} km/h</span>
                 <span class="text-xs">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             </div>
             <div class="text-right ml-4">
-              <div class="text-3xl font-bold text-indigo-600">${user.speed}</div>
-              <div class="text-sm text-gray-600">km/h</div>
+              <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">${user.speed}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">km/h</div>
             </div>
           </div>
         </div>
