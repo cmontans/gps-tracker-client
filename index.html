@@ -353,12 +353,16 @@
       darkModeToggle.textContent = isDark ? '☀️' : '🌙';
     }
 
-    // Inicializar el modo oscuro desde localStorage o preferencia del sistema
+    // Inicializar el modo oscuro desde localStorage (por defecto: modo oscuro)
     function initDarkMode() {
       const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      // Si no hay preferencia guardada, usar modo oscuro por defecto
+      if (!savedTheme) {
+        html.classList.add('dark');
+        updateDarkModeIcon(true);
+        localStorage.setItem('theme', 'dark');
+      } else if (savedTheme === 'dark') {
         html.classList.add('dark');
         updateDarkModeIcon(true);
       } else {
