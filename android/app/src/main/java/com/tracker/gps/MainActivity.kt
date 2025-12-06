@@ -454,8 +454,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun updateMyLocationOnMap(location: Location) {
         googleMap?.let { map ->
-            val position = LatLng(location.latitude, location.longitude)
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(position, 15f))
+            val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
+            val autoCenterEnabled = prefs.getBoolean(
+                getString(R.string.pref_auto_center_key),
+                true
+            )
+
+            if (autoCenterEnabled) {
+                val position = LatLng(location.latitude, location.longitude)
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(position, 15f))
+            }
         }
     }
 
