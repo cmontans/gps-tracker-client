@@ -96,6 +96,20 @@
                 placeholder="wss://tu-servidor.up.railway.app"
               />
             </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" id="language-label">
+                Idioma
+              </label>
+              <select
+                id="language-select"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-colors"
+              >
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </div>
             <div class="pt-4 border-t dark:border-gray-700">
               <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 ID: <span id="user-id" class="font-mono text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded"></span>
@@ -352,6 +366,568 @@
   <script>
     console.log('🚀 GPS Tracker v2.1 iniciado');
 
+    // ==================== TRANSLATIONS ====================
+    const translations = {
+      es: {
+        // Header
+        title: '🚀 GPS Speed Tracker',
+        subtitle: 'Telemetría de velocidad en tiempo real',
+        version: 'v4.1 - Modo oscuro, visualizador y pantalla completa ✓',
+        settings: '⚙️ Ajustes',
+        screenLocked: '🔒 Pantalla bloqueada',
+
+        // Settings Modal
+        configuration: '⚙️ Configuración',
+        serverUrl: 'URL del Servidor WebSocket',
+        serverPlaceholder: 'wss://tu-servidor.up.railway.app',
+        language: 'Idioma',
+
+        // Config Section
+        yourName: 'Tu Nombre',
+        namePlaceholder: 'Ej: Juan, María, Alex...',
+        nameHelper: 'Así te verán los demás usuarios',
+        groupName: '🔐 Nombre del Grupo',
+        groupPlaceholder: 'Ej: Amigos, Carrera2024, Familia...',
+        groupHelper: 'Solo verás usuarios de tu mismo grupo',
+        startTracking: '▶️ Iniciar Seguimiento',
+
+        // Status Section
+        disconnected: 'Desconectado',
+        connected: 'Conectado',
+        gpsInactive: 'GPS Inactivo',
+        gpsActive: 'GPS Activo',
+        currentSpeed: 'Velocidad Actual',
+        maxSession: '🏆 MÁXIMA SESIÓN',
+        average: '📊 PROMEDIO',
+        resetStats: '🔄 Resetear Estadísticas',
+        groupHorn: '📢 Bocina Grupal',
+        gpsAccuracy: 'Precisión GPS:',
+        coordinates: 'Coordenadas:',
+        meters: 'metros',
+        stopTracking: '⏹️ Detener seguimiento',
+
+        // Users Section
+        users: 'Usuarios',
+        viewMap: '🗺️ Ver Mapa',
+        noUsersConnected: 'No hay usuarios conectados',
+        you: 'Tú',
+
+        // Map Section
+        mapRealTime: 'Mapa en Tiempo Real',
+        fullscreen: '⛶ Pantalla Completa',
+        clean: '🗑️ Limpiar',
+        close: '✕ Cerrar',
+        legend: 'Leyenda:',
+        yourPosition: 'Tu posición',
+        otherUsers: 'Otros usuarios',
+        trajectory: 'Trayectoria',
+        mapFullscreen: '🗺️ Mapa - Pantalla Completa',
+        exit: '✕ Salir',
+
+        // Instructions
+        instructionsTitle: '💡 Pasos para usar:',
+        step1: 'Introduce tu nombre',
+        step2: '<strong>Introduce el nombre del grupo</strong> (debe ser igual para todos los participantes)',
+        step3: 'Activa el GPS en tu móvil',
+        step4: 'Presiona "Iniciar Seguimiento"',
+        step5: 'Permite acceso a ubicación cuando te lo pida',
+        step6: 'Sal al exterior para mejor señal GPS',
+
+        groupSystemTitle: '🔐 Sistema de Grupos:',
+        groupInfo1: 'Solo verás usuarios que estén en tu mismo grupo',
+        groupInfo2: 'El nombre del grupo distingue mayúsculas/minúsculas',
+        groupInfo3: 'Ejemplos: "Amigos", "Carrera2024", "Familia"',
+        groupInfo4: 'Todos los participantes deben usar el <strong>mismo nombre exacto</strong>',
+
+        importantGpsTitle: '⚠️ Importante para GPS continuo:',
+        androidInfo: '<strong>Android:</strong> La app mantendrá la pantalla encendida automáticamente. Baja el brillo para ahorrar batería.',
+        iosInfo: '<strong>iOS:</strong> Ve a Ajustes → Pantalla → Bloqueo automático → "Nunca" mientras usas la app.',
+        installInfo: '<strong>Instalar como app:</strong> Chrome/Safari → Menú → "Añadir a pantalla de inicio" para mejor rendimiento.',
+
+        iosInstructionsTitle: '🍎 Usuarios de iPhone/iPad:',
+        iosStep1: 'Abre esta página en <strong>Safari</strong> (no Chrome)',
+        iosStep2: 'Toca el botón "Compartir" (cuadrado con flecha arriba)',
+        iosStep3: 'Selecciona "Añadir a pantalla de inicio"',
+        iosStep4: 'Abre la app desde el icono en tu pantalla',
+        iosStep5: 'Ve a Ajustes → Safari → Ubicación → "Permitir"',
+        iosStep6: 'Ajustes → Privacidad → Ubicación → Safari → "Mientras se usa"',
+
+        // Messages
+        statsReset: '✓ Estadísticas reseteadas',
+        mustBeTracking: '⚠️ Debes estar en seguimiento para usar la bocina grupal',
+        noConnection: '⚠️ No hay conexión con el servidor',
+        hornActivated: '📢 Bocina activada para todo el grupo!',
+        hornReceived: '📢 ¡{name} ha activado la bocina grupal!',
+        connectedToServer: '✓ Conectado al servidor',
+        tracksCleaned: '✓ Trayectorias limpiadas',
+        screenLockedMsg: '✓ Pantalla bloqueada - No se apagará',
+        connectionError: '⚠️ Error de conexión. Verifica el servidor.',
+        reconnectError: '❌ No se pudo reconectar después de múltiples intentos',
+        enterName: '⚠️ Por favor, introduce tu nombre antes de comenzar',
+        gpsNotAvailable: '❌ GPS no disponible en este dispositivo',
+        permissionDenied: '❌ Permisos denegados. Ve a Configuración → Permisos → Ubicación',
+        positionUnavailable: '⚠️ GPS no disponible. Sal al exterior.',
+        timeout: '⏱️ Tiempo agotado. Verifica que el GPS esté activado.',
+        gpsError: '❌ Error GPS: ',
+        iosWakeLockError: 'iOS: Configura "Bloqueo automático: Nunca" en Ajustes',
+        iosScreenError: 'En iOS: Ve a Ajustes → Pantalla → Bloqueo automático → "Nunca"'
+      },
+      en: {
+        // Header
+        title: '🚀 GPS Speed Tracker',
+        subtitle: 'Real-time speed telemetry',
+        version: 'v4.1 - Dark mode, viewer and fullscreen ✓',
+        settings: '⚙️ Settings',
+        screenLocked: '🔒 Screen locked',
+
+        // Settings Modal
+        configuration: '⚙️ Configuration',
+        serverUrl: 'WebSocket Server URL',
+        serverPlaceholder: 'wss://your-server.up.railway.app',
+        language: 'Language',
+
+        // Config Section
+        yourName: 'Your Name',
+        namePlaceholder: 'E.g: John, Mary, Alex...',
+        nameHelper: 'This is how others will see you',
+        groupName: '🔐 Group Name',
+        groupPlaceholder: 'E.g: Friends, Race2024, Family...',
+        groupHelper: 'You will only see users in your same group',
+        startTracking: '▶️ Start Tracking',
+
+        // Status Section
+        disconnected: 'Disconnected',
+        connected: 'Connected',
+        gpsInactive: 'GPS Inactive',
+        gpsActive: 'GPS Active',
+        currentSpeed: 'Current Speed',
+        maxSession: '🏆 SESSION MAX',
+        average: '📊 AVERAGE',
+        resetStats: '🔄 Reset Statistics',
+        groupHorn: '📢 Group Horn',
+        gpsAccuracy: 'GPS Accuracy:',
+        coordinates: 'Coordinates:',
+        meters: 'meters',
+        stopTracking: '⏹️ Stop tracking',
+
+        // Users Section
+        users: 'Users',
+        viewMap: '🗺️ View Map',
+        noUsersConnected: 'No users connected',
+        you: 'You',
+
+        // Map Section
+        mapRealTime: 'Real-Time Map',
+        fullscreen: '⛶ Fullscreen',
+        clean: '🗑️ Clear',
+        close: '✕ Close',
+        legend: 'Legend:',
+        yourPosition: 'Your position',
+        otherUsers: 'Other users',
+        trajectory: 'Trajectory',
+        mapFullscreen: '🗺️ Map - Fullscreen',
+        exit: '✕ Exit',
+
+        // Instructions
+        instructionsTitle: '💡 Steps to use:',
+        step1: 'Enter your name',
+        step2: '<strong>Enter the group name</strong> (must be the same for all participants)',
+        step3: 'Activate GPS on your mobile',
+        step4: 'Press "Start Tracking"',
+        step5: 'Allow location access when prompted',
+        step6: 'Go outside for better GPS signal',
+
+        groupSystemTitle: '🔐 Group System:',
+        groupInfo1: 'You will only see users in your same group',
+        groupInfo2: 'Group name is case-sensitive',
+        groupInfo3: 'Examples: "Friends", "Race2024", "Family"',
+        groupInfo4: 'All participants must use the <strong>exact same name</strong>',
+
+        importantGpsTitle: '⚠️ Important for continuous GPS:',
+        androidInfo: '<strong>Android:</strong> The app will keep the screen on automatically. Lower brightness to save battery.',
+        iosInfo: '<strong>iOS:</strong> Go to Settings → Display → Auto-Lock → "Never" while using the app.',
+        installInfo: '<strong>Install as app:</strong> Chrome/Safari → Menu → "Add to home screen" for better performance.',
+
+        iosInstructionsTitle: '🍎 iPhone/iPad Users:',
+        iosStep1: 'Open this page in <strong>Safari</strong> (not Chrome)',
+        iosStep2: 'Tap the "Share" button (square with arrow up)',
+        iosStep3: 'Select "Add to Home Screen"',
+        iosStep4: 'Open the app from the icon on your screen',
+        iosStep5: 'Go to Settings → Safari → Location → "Allow"',
+        iosStep6: 'Settings → Privacy → Location → Safari → "While Using"',
+
+        // Messages
+        statsReset: '✓ Statistics reset',
+        mustBeTracking: '⚠️ You must be tracking to use the group horn',
+        noConnection: '⚠️ No connection to server',
+        hornActivated: '📢 Horn activated for the entire group!',
+        hornReceived: '📢 {name} has activated the group horn!',
+        connectedToServer: '✓ Connected to server',
+        tracksCleaned: '✓ Trajectories cleared',
+        screenLockedMsg: '✓ Screen locked - Won\'t turn off',
+        connectionError: '⚠️ Connection error. Check the server.',
+        reconnectError: '❌ Could not reconnect after multiple attempts',
+        enterName: '⚠️ Please enter your name before starting',
+        gpsNotAvailable: '❌ GPS not available on this device',
+        permissionDenied: '❌ Permission denied. Go to Settings → Permissions → Location',
+        positionUnavailable: '⚠️ GPS unavailable. Go outside.',
+        timeout: '⏱️ Timeout. Verify that GPS is activated.',
+        gpsError: '❌ GPS Error: ',
+        iosWakeLockError: 'iOS: Configure "Auto-Lock: Never" in Settings',
+        iosScreenError: 'On iOS: Go to Settings → Display → Auto-Lock → "Never"'
+      },
+      fr: {
+        // Header
+        title: '🚀 GPS Speed Tracker',
+        subtitle: 'Télémétrie de vitesse en temps réel',
+        version: 'v4.1 - Mode sombre, visualiseur et plein écran ✓',
+        settings: '⚙️ Paramètres',
+        screenLocked: '🔒 Écran verrouillé',
+
+        // Settings Modal
+        configuration: '⚙️ Configuration',
+        serverUrl: 'URL du serveur WebSocket',
+        serverPlaceholder: 'wss://votre-serveur.up.railway.app',
+        language: 'Langue',
+
+        // Config Section
+        yourName: 'Votre Nom',
+        namePlaceholder: 'Ex: Jean, Marie, Alex...',
+        nameHelper: 'C\'est ainsi que les autres vous verront',
+        groupName: '🔐 Nom du Groupe',
+        groupPlaceholder: 'Ex: Amis, Course2024, Famille...',
+        groupHelper: 'Vous ne verrez que les utilisateurs de votre groupe',
+        startTracking: '▶️ Démarrer le Suivi',
+
+        // Status Section
+        disconnected: 'Déconnecté',
+        connected: 'Connecté',
+        gpsInactive: 'GPS Inactif',
+        gpsActive: 'GPS Actif',
+        currentSpeed: 'Vitesse Actuelle',
+        maxSession: '🏆 MAX SESSION',
+        average: '📊 MOYENNE',
+        resetStats: '🔄 Réinitialiser les Statistiques',
+        groupHorn: '📢 Klaxon de Groupe',
+        gpsAccuracy: 'Précision GPS:',
+        coordinates: 'Coordonnées:',
+        meters: 'mètres',
+        stopTracking: '⏹️ Arrêter le suivi',
+
+        // Users Section
+        users: 'Utilisateurs',
+        viewMap: '🗺️ Voir la Carte',
+        noUsersConnected: 'Aucun utilisateur connecté',
+        you: 'Vous',
+
+        // Map Section
+        mapRealTime: 'Carte en Temps Réel',
+        fullscreen: '⛶ Plein Écran',
+        clean: '🗑️ Effacer',
+        close: '✕ Fermer',
+        legend: 'Légende:',
+        yourPosition: 'Votre position',
+        otherUsers: 'Autres utilisateurs',
+        trajectory: 'Trajectoire',
+        mapFullscreen: '🗺️ Carte - Plein Écran',
+        exit: '✕ Sortir',
+
+        // Instructions
+        instructionsTitle: '💡 Étapes d\'utilisation:',
+        step1: 'Entrez votre nom',
+        step2: '<strong>Entrez le nom du groupe</strong> (doit être identique pour tous les participants)',
+        step3: 'Activez le GPS sur votre mobile',
+        step4: 'Appuyez sur "Démarrer le Suivi"',
+        step5: 'Autorisez l\'accès à la localisation lorsqu\'on vous le demande',
+        step6: 'Sortez à l\'extérieur pour un meilleur signal GPS',
+
+        groupSystemTitle: '🔐 Système de Groupes:',
+        groupInfo1: 'Vous ne verrez que les utilisateurs de votre groupe',
+        groupInfo2: 'Le nom du groupe est sensible à la casse',
+        groupInfo3: 'Exemples: "Amis", "Course2024", "Famille"',
+        groupInfo4: 'Tous les participants doivent utiliser le <strong>même nom exact</strong>',
+
+        importantGpsTitle: '⚠️ Important pour le GPS continu:',
+        androidInfo: '<strong>Android:</strong> L\'application maintiendra l\'écran allumé automatiquement. Baissez la luminosité pour économiser la batterie.',
+        iosInfo: '<strong>iOS:</strong> Allez dans Réglages → Affichage → Verrouillage auto → "Jamais" pendant l\'utilisation de l\'app.',
+        installInfo: '<strong>Installer comme app:</strong> Chrome/Safari → Menu → "Ajouter à l\'écran d\'accueil" pour de meilleures performances.',
+
+        iosInstructionsTitle: '🍎 Utilisateurs iPhone/iPad:',
+        iosStep1: 'Ouvrez cette page dans <strong>Safari</strong> (pas Chrome)',
+        iosStep2: 'Appuyez sur le bouton "Partager" (carré avec flèche vers le haut)',
+        iosStep3: 'Sélectionnez "Sur l\'écran d\'accueil"',
+        iosStep4: 'Ouvrez l\'app depuis l\'icône sur votre écran',
+        iosStep5: 'Allez dans Réglages → Safari → Localisation → "Autoriser"',
+        iosStep6: 'Réglages → Confidentialité → Localisation → Safari → "Lorsque l\'app est active"',
+
+        // Messages
+        statsReset: '✓ Statistiques réinitialisées',
+        mustBeTracking: '⚠️ Vous devez être en suivi pour utiliser le klaxon de groupe',
+        noConnection: '⚠️ Pas de connexion au serveur',
+        hornActivated: '📢 Klaxon activé pour tout le groupe!',
+        hornReceived: '📢 {name} a activé le klaxon de groupe!',
+        connectedToServer: '✓ Connecté au serveur',
+        tracksCleaned: '✓ Trajectoires effacées',
+        screenLockedMsg: '✓ Écran verrouillé - Ne s\'éteindra pas',
+        connectionError: '⚠️ Erreur de connexion. Vérifiez le serveur.',
+        reconnectError: '❌ Impossible de se reconnecter après plusieurs tentatives',
+        enterName: '⚠️ Veuillez entrer votre nom avant de commencer',
+        gpsNotAvailable: '❌ GPS non disponible sur cet appareil',
+        permissionDenied: '❌ Permission refusée. Allez dans Réglages → Autorisations → Localisation',
+        positionUnavailable: '⚠️ GPS non disponible. Sortez à l\'extérieur.',
+        timeout: '⏱️ Délai expiré. Vérifiez que le GPS est activé.',
+        gpsError: '❌ Erreur GPS: ',
+        iosWakeLockError: 'iOS: Configurez "Verrouillage auto: Jamais" dans Réglages',
+        iosScreenError: 'Sur iOS: Allez dans Réglages → Affichage → Verrouillage auto → "Jamais"'
+      },
+      de: {
+        // Header
+        title: '🚀 GPS Speed Tracker',
+        subtitle: 'Echtzeit-Geschwindigkeitstelemetrie',
+        version: 'v4.1 - Dunkelmodus, Viewer und Vollbild ✓',
+        settings: '⚙️ Einstellungen',
+        screenLocked: '🔒 Bildschirm gesperrt',
+
+        // Settings Modal
+        configuration: '⚙️ Konfiguration',
+        serverUrl: 'WebSocket-Server-URL',
+        serverPlaceholder: 'wss://ihr-server.up.railway.app',
+        language: 'Sprache',
+
+        // Config Section
+        yourName: 'Ihr Name',
+        namePlaceholder: 'Z.B: Hans, Maria, Alex...',
+        nameHelper: 'So werden andere Sie sehen',
+        groupName: '🔐 Gruppenname',
+        groupPlaceholder: 'Z.B: Freunde, Rennen2024, Familie...',
+        groupHelper: 'Sie sehen nur Benutzer in Ihrer Gruppe',
+        startTracking: '▶️ Tracking Starten',
+
+        // Status Section
+        disconnected: 'Getrennt',
+        connected: 'Verbunden',
+        gpsInactive: 'GPS Inaktiv',
+        gpsActive: 'GPS Aktiv',
+        currentSpeed: 'Aktuelle Geschwindigkeit',
+        maxSession: '🏆 SESSION MAX',
+        average: '📊 DURCHSCHNITT',
+        resetStats: '🔄 Statistiken Zurücksetzen',
+        groupHorn: '📢 Gruppen-Hupe',
+        gpsAccuracy: 'GPS-Genauigkeit:',
+        coordinates: 'Koordinaten:',
+        meters: 'Meter',
+        stopTracking: '⏹️ Tracking stoppen',
+
+        // Users Section
+        users: 'Benutzer',
+        viewMap: '🗺️ Karte Anzeigen',
+        noUsersConnected: 'Keine Benutzer verbunden',
+        you: 'Sie',
+
+        // Map Section
+        mapRealTime: 'Echtzeit-Karte',
+        fullscreen: '⛶ Vollbild',
+        clean: '🗑️ Löschen',
+        close: '✕ Schließen',
+        legend: 'Legende:',
+        yourPosition: 'Ihre Position',
+        otherUsers: 'Andere Benutzer',
+        trajectory: 'Trajektorie',
+        mapFullscreen: '🗺️ Karte - Vollbild',
+        exit: '✕ Beenden',
+
+        // Instructions
+        instructionsTitle: '💡 Schritte zur Verwendung:',
+        step1: 'Geben Sie Ihren Namen ein',
+        step2: '<strong>Geben Sie den Gruppennamen ein</strong> (muss für alle Teilnehmer gleich sein)',
+        step3: 'Aktivieren Sie GPS auf Ihrem Handy',
+        step4: 'Drücken Sie "Tracking Starten"',
+        step5: 'Erlauben Sie den Standortzugriff, wenn Sie dazu aufgefordert werden',
+        step6: 'Gehen Sie nach draußen für ein besseres GPS-Signal',
+
+        groupSystemTitle: '🔐 Gruppensystem:',
+        groupInfo1: 'Sie sehen nur Benutzer in Ihrer Gruppe',
+        groupInfo2: 'Beim Gruppennamen wird Groß-/Kleinschreibung beachtet',
+        groupInfo3: 'Beispiele: "Freunde", "Rennen2024", "Familie"',
+        groupInfo4: 'Alle Teilnehmer müssen den <strong>exakt gleichen Namen</strong> verwenden',
+
+        importantGpsTitle: '⚠️ Wichtig für kontinuierliches GPS:',
+        androidInfo: '<strong>Android:</strong> Die App hält den Bildschirm automatisch an. Reduzieren Sie die Helligkeit, um Batterie zu sparen.',
+        iosInfo: '<strong>iOS:</strong> Gehen Sie zu Einstellungen → Anzeige → Automatische Sperre → "Nie" während der App-Nutzung.',
+        installInfo: '<strong>Als App installieren:</strong> Chrome/Safari → Menü → "Zum Startbildschirm hinzufügen" für bessere Leistung.',
+
+        iosInstructionsTitle: '🍎 iPhone/iPad-Benutzer:',
+        iosStep1: 'Öffnen Sie diese Seite in <strong>Safari</strong> (nicht Chrome)',
+        iosStep2: 'Tippen Sie auf die Schaltfläche "Teilen" (Quadrat mit Pfeil nach oben)',
+        iosStep3: 'Wählen Sie "Zum Home-Bildschirm"',
+        iosStep4: 'Öffnen Sie die App über das Symbol auf Ihrem Bildschirm',
+        iosStep5: 'Gehen Sie zu Einstellungen → Safari → Standort → "Erlauben"',
+        iosStep6: 'Einstellungen → Datenschutz → Standort → Safari → "Beim Verwenden"',
+
+        // Messages
+        statsReset: '✓ Statistiken zurückgesetzt',
+        mustBeTracking: '⚠️ Sie müssen tracken, um die Gruppen-Hupe zu verwenden',
+        noConnection: '⚠️ Keine Verbindung zum Server',
+        hornActivated: '📢 Hupe für die ganze Gruppe aktiviert!',
+        hornReceived: '📢 {name} hat die Gruppen-Hupe aktiviert!',
+        connectedToServer: '✓ Mit Server verbunden',
+        tracksCleaned: '✓ Trajektorien gelöscht',
+        screenLockedMsg: '✓ Bildschirm gesperrt - Schaltet sich nicht aus',
+        connectionError: '⚠️ Verbindungsfehler. Überprüfen Sie den Server.',
+        reconnectError: '❌ Konnte nach mehreren Versuchen nicht wieder verbinden',
+        enterName: '⚠️ Bitte geben Sie Ihren Namen ein, bevor Sie beginnen',
+        gpsNotAvailable: '❌ GPS auf diesem Gerät nicht verfügbar',
+        permissionDenied: '❌ Berechtigung verweigert. Gehen Sie zu Einstellungen → Berechtigungen → Standort',
+        positionUnavailable: '⚠️ GPS nicht verfügbar. Gehen Sie nach draußen.',
+        timeout: '⏱️ Zeitüberschreitung. Überprüfen Sie, ob GPS aktiviert ist.',
+        gpsError: '❌ GPS-Fehler: ',
+        iosWakeLockError: 'iOS: Konfigurieren Sie "Automatische Sperre: Nie" in Einstellungen',
+        iosScreenError: 'Auf iOS: Gehen Sie zu Einstellungen → Anzeige → Automatische Sperre → "Nie"'
+      }
+    };
+
+    // Current language (default: Spanish)
+    let currentLanguage = localStorage.getItem('language') || 'es';
+
+    // Translation helper function
+    function t(key) {
+      return translations[currentLanguage]?.[key] || translations['es'][key] || key;
+    }
+
+    // Function to update all UI text
+    function updateUILanguage() {
+      // Update HTML lang attribute
+      document.documentElement.lang = currentLanguage;
+
+      // Update all translatable elements
+      document.querySelector('h1').innerHTML = t('title');
+      document.querySelectorAll('p.text-sm.sm\\:text-base')[0].textContent = t('subtitle');
+      document.querySelectorAll('p.text-xs.text-gray-400')[0].textContent = t('version');
+      document.getElementById('settings-button').innerHTML = t('settings');
+
+      // Wake lock status
+      const wakeLockSpan = document.querySelector('#wake-lock-status span');
+      if (wakeLockSpan) {
+        wakeLockSpan.textContent = t('screenLocked');
+      }
+
+      // Settings modal
+      document.querySelector('#settings-modal h2').innerHTML = t('configuration');
+      document.querySelectorAll('#settings-modal label')[0].textContent = t('serverUrl');
+      document.getElementById('server-url').placeholder = t('serverPlaceholder');
+      elements.languageLabel.textContent = t('language');
+
+      // Config section
+      document.querySelectorAll('label.block.text-sm')[0].textContent = t('yourName');
+      document.getElementById('user-name').placeholder = t('namePlaceholder');
+      document.querySelectorAll('p.text-xs.text-gray-500')[0].textContent = t('nameHelper');
+      document.querySelectorAll('label.block.text-sm')[1].innerHTML = t('groupName');
+      document.getElementById('group-name').placeholder = t('groupPlaceholder');
+      document.querySelectorAll('p.text-xs.text-gray-500')[1].textContent = t('groupHelper');
+
+      // Track button
+      if (!isTracking) {
+        elements.trackButton.textContent = t('startTracking');
+      }
+
+      // Status section
+      if (elements.connectionStatus.textContent === 'Conectado' || elements.connectionStatus.textContent === 'Connected' ||
+          elements.connectionStatus.textContent === 'Connecté' || elements.connectionStatus.textContent === 'Verbunden') {
+        elements.connectionStatus.textContent = t('connected');
+      } else {
+        elements.connectionStatus.textContent = t('disconnected');
+      }
+
+      if (elements.gpsStatus.textContent.includes('Activ') || elements.gpsStatus.textContent.includes('Aktiv')) {
+        elements.gpsStatus.textContent = t('gpsActive');
+      } else {
+        elements.gpsStatus.textContent = t('gpsInactive');
+      }
+
+      document.querySelectorAll('.text-sm.text-gray-600.dark\\:text-gray-400.mb-1')[0].textContent = t('currentSpeed');
+      document.querySelectorAll('.text-xs')[2].textContent = t('maxSession');
+      document.querySelectorAll('.text-xs')[3].textContent = t('average');
+      document.getElementById('reset-stats-button').innerHTML = t('resetStats');
+      document.getElementById('group-horn-button').innerHTML = t('groupHorn');
+      document.getElementById('stop-button').innerHTML = t('stopTracking');
+
+      // Users section
+      const usersTitle = document.querySelector('h2.text-lg.sm\\:text-xl');
+      if (usersTitle && usersTitle.textContent.includes('Usuarios') || usersTitle.textContent.includes('Users') ||
+          usersTitle.textContent.includes('Utilisateurs') || usersTitle.textContent.includes('Benutzer')) {
+        const count = document.getElementById('user-count').textContent;
+        usersTitle.innerHTML = `<span class="text-xl sm:text-2xl">👥</span> ${t('users')} (<span id="user-count">${count}</span>)`;
+      }
+      document.getElementById('toggle-map-button').innerHTML = t('viewMap');
+
+      // Map section
+      document.getElementById('fullscreen-button').innerHTML = t('fullscreen');
+      document.getElementById('clear-tracks-button').innerHTML = t('clean');
+      document.getElementById('close-map-button').innerHTML = t('close');
+      document.getElementById('exit-fullscreen-button').innerHTML = t('exit');
+
+      // Instructions
+      const instructionsTitle = document.querySelector('.bg-blue-50 p.font-semibold');
+      if (instructionsTitle) {
+        instructionsTitle.textContent = t('instructionsTitle');
+      }
+
+      const instructionsList = document.querySelectorAll('.bg-blue-50 ol li');
+      if (instructionsList.length >= 6) {
+        instructionsList[0].textContent = t('step1');
+        instructionsList[1].innerHTML = t('step2');
+        instructionsList[2].textContent = t('step3');
+        instructionsList[3].textContent = t('step4');
+        instructionsList[4].textContent = t('step5');
+        instructionsList[5].textContent = t('step6');
+      }
+
+      // Group system
+      const groupTitle = document.querySelector('.bg-purple-50 p.font-semibold');
+      if (groupTitle) {
+        groupTitle.textContent = t('groupSystemTitle');
+      }
+
+      const groupList = document.querySelectorAll('.bg-purple-50 ul li');
+      if (groupList.length >= 4) {
+        groupList[0].textContent = t('groupInfo1');
+        groupList[1].textContent = t('groupInfo2');
+        groupList[2].textContent = t('groupInfo3');
+        groupList[3].innerHTML = t('groupInfo4');
+      }
+
+      // Important GPS info
+      const gpsTitle = document.querySelector('.bg-amber-50 p.font-semibold');
+      if (gpsTitle) {
+        gpsTitle.textContent = t('importantGpsTitle');
+      }
+
+      const gpsList = document.querySelectorAll('.bg-amber-50 ul li');
+      if (gpsList.length >= 3) {
+        gpsList[0].innerHTML = t('androidInfo');
+        gpsList[1].innerHTML = t('iosInfo');
+        gpsList[2].innerHTML = t('installInfo');
+      }
+
+      // iOS instructions
+      const iosTitle = document.querySelector('#ios-instructions p.font-semibold');
+      if (iosTitle) {
+        iosTitle.textContent = t('iosInstructionsTitle');
+      }
+
+      const iosList = document.querySelectorAll('#ios-instructions ol li');
+      if (iosList.length >= 6) {
+        iosList[0].innerHTML = t('iosStep1');
+        iosList[1].innerHTML = t('iosStep2');
+        iosList[2].innerHTML = t('iosStep3');
+        iosList[3].innerHTML = t('iosStep4');
+        iosList[4].innerHTML = t('iosStep5');
+        iosList[5].innerHTML = t('iosStep6');
+      }
+
+      console.log('✓ UI language updated to:', currentLanguage);
+    }
+
     // Dark Mode Management
     const darkModeToggle = document.getElementById('dark-mode-toggle');
     const html = document.documentElement;
@@ -466,7 +1042,9 @@
       mapFullscreen: document.getElementById('map-fullscreen'),
       settingsButton: document.getElementById('settings-button'),
       settingsModal: document.getElementById('settings-modal'),
-      closeSettings: document.getElementById('close-settings')
+      closeSettings: document.getElementById('close-settings'),
+      languageSelect: document.getElementById('language-select'),
+      languageLabel: document.getElementById('language-label')
     };
 
     // Inicializar
@@ -474,6 +1052,10 @@
     elements.userName.value = userName;
     elements.groupName.value = groupName;
     elements.serverUrl.value = serverUrl;
+    elements.languageSelect.value = currentLanguage;
+
+    // Initialize UI language on load
+    updateUILanguage();
 
     // VERIFICACIÓN CRÍTICA
     console.log('🔍 VERIFICACIÓN DE ELEMENTOS:');
@@ -506,6 +1088,14 @@
       localStorage.setItem('serverUrl', serverUrl);
     });
 
+    // Language selector
+    elements.languageSelect.addEventListener('change', (e) => {
+      currentLanguage = e.target.value;
+      localStorage.setItem('language', currentLanguage);
+      updateUILanguage();
+      console.log('🌍 Language changed to:', currentLanguage);
+    });
+
     // Modal de configuración
     elements.settingsButton.addEventListener('click', () => {
       elements.settingsModal.classList.remove('hidden');
@@ -527,7 +1117,7 @@
       speedReadings = [];
       elements.maxSpeed.textContent = '0.0';
       elements.avgSpeed.textContent = '0.0';
-      showSuccess('✓ Estadísticas reseteadas');
+      showSuccess(t('statsReset'));
       console.log('🔄 Estadísticas reseteadas');
     });
 
@@ -577,12 +1167,12 @@
     // Botón de bocina grupal
     elements.groupHornButton.addEventListener('click', () => {
       if (!isTracking) {
-        showError('⚠️ Debes estar en seguimiento para usar la bocina grupal');
+        showError(t('mustBeTracking'));
         return;
       }
 
       if (!ws || ws.readyState !== WebSocket.OPEN) {
-        showError('⚠️ No hay conexión con el servidor');
+        showError(t('noConnection'));
         return;
       }
 
@@ -597,7 +1187,7 @@
 
       // Reproducir sonido localmente también
       playHornSound();
-      showSuccess('📢 Bocina activada para todo el grupo!');
+      showSuccess(t('hornActivated'));
       console.log('📢 Señal de bocina enviada al grupo:', groupName || 'default');
     });
 
@@ -786,7 +1376,7 @@
     function clearMapTracks() {
       const activeMap = isFullscreen ? mapFullscreen : map;
       if (!activeMap) return;
-      
+
       // Eliminar todas las polylines
       Object.keys(trackPolylines).forEach(uid => {
         if (trackPolylines[uid]) {
@@ -794,13 +1384,13 @@
           delete trackPolylines[uid];
         }
       });
-      
+
       // Vaciar arrays de tracks
       Object.keys(userTracks).forEach(uid => {
         userTracks[uid] = [];
       });
-      
-      showSuccess('✓ Trayectorias limpiadas');
+
+      showSuccess(t('tracksCleaned'));
       console.log('🗑️ Tracks del mapa limpiados');
     }
 
@@ -889,7 +1479,7 @@
       if (!('wakeLock' in navigator)) {
         console.log('⚠️ Wake Lock no soportado en este navegador');
         if (isIOS) {
-          showError('En iOS: Ve a Ajustes → Pantalla → Bloqueo automático → "Nunca"');
+          showError(t('iosScreenError'));
         }
         return;
       }
@@ -898,8 +1488,8 @@
         wakeLock = await navigator.wakeLock.request('screen');
         console.log('✓ Wake Lock activado - Pantalla se mantendrá encendida');
         elements.wakeLockStatus.classList.remove('hidden');
-        showSuccess('✓ Pantalla bloqueada - No se apagará');
-        
+        showSuccess(t('screenLockedMsg'));
+
         wakeLock.addEventListener('release', () => {
           console.log('Wake Lock liberado');
           elements.wakeLockStatus.classList.add('hidden');
@@ -907,7 +1497,7 @@
       } catch (err) {
         console.log('❌ Wake Lock error:', err);
         if (isIOS) {
-          showError('iOS: Configura "Bloqueo automático: Nunca" en Ajustes');
+          showError(t('iosWakeLockError'));
         }
       }
     }
@@ -971,14 +1561,14 @@
     // Actualizar estado de conexión
     function updateConnectionStatus(connected) {
       elements.wifiIcon.textContent = connected ? '✅' : '❌';
-      elements.connectionStatus.textContent = connected ? 'Conectado' : 'Desconectado';
+      elements.connectionStatus.textContent = connected ? t('connected') : t('disconnected');
       elements.connectionStatus.className = `text-sm font-medium ${connected ? 'text-green-600' : 'text-red-600'}`;
     }
 
     // Actualizar estado GPS
     function updateGpsStatus(active) {
       elements.gpsIcon.textContent = active ? '✅' : '📍';
-      elements.gpsStatus.textContent = active ? 'GPS Activo' : 'GPS Inactivo';
+      elements.gpsStatus.textContent = active ? t('gpsActive') : t('gpsInactive');
       elements.gpsStatus.className = `text-sm font-medium ${active ? 'text-green-600' : 'text-gray-600'}`;
     }
 
@@ -992,17 +1582,17 @@
         
         ws.onopen = () => {
           updateConnectionStatus(true);
-          showSuccess('✓ Conectado al servidor');
+          showSuccess(t('connectedToServer'));
           reconnectAttempts = 0;
-          
-          ws.send(JSON.stringify({ 
-            type: 'register', 
+
+          ws.send(JSON.stringify({
+            type: 'register',
             userId,
             userName: userName || 'Usuario',
             groupName: groupName || 'default'
           }));
           console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
-          
+
           startKeepAlive();
         };
 
@@ -1022,14 +1612,14 @@
             // Solo reproducir si no es el usuario actual quien la envió
             if (data.userId !== userId) {
               playHornSound();
-              showSuccess(`📢 ¡${senderName} ha activado la bocina grupal!`);
+              showSuccess(t('hornReceived').replace('{name}', senderName));
             }
           }
         };
 
         ws.onerror = (error) => {
           console.error('❌ Error WebSocket:', error);
-          showError('⚠️ Error de conexión. Verifica el servidor.');
+          showError(t('connectionError'));
           updateConnectionStatus(false);
         };
 
@@ -1037,14 +1627,14 @@
           console.log('🔌 Conexión cerrada');
           updateConnectionStatus(false);
           stopKeepAlive();
-          
+
           if (isTracking && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
             reconnectAttempts++;
             const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
             console.log(`↻ Reconectando en ${delay/1000}s (intento ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
             setTimeout(connectWebSocket, delay);
           } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-            showError('❌ No se pudo reconectar después de múltiples intentos');
+            showError(t('reconnectError'));
           }
         };
       } catch (error) {
@@ -1056,9 +1646,9 @@
     // Actualizar lista de usuarios
     function updateUsersList() {
       elements.userCount.textContent = users.length;
-      
+
       if (users.length === 0) {
-        elements.usersList.innerHTML = '<p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>';
+        elements.usersList.innerHTML = `<p class="text-gray-500 dark:text-gray-400 text-center py-8">${t('noUsersConnected')}</p>`;
         return;
       }
 
@@ -1080,7 +1670,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
                 <span class="text-lg font-semibold text-gray-800 dark:text-white">${displayName}</span>
-                ${isCurrentUser ? '<span class="text-xs bg-indigo-500 dark:bg-indigo-600 text-white px-2 py-1 rounded-full">Tú</span>' : ''}
+                ${isCurrentUser ? `<span class="text-xs bg-indigo-500 dark:bg-indigo-600 text-white px-2 py-1 rounded-full">${t('you')}</span>` : ''}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate">
                 ID: ${user.userId.substring(0, 20)}...
@@ -1103,16 +1693,16 @@
     // Iniciar seguimiento GPS
     function startTracking() {
       console.log('🎯 Iniciando seguimiento GPS...');
-      
+
       // Validar nombre
       if (!userName || userName.trim() === '') {
-        showError('⚠️ Por favor, introduce tu nombre antes de comenzar');
+        showError(t('enterName'));
         elements.userName.focus();
         return;
       }
-      
+
       if (!navigator.geolocation) {
-        showError('❌ GPS no disponible en este dispositivo');
+        showError(t('gpsNotAvailable'));
         return;
       }
 
@@ -1190,16 +1780,16 @@
           let errorMsg = '';
           switch(error.code) {
             case error.PERMISSION_DENIED:
-              errorMsg = '❌ Permisos denegados. Ve a Configuración → Permisos → Ubicación';
+              errorMsg = t('permissionDenied');
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMsg = '⚠️ GPS no disponible. Sal al exterior.';
+              errorMsg = t('positionUnavailable');
               break;
             case error.TIMEOUT:
-              errorMsg = '⏱️ Tiempo agotado. Verifica que el GPS esté activado.';
+              errorMsg = t('timeout');
               break;
             default:
-              errorMsg = '❌ Error GPS: ' + error.message;
+              errorMsg = t('gpsError') + error.message;
           }
           showError(errorMsg);
           updateGpsStatus(false);
@@ -1208,7 +1798,7 @@
       );
 
       isTracking = true;
-      elements.trackButton.textContent = 'Detener Seguimiento';
+      elements.trackButton.textContent = t('stopTracking');
       elements.trackButton.className = 'w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
     }
 
@@ -1243,9 +1833,9 @@
       elements.statusSection.style.display = 'none';
       
       // Restaurar botón iniciar a su estilo original
-      elements.trackButton.textContent = '▶️ Iniciar Seguimiento';
+      elements.trackButton.textContent = t('startTracking');
       elements.trackButton.className = 'flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
-      
+
       console.log('✅ Status oculto, Config visible');
       console.log('✅ SEGUIMIENTO DETENIDO');
     }
