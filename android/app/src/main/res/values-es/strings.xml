@@ -38,6 +38,7 @@
     <!-- Settings -->
     <string name="server_url">URL del Servidor</string>
     <string name="user_id">ID de Usuario</string>
+    <string name="default_server_url">wss://gps-tracker-server-production-5900.up.railway.app</string>
 
     <!-- Messages -->
     <string name="enter_name">Por favor ingresa tu nombre</string>
@@ -50,4 +51,9 @@
     <!-- Errors -->
     <string name="gps_error">Error de GPS: %1$s</string>
     <string name="connection_error">Error de conexión</string>
+
+    <!-- Preferences -->
+    <string name="pref_server_url_key">server_url</string>
+    <string name="pref_user_id_key">user_id</string>
+    <string name="pref_dark_mode_key">dark_mode</string>
 </resources>
