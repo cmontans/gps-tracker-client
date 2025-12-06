@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">3WB Speed Tracker</string>
+
+    <!-- Main Screen -->
+    <string name="your_name">Tu Nombre</string>
+    <string name="group_name">Nombre del Grupo</string>
+    <string name="start_tracking">▶️ Iniciar Seguimiento</string>
+    <string name="stop_tracking">⏹️ Detener Seguimiento</string>
+    <string name="settings">⚙️ Ajustes</string>
+
+    <!-- Speed Statistics -->
+    <string name="current_speed">Velocidad Actual</string>
+    <string name="max_speed">Velocidad Máxima</string>
+    <string name="avg_speed">Velocidad Promedio</string>
+    <string name="kmh">km/h</string>
+
+    <!-- Status -->
+    <string name="status_disconnected">Desconectado</string>
+    <string name="status_connecting">Conectando...</string>
+    <string name="status_connected">Conectado</string>
+    <string name="gps_searching">Buscando GPS...</string>
+    <string name="gps_active">GPS Activo</string>
+
+    <!-- Map -->
+    <string name="view_map">🗺️ Ver Mapa</string>
+    <string name="hide_map">Ocultar Mapa</string>
+    <string name="fullscreen_map">⛶ Pantalla Completa</string>
+    <string name="clear_tracks">Limpiar Rastros</string>
+
+    <!-- Group -->
+    <string name="group_horn">📢 Bocina Grupal</string>
+    <string name="users_in_group">Usuarios en el Grupo</string>
+
+    <!-- Actions -->
+    <string name="reset_stats">🔄 Resetear Estadísticas</string>
+
+    <!-- Settings -->
+    <string name="server_url">URL del Servidor</string>
+    <string name="user_id">ID de Usuario</string>
+
+    <!-- Messages -->
+    <string name="enter_name">Por favor ingresa tu nombre</string>
+    <string name="enter_group">Por favor ingresa un nombre de grupo</string>
+    <string name="location_permission_required">Se requiere permiso de ubicación para el seguimiento GPS</string>
+    <string name="notification_permission_required">Se requiere permiso de notificaciones para Android 13+</string>
+    <string name="tracking_active">Seguimiento GPS Activo</string>
+    <string name="tracking_notification_text">Velocidad: %1$.1f km/h</string>
+
+    <!-- Errors -->
+    <string name="gps_error">Error de GPS: %1$s</string>
+    <string name="connection_error">Error de conexión</string>
+</resources>
