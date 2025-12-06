@@ -5,44 +5,93 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GPS Tracker">
+  <meta name="theme-color" content="#4F46E5">
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiR1BTIFNwZWVkIFRyYWNrZXIiLCJzaG9ydF9uYW1lIjoiR1BTIFRyYWNrZXIiLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzRGNDZFNSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnJTNFJTNDY2lyY2xlIGN4PSc1MCcgY3k9JzUwJyByPSc0MCcgZmlsbD0nJTIzNEY0NkU1Jy8lM0UlM0N0ZXh0IHg9JzUwJyB5PSc2MCcgZm9udC1zaXplPSc0MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnJTNF8J+agCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn0seyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnJTNFJTNDY2lyY2xlIGN4PSc1MCcgY3k9JzUwJyByPSc0MCcgZmlsbD0nJTIzNEY0NkU1Jy8lM0UlM0N0ZXh0IHg9JzUwJyB5PSc2MCcgZm9udC1zaXplPSc0MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnJTNF8J+agCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
   <title>GPS Speed Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          screens: {
+            'xs': '475px',
+          }
+        }
+      }
+    }
+  </script>
   <style>
     body {
       overscroll-behavior: contain;
       -webkit-tap-highlight-color: transparent;
-      transition: filter 0.3s ease;
+      -webkit-user-select: none;
+      user-select: none;
     }
     * {
       box-sizing: border-box;
     }
-    body.night-mode {
-      filter: brightness(0.4);
-    }
-    body.night-mode-medium {
-      filter: brightness(0.6);
-    }
-    body.night-mode-light {
-      filter: brightness(0.8);
+    @media (display-mode: standalone) {
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
     }
   </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 m-0 p-0">
-  <div id="app" class="min-h-screen p-4">
-    <div class="max-w-4xl mx-auto">
-      <!-- Header -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
+  <div id="app" class="min-h-screen p-2 sm:p-4">
+    <div class="max-w-7xl mx-auto">
+      <!-- Header with Settings -->
+      <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
-            <p class="text-gray-600">Telemetría de velocidad en tiempo real</p>
-            <p class="text-xs text-gray-400 mt-2">v4.0 Final ✔</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
+            <p class="text-sm sm:text-base text-gray-600">Telemetría de velocidad en tiempo real</p>
+            <p class="text-xs text-gray-400 mt-2">v4.0 - Modo visualizador y pantalla completa ✓</p>
           </div>
-          <div class="flex gap-2">
-            <button id="brightness-button" class="text-2xl hover:bg-gray-100 p-2 rounded-lg" title="Modo Nocturno">🌙</button>
-            <button id="settings-button" class="text-2xl hover:bg-gray-100 p-2 rounded-lg" title="Configuración">⚙️</button>
+          <button
+            id="settings-button"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          >
+            ⚙️ Ajustes
+          </button>
+        </div>
+        <div id="wake-lock-status" class="hidden mt-2 text-xs">
+          <span class="bg-green-100 text-green-800 px-2 py-1 rounded">🔒 Pantalla bloqueada</span>
+        </div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div class="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-800">⚙️ Configuración</h2>
+            <button id="close-settings" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">
+              ✕
+            </button>
+          </div>
+          <div class="p-4 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                URL del Servidor WebSocket
+              </label>
+              <input
+                id="server-url"
+                type="text"
+                value="wss://gps-tracker-server-production-5900.up.railway.app"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                placeholder="wss://tu-servidor.up.railway.app"
+              />
+            </div>
+            <div class="pt-4 border-t">
+              <p class="text-sm text-gray-500 mb-2">
+                ID: <span id="user-id" class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"></span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -50,24 +99,46 @@
       <!-- Configuración -->
       <div id="config-section" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Tu Nombre</label>
-          <input id="user-name" type="text" maxlength="20" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Ej: Juan, María, Alex..." />
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Tu Nombre
+          </label>
+          <input
+            id="user-name"
+            type="text"
+            maxlength="20"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Ej: Juan, María, Alex..."
+          />
           <p class="text-xs text-gray-500 mt-1">Así te verán los demás usuarios</p>
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">📍 Nombre del Grupo</label>
-          <input id="group-name" type="text" maxlength="30" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Ej: Amigos, Carrera2024, Familia..." />
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            🔐 Nombre del Grupo
+          </label>
+          <input
+            id="group-name"
+            type="text"
+            maxlength="30"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            placeholder="Ej: Amigos, Carrera2024, Familia..."
+          />
           <p class="text-xs text-gray-500 mt-1">Solo verás usuarios de tu mismo grupo</p>
         </div>
         
         <div class="flex gap-2">
-          <button id="track-button" class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors">▶️ Iniciar Seguimiento</button>
+          <button
+            id="track-button"
+            class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+          >
+            ▶️ Iniciar Seguimiento
+          </button>
         </div>
       </div>
 
       <!-- Estado y Estadísticas -->
       <div id="status-section" style="display: none;" class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+        <!-- Conexión y GPS -->
         <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div class="flex items-center gap-2">
             <span id="wifi-icon" class="text-xl sm:text-2xl">📡</span>
@@ -79,6 +150,7 @@
           </div>
         </div>
 
+        <!-- Velocidad y Estadísticas -->
         <div class="text-center py-4 sm:py-8">
           <div class="mb-4">
             <div class="text-sm text-gray-600 mb-1">Velocidad Actual</div>
@@ -88,7 +160,7 @@
           
           <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-6">
             <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 sm:p-4">
-              <div class="text-xs text-green-600 font-semibold mb-1">🏆 MÁXIMA</div>
+              <div class="text-xs text-green-600 font-semibold mb-1">🏆 MÁXIMA SESIÓN</div>
               <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700">0</div>
               <div class="text-xs sm:text-sm text-green-600">km/h</div>
             </div>
@@ -99,73 +171,115 @@
             </div>
           </div>
 
-          <button id="reset-stats-button" class="mt-4 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">🔄 Resetear Estadísticas</button>
+          <button
+            id="reset-stats-button"
+            class="mt-4 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          >
+            🔄 Resetear Estadísticas
+          </button>
         </div>
 
+        <!-- Mensajes -->
         <div id="error-box" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
         <div id="success-box" class="hidden mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"></div>
 
+        <!-- Info GPS -->
         <div id="gps-info" class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
           <p class="mb-1"><strong>Precisión GPS:</strong> <span id="accuracy">--</span> metros</p>
           <p class="mb-1"><strong>Coordenadas:</strong> <span id="coords" class="text-xs break-all">--</span></p>
         </div>
 
+        <!-- Botón Detener -->
         <div class="mt-6">
-          <button id="stop-button" class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-lg">⏹️ DETENER SEGUIMIENTO</button>
+          <button
+            id="stop-button"
+            class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-lg"
+          >
+            ⏹️ DETENER SEGUIMIENTO
+          </button>
         </div>
       </div>
 
       <!-- Usuarios -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-4">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span class="text-2xl">👥</span>
-            Usuarios Conectados (<span id="user-count">0</span>)
+      <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+          <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span class="text-xl sm:text-2xl">👥</span>
+            Usuarios (<span id="user-count">0</span>)
           </h2>
-          <button id="toggle-map-button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">🗺️ Ver Mapa</button>
+          <button
+            id="toggle-map-button"
+            class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+          >
+            🗺️ Ver Mapa
+          </button>
         </div>
         <div id="users-list" class="space-y-3">
           <p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>
         </div>
       </div>
 
-      <!-- Mapa Normal -->
-      <div id="map-container" class="hidden bg-white rounded-lg shadow-lg p-6 mb-4">
-        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span class="text-2xl">🗺️</span>
+      <!-- Mapa -->
+      <div id="map-container" class="hidden bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+          <h2 class="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+            <span class="text-xl sm:text-2xl">🗺️</span>
             Mapa en Tiempo Real
           </h2>
-          <div class="flex gap-2 flex-wrap">
-            <button id="fullscreen-button" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">⛶ Pantalla Completa</button>
-            <button id="clear-tracks-button" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">🗑️ Limpiar Tracks</button>
-            <button id="close-map-button" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">✕ Cerrar</button>
+          <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <button
+              id="fullscreen-button"
+              class="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              ⛶ Pantalla Completa
+            </button>
+            <button
+              id="clear-tracks-button"
+              class="flex-1 sm:flex-none bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              🗑️ Limpiar
+            </button>
+            <button
+              id="close-map-button"
+              class="flex-1 sm:flex-none bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              ✕ Cerrar
+            </button>
           </div>
         </div>
-        <div id="map" class="w-full h-64 md:h-96 lg:h-[500px] rounded-lg border-2 border-gray-200"></div>
+        <div id="map" class="w-full h-64 sm:h-96 lg:h-[500px] rounded-lg border-2 border-gray-200"></div>
+        <div class="mt-4 text-xs sm:text-sm text-gray-600">
+          <p class="font-semibold mb-2">Leyenda:</p>
+          <div class="flex flex-wrap gap-3 sm:gap-4">
+            <div class="flex items-center gap-2">
+              <span class="text-xl sm:text-2xl">📍</span>
+              <span>Tu posición</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl sm:text-2xl">👤</span>
+              <span>Otros usuarios</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-block w-4 h-1 bg-blue-500"></span>
+              <span>Trayectoria</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Mapa Pantalla Completa -->
-      <div id="map-fullscreen" class="hidden fixed inset-0 z-50 bg-white">
+      <!-- Fullscreen Map -->
+      <div id="map-fullscreen" class="hidden fixed inset-0 bg-white z-50">
         <div class="h-full flex flex-col">
-          <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
-            <h2 class="text-xl font-bold">🗺️ Mapa - Pantalla Completa</h2>
-            <button id="exit-fullscreen-button" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold transition-colors">↙ Salir</button>
+          <div class="bg-white border-b p-3 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-800">🗺️ Mapa - Pantalla Completa</h2>
+            <button
+              id="exit-fullscreen-button"
+              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              ✕ Salir
+            </button>
           </div>
           <div id="map-fullscreen-container" class="flex-1"></div>
-        </div>
-      </div>
-
-      <!-- Modal Configuración -->
-      <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full">
-          <h3 class="text-xl font-bold mb-4">⚙️ Configuración</h3>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">URL del Servidor WebSocket</label>
-            <input id="server-url" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
-            <p class="text-xs text-gray-500 mt-1">Usuario ID: <span id="user-id" class="font-mono"></span></p>
-          </div>
-          <button id="close-settings" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg">Cerrar</button>
         </div>
       </div>
 
@@ -174,705 +288,845 @@
         <p class="font-semibold mb-2">💡 Pasos para usar:</p>
         <ol class="list-decimal list-inside space-y-1">
           <li>Introduce tu nombre</li>
-          <li>Introduce el nombre del grupo (debe ser igual para todos)</li>
+          <li><strong>Introduce el nombre del grupo</strong> (debe ser igual para todos los participantes)</li>
           <li>Activa el GPS en tu móvil</li>
           <li>Presiona "Iniciar Seguimiento"</li>
-          <li>Permite acceso a ubicación</li>
+          <li>Permite acceso a ubicación cuando te lo pida</li>
           <li>Sal al exterior para mejor señal GPS</li>
         </ol>
       </div>
 
+      <!-- Info sobre grupos -->
       <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 mb-4">
-        <p class="font-semibold mb-2">📍 Sistema de Grupos:</p>
+        <p class="font-semibold mb-2">🔐 Sistema de Grupos:</p>
         <ul class="list-disc list-inside space-y-1">
-          <li>Solo verás usuarios de tu mismo grupo</li>
-          <li>El nombre distingue mayúsculas/minúsculas</li>
-          <li>Todos deben usar el <strong>mismo nombre exacto</strong></li>
+          <li>Solo verás usuarios que estén en tu mismo grupo</li>
+          <li>El nombre del grupo distingue mayúsculas/minúsculas</li>
+          <li>Ejemplos: "Amigos", "Carrera2024", "Familia"</li>
+          <li>Todos los participantes deben usar el <strong>mismo nombre exacto</strong></li>
         </ul>
+      </div>
+
+      <!-- Instrucciones pantalla encendida -->
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 mb-4">
+        <p class="font-semibold mb-2">⚠️ Importante para GPS continuo:</p>
+        <ul class="list-disc list-inside space-y-1">
+          <li><strong>Android:</strong> La app mantendrá la pantalla encendida automáticamente. Baja el brillo para ahorrar batería.</li>
+          <li><strong>iOS:</strong> Ve a Ajustes → Pantalla → Bloqueo automático → "Nunca" mientras usas la app.</li>
+          <li><strong>Instalar como app:</strong> Chrome/Safari → Menú → "Añadir a pantalla de inicio" para mejor rendimiento.</li>
+        </ul>
+      </div>
+
+      <!-- Instrucciones iOS -->
+      <div id="ios-instructions" class="hidden bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 mb-4">
+        <p class="font-semibold mb-2">🍎 Usuarios de iPhone/iPad:</p>
+        <ol class="list-decimal list-inside space-y-1">
+          <li>Abre esta página en <strong>Safari</strong> (no Chrome)</li>
+          <li>Toca el botón "Compartir" (cuadrado con flecha arriba)</li>
+          <li>Selecciona "Añadir a pantalla de inicio"</li>
+          <li>Abre la app desde el icono en tu pantalla</li>
+          <li>Ve a Ajustes → Safari → Ubicación → "Permitir"</li>
+          <li>Ajustes → Privacidad → Ubicación → Safari → "Mientras se usa"</li>
+        </ol>
       </div>
     </div>
   </div>
 
   <script>
-// ===== GPS TRACKER v4.0 - JAVASCRIPT COMPLETO =====
-
-console.log('🚀 GPS Tracker v4.0 iniciado');
-
-// ===== VARIABLES GLOBALES =====
-let userId = localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-localStorage.setItem('userId', userId);
-
-let userName = localStorage.getItem('userName') || '';
-let groupName = localStorage.getItem('groupName') || '';
-let serverUrl = localStorage.getItem('serverUrl') || 'wss://gps-tracker-server-production-5900.up.railway.app';
-
-let ws = null;
-let watchId = null;
-let isTracking = false;
-let users = [];
-let wakeLock = null;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 10;
-
-let maxSpeed = 0;
-let speedReadings = [];
-
-let map = null;
-let mapFullscreen = null;
-let userMarkers = {};
-let userTracks = {};
-let trackPolylines = {};
-let mapVisible = false;
-let isFullscreen = false;
-
-let keepAliveInterval = null;
-
-// Control de brillo
-let brightnessLevel = 0; // 0 = normal, 1 = 80%, 2 = 60%, 3 = 40%
-const brightnessLevels = [
-  { class: '', emoji: '🌙', name: 'Normal' },
-  { class: 'night-mode-light', emoji: '🌙', name: '80%' },
-  { class: 'night-mode-medium', emoji: '🌙', name: '60%' },
-  { class: 'night-mode', emoji: '🌙', name: '40%' }
-];
-
-// ===== ELEMENTOS DOM =====
-const elements = {
-  userId: document.getElementById('user-id'),
-  userName: document.getElementById('user-name'),
-  groupName: document.getElementById('group-name'),
-  serverUrl: document.getElementById('server-url'),
-  configSection: document.getElementById('config-section'),
-  statusSection: document.getElementById('status-section'),
-  gpsStatusContainer: document.getElementById('gps-status-container'),
-  wifiIcon: document.getElementById('wifi-icon'),
-  connectionStatus: document.getElementById('connection-status'),
-  gpsIcon: document.getElementById('gps-icon'),
-  gpsStatus: document.getElementById('gps-status'),
-  speedDisplay: document.getElementById('speed-display'),
-  maxSpeed: document.getElementById('max-speed'),
-  avgSpeed: document.getElementById('avg-speed'),
-  errorBox: document.getElementById('error-box'),
-  successBox: document.getElementById('success-box'),
-  gpsInfo: document.getElementById('gps-info'),
-  trackButton: document.getElementById('track-button'),
-  stopButton: document.getElementById('stop-button'),
-  resetStatsButton: document.getElementById('reset-stats-button'),
-  userCount: document.getElementById('user-count'),
-  usersList: document.getElementById('users-list'),
-  accuracy: document.getElementById('accuracy'),
-  coords: document.getElementById('coords'),
-  mapContainer: document.getElementById('map-container'),
-  toggleMapButton: document.getElementById('toggle-map-button'),
-  closeMapButton: document.getElementById('close-map-button'),
-  clearTracksButton: document.getElementById('clear-tracks-button'),
-  fullscreenButton: document.getElementById('fullscreen-button'),
-  exitFullscreenButton: document.getElementById('exit-fullscreen-button'),
-  mapFullscreen: document.getElementById('map-fullscreen'),
-  settingsButton: document.getElementById('settings-button'),
-  settingsModal: document.getElementById('settings-modal'),
-  closeSettings: document.getElementById('close-settings'),
-  brightnessButton: document.getElementById('brightness-button')
-};
-
-// Inicializar valores
-elements.userId.textContent = userId.substring(0, 30);
-elements.userName.value = userName;
-elements.groupName.value = groupName;
-elements.serverUrl.value = serverUrl;
-
-// Restaurar nivel de brillo guardado
-const savedBrightness = localStorage.getItem('brightnessLevel');
-if (savedBrightness !== null) {
-  brightnessLevel = parseInt(savedBrightness);
-  const currentLevel = brightnessLevels[brightnessLevel];
-  if (currentLevel.class) {
-    document.body.classList.add(currentLevel.class);
-  }
-  elements.brightnessButton.textContent = currentLevel.emoji;
-}
-
-// ===== EVENT LISTENERS - INPUTS =====
-elements.userName.addEventListener('input', (e) => {
-  userName = e.target.value.trim();
-  localStorage.setItem('userName', userName);
-});
-
-elements.groupName.addEventListener('input', (e) => {
-  groupName = e.target.value.trim();
-  localStorage.setItem('groupName', groupName);
-});
-
-elements.serverUrl.addEventListener('input', (e) => {
-  serverUrl = e.target.value.trim();
-  localStorage.setItem('serverUrl', serverUrl);
-});
-
-// ===== FUNCIONES UI =====
-function showError(message) {
-  console.error('❌', message);
-  elements.errorBox.textContent = message;
-  elements.errorBox.classList.remove('hidden');
-  elements.successBox.classList.add('hidden');
-  setTimeout(() => elements.errorBox.classList.add('hidden'), 8000);
-}
-
-function showSuccess(message) {
-  console.log('✓', message);
-  elements.successBox.textContent = message;
-  elements.successBox.classList.remove('hidden');
-  elements.errorBox.classList.add('hidden');
-  setTimeout(() => elements.successBox.classList.add('hidden'), 3000);
-}
-
-function updateConnectionStatus(connected) {
-  elements.wifiIcon.textContent = connected ? '✅' : '❌';
-  elements.connectionStatus.textContent = connected ? 'Conectado' : 'Desconectado';
-  elements.connectionStatus.className = `text-xs sm:text-sm font-medium ${connected ? 'text-green-600' : 'text-red-600'}`;
-}
-
-function updateGpsStatus(active) {
-  elements.gpsIcon.textContent = active ? '✅' : '📍';
-  elements.gpsStatus.textContent = active ? 'GPS Activo' : 'GPS Inactivo';
-  elements.gpsStatus.className = `text-xs sm:text-sm font-medium ${active ? 'text-green-600' : 'text-gray-600'}`;
-}
-
-function updateUsersList() {
-  elements.userCount.textContent = users.length;
-  
-  if (users.length === 0) {
-    elements.usersList.innerHTML = '<p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>';
-    return;
-  }
-
-  elements.usersList.innerHTML = users.map(user => {
-    const displayName = user.userName || user.userId.substring(0, 15);
-    const isCurrentUser = user.userId === userId;
+    console.log('🚀 GPS Tracker v2.1 iniciado');
     
-    let direction = '';
-    if (user.bearing !== undefined) {
-      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
-      const index = Math.round(user.bearing / 45) % 8;
-      direction = dirs[index];
+    // Detectar iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    
+    if (isIOS) {
+      document.getElementById('ios-instructions').classList.remove('hidden');
+      console.log('📱 Dispositivo iOS detectado');
     }
     
-    return `
-    <div class="p-4 rounded-lg border-2 ${isCurrentUser ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50 border-gray-200'}">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-lg font-semibold text-gray-800">${displayName}</span>
-            ${isCurrentUser ? '<span class="text-xs bg-indigo-500 text-white px-2 py-1 rounded-full">Tú</span>' : ''}
-          </div>
-          <div class="text-xs text-gray-500 font-mono truncate">ID: ${user.userId.substring(0, 20)}...</div>
-          <div class="flex items-center gap-3 mt-2 text-sm text-gray-600">
-            <span>🧭 ${direction || '--'}</span>
-            <span>🏆 ${user.maxSpeed || 0} km/h</span>
-            <span class="text-xs">${new Date(user.timestamp).toLocaleTimeString()}</span>
-          </div>
-        </div>
-        <div class="text-right ml-4">
-          <div class="text-3xl font-bold text-indigo-600">${user.speed}</div>
-          <div class="text-sm text-gray-600">km/h</div>
-        </div>
-      </div>
-    </div>
-    `;
-  }).join('');
-}
-
-// ===== WEBSOCKET =====
-function connectWebSocket() {
-  console.log('🔌 Conectando a:', serverUrl);
-  
-  try {
-    ws = new WebSocket(serverUrl);
+    // Variables globales
+    let userId = localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('userId', userId);
     
-    ws.onopen = () => {
-      updateConnectionStatus(true);
-      showSuccess('✓ Conectado al servidor');
-      reconnectAttempts = 0;
-      
-      ws.send(JSON.stringify({ 
-        type: 'register', 
-        userId,
-        userName: userName || 'Usuario',
-        groupName: groupName || 'default'
-      }));
-      console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
-      
-      startKeepAlive();
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'users') {
-        users = data.users;
-        updateUsersList();
-        updateMap();
-      } else if (data.type === 'pong') {
-        console.log('💓 Pong recibido');
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error('❌ Error WebSocket:', error);
-      showError('⚠️ Error de conexión. Verifica el servidor.');
-      updateConnectionStatus(false);
-    };
-
-    ws.onclose = () => {
-      console.log('🔌 Conexión cerrada');
-      updateConnectionStatus(false);
-      stopKeepAlive();
-      
-      if (isTracking && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-        reconnectAttempts++;
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-        console.log(`↻ Reconectando en ${delay/1000}s (intento ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
-        setTimeout(connectWebSocket, delay);
-      }
-    };
-  } catch (error) {
-    console.error('❌ Error al crear WebSocket:', error);
-    showError('No se pudo conectar: ' + error.message);
-  }
-}
-
-function startKeepAlive() {
-  stopKeepAlive();
-  keepAliveInterval = setInterval(() => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'ping' }));
-      console.log('💓 Ping enviado');
-    }
-  }, 25000);
-}
-
-function stopKeepAlive() {
-  if (keepAliveInterval) {
-    clearInterval(keepAliveInterval);
-    keepAliveInterval = null;
-  }
-}
-
-// ===== GPS =====
-async function requestWakeLock() {
-  if ('wakeLock' in navigator) {
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      console.log('✓ Screen Wake Lock activado');
-      wakeLock.addEventListener('release', () => {
-        console.log('⚠ Screen Wake Lock liberado');
-      });
-    } catch (err) {
-      console.warn('⚠ No se pudo activar Wake Lock:', err);
-    }
-  }
-}
-
-function releaseWakeLock() {
-  if (wakeLock) {
-    wakeLock.release();
-    wakeLock = null;
-    console.log('✓ Wake Lock liberado');
-  }
-}
-
-function updateSpeed(speed, accuracy, lat, lon, bearing) {
-  elements.speedDisplay.textContent = speed;
-  elements.accuracy.textContent = accuracy.toFixed(1);
-  elements.coords.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-  
-  if (speed > maxSpeed) {
-    maxSpeed = speed;
-    elements.maxSpeed.textContent = maxSpeed;
-  }
-  
-  if (speed > 0) {
-    speedReadings.push(speed);
-    if (speedReadings.length > 100) speedReadings.shift();
-    const avg = speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length;
-    elements.avgSpeed.textContent = avg.toFixed(1);
-  }
-  
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: 'update',
-      userId,
-      userName: userName || 'Usuario',
-      groupName: groupName || 'default',
-      speed,
-      maxSpeed,
-      lat,
-      lon,
-      bearing: bearing || 0,
-      accuracy,
-      timestamp: Date.now()
-    }));
-  }
-}
-
-function startGPS() {
-  if (!navigator.geolocation) {
-    showError('❌ GPS no disponible en este dispositivo');
-    return;
-  }
-
-  const options = {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 0
-  };
-
-  watchId = navigator.geolocation.watchPosition(
-    (position) => {
-      const { latitude, longitude, accuracy, speed, heading } = position.coords;
-      
-      updateGpsStatus(true);
-      elements.gpsInfo.style.display = 'block';
-      
-      const speedKmh = speed !== null && speed >= 0 
-        ? Math.round(speed * 3.6) 
-        : 0;
-      
-      const bearing = heading !== null ? heading : 0;
-      
-      updateSpeed(speedKmh, accuracy, latitude, longitude, bearing);
-    },
-    (error) => {
-      console.error('❌ Error GPS:', error);
-      let errorMsg = 'Error de GPS: ';
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          errorMsg += 'Permiso denegado. Activa ubicación en Configuración.';
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMsg += 'Posición no disponible. Sal al exterior.';
-          break;
-        case error.TIMEOUT:
-          errorMsg += 'Timeout. Sal al exterior para mejor señal.';
-          break;
-        default:
-          errorMsg += error.message;
-      }
-      showError(errorMsg);
-      updateGpsStatus(false);
-    },
-    options
-  );
-}
-
-function stopGPS() {
-  if (watchId !== null) {
-    navigator.geolocation.clearWatch(watchId);
-    watchId = null;
-    updateGpsStatus(false);
-    console.log('✓ GPS detenido');
-  }
-}
-
-// ===== CONTROL PRINCIPAL =====
-async function startTracking() {
-  if (!userName.trim()) {
-    showError('⚠️ Debes introducir tu nombre');
-    return;
-  }
-  
-  isTracking = true;
-  
-  elements.configSection.classList.add('hidden');
-  elements.configSection.style.display = 'none';
-  elements.statusSection.classList.remove('hidden');
-  elements.statusSection.style.display = 'block';
-  
-  connectWebSocket();
-  startGPS();
-  await requestWakeLock();
-  
-  elements.trackButton.textContent = '🟢 Seguimiento Activo';
-  elements.trackButton.className = 'flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors cursor-not-allowed opacity-75';
-  elements.trackButton.disabled = true;
-  
-  showSuccess('✓ Seguimiento iniciado correctamente');
-  console.log('✅ SEGUIMIENTO INICIADO');
-}
-
-function stopTracking() {
-  isTracking = false;
-  
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
-  
-  stopGPS();
-  releaseWakeLock();
-  stopKeepAlive();
-  
-  updateConnectionStatus(false);
-  updateGpsStatus(false);
-  
-  elements.speedDisplay.textContent = '0';
-  elements.gpsInfo.style.display = 'none';
-  
-  elements.configSection.classList.remove('hidden');
-  elements.configSection.style.display = 'block';
-  elements.statusSection.classList.add('hidden');
-  elements.statusSection.style.display = 'none';
-  
-  elements.trackButton.textContent = '▶️ Iniciar Seguimiento';
-  elements.trackButton.className = 'flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
-  elements.trackButton.disabled = false;
-  
-  console.log('✅ SEGUIMIENTO DETENIDO');
-}
-
-function resetStats() {
-  maxSpeed = 0;
-  speedReadings = [];
-  elements.maxSpeed.textContent = '0';
-  elements.avgSpeed.textContent = '0';
-  showSuccess('✓ Estadísticas reseteadas');
-}
-
-// ===== CONTROL DE BRILLO =====
-function toggleBrightness() {
-  brightnessLevel = (brightnessLevel + 1) % brightnessLevels.length;
-  
-  // Remover todas las clases de brillo
-  document.body.classList.remove('night-mode', 'night-mode-medium', 'night-mode-light');
-  
-  // Añadir la clase correspondiente si no es nivel normal
-  const currentLevel = brightnessLevels[brightnessLevel];
-  if (currentLevel.class) {
-    document.body.classList.add(currentLevel.class);
-  }
-  
-  // Actualizar botón
-  elements.brightnessButton.textContent = currentLevel.emoji;
-  
-  // Mostrar mensaje
-  const messages = [
-    '☀️ Brillo normal',
-    '🌤️ Brillo reducido 80%',
-    '🌥️ Brillo reducido 60%',
-    '🌙 Modo nocturno 40%'
-  ];
-  showSuccess(messages[brightnessLevel]);
-  
-  // Guardar preferencia
-  localStorage.setItem('brightnessLevel', brightnessLevel);
-  
-  console.log('✓ Brillo ajustado:', currentLevel.name);
-}
-
-// ===== MAPA =====
-function initMap(lat, lon, containerId) {
-  const container = document.getElementById(containerId);
-  const isFs = containerId.includes('fullscreen');
-  
-  if (isFs) {
-    if (mapFullscreen) return;
-    mapFullscreen = L.map(containerId).setView([lat, lon], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(mapFullscreen);
-  } else {
-    if (map) return;
-    map = L.map(containerId).setView([lat, lon], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(map);
-  }
-}
-
-function createArrowIcon(speed, isCurrentUser, bearing = 0) {
-  const color = isCurrentUser ? '#4F46E5' : '#10B981';
-  const size = isCurrentUser ? 40 : 35;
-  
-  const html = `
-    <div style="position: relative; width: ${size}px; height: ${size}px;">
-      <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: ${color}; color: white; padding: 3px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 1000;">
-        ${speed} km/h
-      </div>
-      <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform: rotate(${bearing}deg); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
-        <path d="M12 2 L4 20 L12 16 L20 20 Z" fill="${color}" stroke="white" stroke-width="1.5"/>
-      </svg>
-    </div>
-  `;
-  
-  return L.divIcon({
-    html: html,
-    className: '',
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -size/2]
-  });
-}
-
-function updateMap() {
-  const activeMap = isFullscreen ? mapFullscreen : map;
-  if (!activeMap || (!mapVisible && !isFullscreen)) return;
-
-  users.forEach(user => {
-    const isCurrentUser = user.userId === userId;
-    const markerId = user.userId + (isFullscreen ? '_fs' : '_normal');
+    let userName = localStorage.getItem('userName') || '';
+    let groupName = localStorage.getItem('groupName') || '';
+    let serverUrl = localStorage.getItem('serverUrl') || 'wss://gps-tracker-server-production-5900.up.railway.app';
+    let ws = null;
+    let watchId = null;
+    let isTracking = false;
+    let users = [];
+    let wakeLock = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 10;
     
-    if (!userMarkers[markerId]) {
-      try {
-        const icon = createArrowIcon(user.speed, isCurrentUser, user.bearing || 0);
-        const marker = L.marker([user.lat, user.lon], { icon: icon }).addTo(activeMap);
-        
-        const displayName = user.userName || user.userId.substring(0, 15);
-        marker.bindPopup(`
-          <div style="text-align: center;">
-            <strong>${displayName}</strong><br>
-            <span style="font-size: 18px; font-weight: bold;">${user.speed} km/h</span><br>
-            <span style="font-size: 14px;">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
-            <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
-          </div>
-        `);
-        
-        userMarkers[markerId] = marker;
-        userTracks[markerId] = [];
-      } catch (error) {
-        console.error('Error creando marcador:', error);
-      }
+    // Variables para estadísticas
+    let maxSpeed = 0;
+    let speedReadings = [];
+    
+    // Variables para el mapa
+    let map = null;
+    let mapFullscreen = null;
+    let userMarkers = {};
+    let userTracks = {};
+    let trackPolylines = {};
+    let mapVisible = false;
+    let isFullscreen = false;
+
+    // Elementos DOM
+    const elements = {
+      userId: document.getElementById('user-id'),
+      userName: document.getElementById('user-name'),
+      groupName: document.getElementById('group-name'),
+      serverUrl: document.getElementById('server-url'),
+      configSection: document.getElementById('config-section'),
+      statusSection: document.getElementById('status-section'),
+      gpsStatusContainer: document.getElementById('gps-status-container'),
+      wifiIcon: document.getElementById('wifi-icon'),
+      connectionStatus: document.getElementById('connection-status'),
+      gpsIcon: document.getElementById('gps-icon'),
+      gpsStatus: document.getElementById('gps-status'),
+      speedDisplay: document.getElementById('speed-display'),
+      maxSpeed: document.getElementById('max-speed'),
+      avgSpeed: document.getElementById('avg-speed'),
+      errorBox: document.getElementById('error-box'),
+      successBox: document.getElementById('success-box'),
+      gpsInfo: document.getElementById('gps-info'),
+      trackButton: document.getElementById('track-button'),
+      stopButton: document.getElementById('stop-button'),
+      resetStatsButton: document.getElementById('reset-stats-button'),
+      userCount: document.getElementById('user-count'),
+      usersList: document.getElementById('users-list'),
+      accuracy: document.getElementById('accuracy'),
+      coords: document.getElementById('coords'),
+      wakeLockStatus: document.getElementById('wake-lock-status'),
+      mapContainer: document.getElementById('map-container'),
+      toggleMapButton: document.getElementById('toggle-map-button'),
+      closeMapButton: document.getElementById('close-map-button'),
+      clearTracksButton: document.getElementById('clear-tracks-button'),
+      fullscreenButton: document.getElementById('fullscreen-button'),
+      exitFullscreenButton: document.getElementById('exit-fullscreen-button'),
+      mapFullscreen: document.getElementById('map-fullscreen'),
+      settingsButton: document.getElementById('settings-button'),
+      settingsModal: document.getElementById('settings-modal'),
+      closeSettings: document.getElementById('close-settings')
+    };
+
+    // Inicializar
+    elements.userId.textContent = userId.substring(0, 30);
+    elements.userName.value = userName;
+    elements.groupName.value = groupName;
+    elements.serverUrl.value = serverUrl;
+
+    // VERIFICACIÓN CRÍTICA
+    console.log('🔍 VERIFICACIÓN DE ELEMENTOS:');
+    console.log('config-section:', !!elements.configSection, elements.configSection);
+    console.log('status-section:', !!elements.statusSection, elements.statusSection);
+    console.log('track-button:', !!elements.trackButton, elements.trackButton);
+    console.log('stop-button:', !!elements.stopButton, elements.stopButton);
+    
+    if (!elements.stopButton) {
+      console.error('❌ ERROR CRÍTICO: stop-button NO EXISTE en el DOM!');
     } else {
+      console.log('✅ stop-button encontrado correctamente');
+    }
+
+    // Guardar nombre cuando cambie
+    elements.userName.addEventListener('input', (e) => {
+      userName = e.target.value.trim();
+      localStorage.setItem('userName', userName);
+    });
+
+    // Guardar grupo cuando cambie
+    elements.groupName.addEventListener('input', (e) => {
+      groupName = e.target.value.trim();
+      localStorage.setItem('groupName', groupName);
+    });
+
+    // Guardar URL del servidor
+    elements.serverUrl.addEventListener('change', (e) => {
+      serverUrl = e.target.value.trim();
+      localStorage.setItem('serverUrl', serverUrl);
+    });
+
+    // Modal de configuración
+    elements.settingsButton.addEventListener('click', () => {
+      elements.settingsModal.classList.remove('hidden');
+    });
+
+    elements.closeSettings.addEventListener('click', () => {
+      elements.settingsModal.classList.add('hidden');
+    });
+
+    elements.settingsModal.addEventListener('click', (e) => {
+      if (e.target === elements.settingsModal) {
+        elements.settingsModal.classList.add('hidden');
+      }
+    });
+
+    // Resetear estadísticas
+    elements.resetStatsButton.addEventListener('click', () => {
+      maxSpeed = 0;
+      speedReadings = [];
+      elements.maxSpeed.textContent = '0';
+      elements.avgSpeed.textContent = '0';
+      showSuccess('✓ Estadísticas reseteadas');
+      console.log('🔄 Estadísticas reseteadas');
+    });
+
+    // Inicializar mapa con Leaflet (OpenStreetMap)
+    function initMap(lat, lon, container = 'map') {
+      const targetMap = container === 'map-fullscreen-container' ? 'mapFullscreen' : 'map';
+      
+      if (eval(targetMap)) return; // Ya está inicializado
+      
+      const mapInstance = L.map(container).setView([lat, lon], 15);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(mapInstance);
+      
+      if (targetMap === 'mapFullscreen') {
+        mapFullscreen = mapInstance;
+      } else {
+        map = mapInstance;
+      }
+      
+      console.log('✓ Mapa inicializado:', container);
+    }
+
+    // Calcular ángulo de dirección entre dos puntos
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+      const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+                Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+      const bearing = Math.atan2(y, x) * 180 / Math.PI;
+      return (bearing + 360) % 360;
+    }
+
+    // Crear icono de flecha para dirección con velocidad visible
+    function createArrowIcon(speed, isCurrentUser, bearing = 0) {
+      const color = isCurrentUser ? '#4F46E5' : '#10B981';
+      const size = isCurrentUser ? 40 : 35;
+      
+      const html = `
+        <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: ${color}; color: white; padding: 3px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 1000;">
+            ${speed} km/h
+          </div>
+          <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform: rotate(${bearing}deg); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
+            <path d="M12 2 L4 20 L12 16 L20 20 Z" fill="${color}" stroke="white" stroke-width="1.5"/>
+          </svg>
+        </div>
+      `;
+      
+      return L.divIcon({
+        html: html,
+        className: '',
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
+        popupAnchor: [0, -size/2]
+      });
+    }
+
+    // Actualizar mapa con posiciones de usuarios
+    function updateMap() {
+      const activeMap = isFullscreen ? mapFullscreen : map;
+      if (!activeMap || (!mapVisible && !isFullscreen)) return;
+
+      console.log('🗺️ Actualizando mapa con', users.length, 'usuarios');
+
+      users.forEach(user => {
+        const isCurrentUser = user.userId === userId;
+        const markerId = user.userId + (isFullscreen ? '_fs' : '_normal');
+        
+        console.log('📍 Procesando usuario:', user.userName || user.userId, 'Pos:', user.lat, user.lon);
+        
+        // Crear o actualizar marcador
+        if (!userMarkers[markerId]) {
+          console.log('✨ Creando nuevo marcador para:', markerId);
+          
+          try {
+            const icon = createArrowIcon(user.speed, isCurrentUser, user.bearing || 0);
+            const marker = L.marker([user.lat, user.lon], { icon: icon }).addTo(activeMap);
+            
+            const displayName = user.userName || user.userId.substring(0, 15);
+            marker.bindPopup(`
+              <div style="text-align: center;">
+                <strong>${displayName}</strong><br>
+                <span style="font-size: 18px; font-weight: bold;">${user.speed} km/h</span><br>
+                <span style="font-size: 14px;">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
+                <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
+              </div>
+            `);
+            
+            userMarkers[markerId] = marker;
+            userTracks[markerId] = [];
+            
+            console.log('✅ Marcador creado exitosamente');
+          } catch (error) {
+            console.error('❌ Error creando marcador:', error);
+          }
+        } else {
+          // Actualizar posición y rotación
+          try {
+            const marker = userMarkers[markerId];
+            marker.setLatLng([user.lat, user.lon]);
+            marker.setIcon(createArrowIcon(user.speed, isCurrentUser, user.bearing || 0));
+            
+            const displayName = user.userName || user.userId.substring(0, 15);
+            marker.setPopupContent(`
+              <div style="text-align: center;">
+                <strong>${displayName}</strong><br>
+                <span style="font-size: 18px; font-weight: bold;">${user.speed} km/h</span><br>
+                <span style="font-size: 14px;">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
+                <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
+              </div>
+            `);
+          } catch (error) {
+            console.error('❌ Error actualizando marcador:', error);
+          }
+        }
+        
+        // Agregar punto a la trayectoria solo si velocidad > 3.6 km/h
+        if (user.speed > 3.6) {
+          const track = userTracks[markerId];
+          if (track) {
+            track.push([user.lat, user.lon]);
+            
+            if (track.length > 50) {
+              track.shift();
+            }
+            
+            const polylineId = markerId + '_polyline';
+            if (trackPolylines[polylineId]) {
+              activeMap.removeLayer(trackPolylines[polylineId]);
+            }
+            
+            if (track.length > 1) {
+              const color = isCurrentUser ? '#4F46E5' : '#10B981';
+              try {
+                trackPolylines[polylineId] = L.polyline(track, {
+                  color: color,
+                  weight: 3,
+                  opacity: 0.7,
+                  smoothFactor: 1
+                }).addTo(activeMap);
+              } catch (error) {
+                console.error('❌ Error dibujando polyline:', error);
+              }
+            }
+          }
+        }
+      });
+
+      // Eliminar marcadores de usuarios desconectados
+      Object.keys(userMarkers).forEach(markerId => {
+        const userId = markerId.replace('_fs', '').replace('_normal', '');
+        const mapType = markerId.includes('_fs') ? 'fs' : 'normal';
+        
+        if (!users.find(u => u.userId === userId) || 
+            (isFullscreen && mapType === 'normal') || 
+            (!isFullscreen && mapType === 'fs')) {
+          try {
+            activeMap.removeLayer(userMarkers[markerId]);
+            delete userMarkers[markerId];
+            delete userTracks[markerId];
+            
+            const polylineId = markerId + '_polyline';
+            if (trackPolylines[polylineId]) {
+              activeMap.removeLayer(trackPolylines[polylineId]);
+              delete trackPolylines[polylineId];
+            }
+          } catch (error) {
+            console.error('❌ Error eliminando marcador:', error);
+          }
+        }
+      });
+
+      // Centrar en el usuario actual si existe
+      const currentUser = users.find(u => u.userId === userId);
+      if (currentUser) {
+        activeMap.setView([currentUser.lat, currentUser.lon], activeMap.getZoom());
+      }
+    }
+
+    // Limpiar tracks del mapa
+    function clearMapTracks() {
+      const activeMap = isFullscreen ? mapFullscreen : map;
+      if (!activeMap) return;
+      
+      // Eliminar todas las polylines
+      Object.keys(trackPolylines).forEach(uid => {
+        if (trackPolylines[uid]) {
+          activeMap.removeLayer(trackPolylines[uid]);
+          delete trackPolylines[uid];
+        }
+      });
+      
+      // Vaciar arrays de tracks
+      Object.keys(userTracks).forEach(uid => {
+        userTracks[uid] = [];
+      });
+      
+      showSuccess('✓ Trayectorias limpiadas');
+      console.log('🗑️ Tracks del mapa limpiados');
+    }
+
+    // Toggle mapa
+    elements.toggleMapButton.addEventListener('click', () => {
+      mapVisible = true;
+      elements.mapContainer.classList.remove('hidden');
+      
+      // Inicializar mapa con posición del primer usuario disponible
+      const firstUser = users.length > 0 ? users[0] : null;
+      if (firstUser) {
+        initMap(firstUser.lat, firstUser.lon);
+        updateMap();
+      } else if (users.length === 0) {
+        initMap(40.4168, -3.7038); // Madrid por defecto
+      }
+      
+      // Ajustar tamaño del mapa
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 100);
+    });
+
+    elements.closeMapButton.addEventListener('click', () => {
+      mapVisible = false;
+      elements.mapContainer.classList.add('hidden');
+    });
+
+    // Pantalla completa
+    elements.fullscreenButton.addEventListener('click', () => {
+      isFullscreen = true;
+      elements.mapContainer.classList.add('hidden'); // Ocultar mapa normal
+      elements.mapFullscreen.classList.remove('hidden');
+      
+      const firstUser = users.length > 0 ? users[0] : null;
+      if (firstUser) {
+        initMap(firstUser.lat, firstUser.lon, 'map-fullscreen-container');
+        setTimeout(() => {
+          updateMap();
+        }, 200);
+      } else {
+        initMap(40.4168, -3.7038, 'map-fullscreen-container');
+      }
+      
+      setTimeout(() => {
+        if (mapFullscreen) mapFullscreen.invalidateSize();
+      }, 100);
+    });
+
+    elements.exitFullscreenButton.addEventListener('click', () => {
+      isFullscreen = false;
+      elements.mapFullscreen.classList.add('hidden');
+      elements.mapContainer.classList.remove('hidden'); // Mostrar mapa normal
+      
+      // Limpiar marcadores del mapa fullscreen
+      Object.keys(userMarkers).forEach(markerId => {
+        if (markerId.includes('_fs') && mapFullscreen) {
+          mapFullscreen.removeLayer(userMarkers[markerId]);
+          delete userMarkers[markerId];
+          delete userTracks[markerId];
+          
+          const polylineId = `${markerId}_polyline`;
+          if (trackPolylines[polylineId]) {
+            mapFullscreen.removeLayer(trackPolylines[polylineId]);
+            delete trackPolylines[polylineId];
+          }
+        }
+      });
+      
+      // Actualizar mapa normal
+      setTimeout(() => {
+        if (map) {
+          map.invalidateSize();
+          updateMap();
+        }
+      }, 100);
+    });
+
+    // Limpiar tracks
+    elements.clearTracksButton.addEventListener('click', () => {
+      clearMapTracks();
+    });
+
+    // Wake Lock API - Mantener pantalla encendida
+    async function requestWakeLock() {
+      if (!('wakeLock' in navigator)) {
+        console.log('⚠️ Wake Lock no soportado en este navegador');
+        if (isIOS) {
+          showError('En iOS: Ve a Ajustes → Pantalla → Bloqueo automático → "Nunca"');
+        }
+        return;
+      }
+
       try {
-        const marker = userMarkers[markerId];
-        marker.setLatLng([user.lat, user.lon]);
-        marker.setIcon(createArrowIcon(user.speed, isCurrentUser, user.bearing || 0));
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('✓ Wake Lock activado - Pantalla se mantendrá encendida');
+        elements.wakeLockStatus.classList.remove('hidden');
+        showSuccess('✓ Pantalla bloqueada - No se apagará');
+        
+        wakeLock.addEventListener('release', () => {
+          console.log('Wake Lock liberado');
+          elements.wakeLockStatus.classList.add('hidden');
+        });
+      } catch (err) {
+        console.log('❌ Wake Lock error:', err);
+        if (isIOS) {
+          showError('iOS: Configura "Bloqueo automático: Nunca" en Ajustes');
+        }
+      }
+    }
+
+    // Liberar Wake Lock
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release().then(() => {
+          wakeLock = null;
+          elements.wakeLockStatus.classList.add('hidden');
+          console.log('✓ Wake Lock liberado');
+        });
+      }
+    }
+
+    // Re-adquirir Wake Lock cuando la página vuelve a estar visible
+    document.addEventListener('visibilitychange', async () => {
+      if (isTracking && !document.hidden && wakeLock === null) {
+        console.log('↻ Reactivando Wake Lock...');
+        await requestWakeLock();
+      }
+    });
+
+    // Prevenir que el navegador pause la app
+    let keepAliveInterval = null;
+    function startKeepAlive() {
+      // Ping cada 25 segundos para mantener la conexión activa
+      keepAliveInterval = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping' }));
+          console.log('💓 Keep-alive ping');
+        }
+      }, 25000);
+    }
+
+    function stopKeepAlive() {
+      if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+      }
+    }
+
+    // Mostrar error
+    function showError(message) {
+      console.error('❌', message);
+      elements.errorBox.textContent = message;
+      elements.errorBox.classList.remove('hidden');
+      elements.successBox.classList.add('hidden');
+      setTimeout(() => elements.errorBox.classList.add('hidden'), 8000);
+    }
+
+    // Mostrar éxito
+    function showSuccess(message) {
+      console.log('✓', message);
+      elements.successBox.textContent = message;
+      elements.successBox.classList.remove('hidden');
+      elements.errorBox.classList.add('hidden');
+      setTimeout(() => elements.successBox.classList.add('hidden'), 3000);
+    }
+
+    // Actualizar estado de conexión
+    function updateConnectionStatus(connected) {
+      elements.wifiIcon.textContent = connected ? '✅' : '❌';
+      elements.connectionStatus.textContent = connected ? 'Conectado' : 'Desconectado';
+      elements.connectionStatus.className = `text-sm font-medium ${connected ? 'text-green-600' : 'text-red-600'}`;
+    }
+
+    // Actualizar estado GPS
+    function updateGpsStatus(active) {
+      elements.gpsIcon.textContent = active ? '✅' : '📍';
+      elements.gpsStatus.textContent = active ? 'GPS Activo' : 'GPS Inactivo';
+      elements.gpsStatus.className = `text-sm font-medium ${active ? 'text-green-600' : 'text-gray-600'}`;
+    }
+
+    // Conectar WebSocket con reconexión mejorada
+    function connectWebSocket() {
+      const serverUrl = elements.serverUrl.value;
+      console.log('🔌 Conectando a:', serverUrl);
+      
+      try {
+        ws = new WebSocket(serverUrl);
+        
+        ws.onopen = () => {
+          updateConnectionStatus(true);
+          showSuccess('✓ Conectado al servidor');
+          reconnectAttempts = 0;
+          
+          ws.send(JSON.stringify({ 
+            type: 'register', 
+            userId,
+            userName: userName || 'Usuario',
+            groupName: groupName || 'default'
+          }));
+          console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
+          
+          startKeepAlive();
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'users') {
+            users = data.users;
+            updateUsersList();
+            updateMap();
+          } else if (data.type === 'pong') {
+            console.log('💓 Pong recibido');
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('❌ Error WebSocket:', error);
+          showError('⚠️ Error de conexión. Verifica el servidor.');
+          updateConnectionStatus(false);
+        };
+
+        ws.onclose = () => {
+          console.log('🔌 Conexión cerrada');
+          updateConnectionStatus(false);
+          stopKeepAlive();
+          
+          if (isTracking && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            reconnectAttempts++;
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+            console.log(`↻ Reconectando en ${delay/1000}s (intento ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+            setTimeout(connectWebSocket, delay);
+          } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            showError('❌ No se pudo reconectar después de múltiples intentos');
+          }
+        };
       } catch (error) {
-        console.error('Error actualizando marcador:', error);
+        console.error('❌ Error al crear WebSocket:', error);
+        showError('No se pudo conectar: ' + error.message);
       }
     }
-    
-    if (user.speed > 3.6) {
-      const track = userTracks[markerId];
-      if (track) {
-        track.push([user.lat, user.lon]);
-        if (track.length > 50) track.shift();
-        
-        const polylineId = markerId + '_polyline';
-        if (trackPolylines[polylineId]) {
-          activeMap.removeLayer(trackPolylines[polylineId]);
-        }
-        
-        if (track.length > 1) {
-          const color = isCurrentUser ? '#4F46E5' : '#10B981';
-          trackPolylines[polylineId] = L.polyline(track, {
-            color: color,
-            weight: 3,
-            opacity: 0.7
-          }).addTo(activeMap);
-        }
+
+    // Actualizar lista de usuarios
+    function updateUsersList() {
+      elements.userCount.textContent = users.length;
+      
+      if (users.length === 0) {
+        elements.usersList.innerHTML = '<p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>';
+        return;
       }
+
+      elements.usersList.innerHTML = users.map(user => {
+        const displayName = user.userName || user.userId.substring(0, 15);
+        const isCurrentUser = user.userId === userId;
+        
+        // Calcular dirección en texto
+        let direction = '';
+        if (user.bearing !== undefined) {
+          const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+          const index = Math.round(user.bearing / 45) % 8;
+          direction = dirs[index];
+        }
+        
+        return `
+        <div class="p-4 rounded-lg border-2 ${isCurrentUser ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50 border-gray-200'}">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg font-semibold text-gray-800">${displayName}</span>
+                ${isCurrentUser ? '<span class="text-xs bg-indigo-500 text-white px-2 py-1 rounded-full">Tú</span>' : ''}
+              </div>
+              <div class="text-xs text-gray-500 font-mono truncate">
+                ID: ${user.userId.substring(0, 20)}...
+              </div>
+              <div class="flex items-center gap-3 mt-2 text-sm text-gray-600">
+                <span>🧭 ${direction || '--'}</span>
+                <span>🏆 ${user.maxSpeed || 0} km/h</span>
+                <span class="text-xs">${new Date(user.timestamp).toLocaleTimeString()}</span>
+              </div>
+            </div>
+            <div class="text-right ml-4">
+              <div class="text-3xl font-bold text-indigo-600">${user.speed}</div>
+              <div class="text-sm text-gray-600">km/h</div>
+            </div>
+          </div>
+        </div>
+      `}).join('');
     }
-  });
 
-  const currentUser = users.find(u => u.userId === userId);
-  if (currentUser) {
-    activeMap.setView([currentUser.lat, currentUser.lon], activeMap.getZoom());
-  }
-}
+    // Iniciar seguimiento GPS
+    function startTracking() {
+      console.log('🎯 Iniciando seguimiento GPS...');
+      
+      // Validar nombre
+      if (!userName || userName.trim() === '') {
+        showError('⚠️ Por favor, introduce tu nombre antes de comenzar');
+        elements.userName.focus();
+        return;
+      }
+      
+      if (!navigator.geolocation) {
+        showError('❌ GPS no disponible en este dispositivo');
+        return;
+      }
 
-function clearMapTracks() {
-  const activeMap = isFullscreen ? mapFullscreen : map;
-  if (!activeMap) return;
-  
-  Object.keys(trackPolylines).forEach(polylineId => {
-    if (trackPolylines[polylineId]) {
-      activeMap.removeLayer(trackPolylines[polylineId]);
-      delete trackPolylines[polylineId];
+      // Cambiar visibilidad
+      elements.statusSection.classList.remove('hidden');
+      elements.statusSection.style.display = 'block';
+      elements.configSection.classList.add('hidden');
+      elements.configSection.style.display = 'none';
+      connectWebSocket();
+
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      };
+
+      let lastPosition = null;
+
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const speed = position.coords.speed !== null 
+            ? Math.max(0, Math.round(position.coords.speed * 3.6))
+            : 0;
+          
+          elements.speedDisplay.textContent = speed;
+          updateGpsStatus(true);
+          elements.gpsInfo.classList.remove('hidden');
+          
+          // Actualizar velocidad máxima
+          if (speed > maxSpeed) {
+            maxSpeed = speed;
+            elements.maxSpeed.textContent = maxSpeed;
+          }
+          
+          // Actualizar promedio
+          speedReadings.push(speed);
+          if (speedReadings.length > 20) speedReadings.shift(); // Mantener últimos 20
+          const avgSpeed = Math.round(speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length);
+          elements.avgSpeed.textContent = avgSpeed;
+          
+          // Calcular dirección/rumbo
+          let bearing = 0;
+          if (lastPosition && position.coords.speed > 1) { // Solo si hay movimiento
+            bearing = calculateBearing(
+              lastPosition.coords.latitude,
+              lastPosition.coords.longitude,
+              position.coords.latitude,
+              position.coords.longitude
+            );
+          }
+          
+          const accuracy = Math.round(position.coords.accuracy);
+          elements.accuracy.textContent = accuracy;
+          elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'speed',
+              userId,
+              userName: userName || 'Usuario',
+              groupName: groupName || 'default',
+              speed,
+              maxSpeed,
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+              bearing: Math.round(bearing),
+              timestamp: Date.now()
+            }));
+          }
+          
+          lastPosition = position;
+        },
+        (error) => {
+          let errorMsg = '';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg = '❌ Permisos denegados. Ve a Configuración → Permisos → Ubicación';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMsg = '⚠️ GPS no disponible. Sal al exterior.';
+              break;
+            case error.TIMEOUT:
+              errorMsg = '⏱️ Tiempo agotado. Verifica que el GPS esté activado.';
+              break;
+            default:
+              errorMsg = '❌ Error GPS: ' + error.message;
+          }
+          showError(errorMsg);
+          updateGpsStatus(false);
+        },
+        options
+      );
+
+      isTracking = true;
+      elements.trackButton.textContent = 'Detener Seguimiento';
+      elements.trackButton.className = 'w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
     }
-  });
-  
-  Object.keys(userTracks).forEach(trackId => {
-    userTracks[trackId] = [];
-  });
-  
-  showSuccess('✓ Trayectorias limpiadas');
-}
 
-// ===== EVENT LISTENERS =====
-elements.trackButton.addEventListener('click', startTracking);
-elements.stopButton.addEventListener('click', stopTracking);
-elements.resetStatsButton.addEventListener('click', resetStats);
-
-elements.toggleMapButton.addEventListener('click', () => {
-  mapVisible = true;
-  elements.mapContainer.classList.remove('hidden');
-  
-  const currentUser = users.find(u => u.userId === userId);
-  if (currentUser) {
-    initMap(currentUser.lat, currentUser.lon, 'map');
-  } else if (users.length > 0) {
-    initMap(users[0].lat, users[0].lon, 'map');
-  } else {
-    initMap(40.4168, -3.7038, 'map');
-  }
-  
-  setTimeout(() => {
-    if (map) map.invalidateSize();
-    updateMap();
-  }, 100);
-});
-
-elements.closeMapButton.addEventListener('click', () => {
-  mapVisible = false;
-  elements.mapContainer.classList.add('hidden');
-});
-
-elements.clearTracksButton.addEventListener('click', clearMapTracks);
-
-elements.fullscreenButton.addEventListener('click', () => {
-  isFullscreen = true;
-  elements.mapContainer.classList.add('hidden');
-  elements.mapFullscreen.classList.remove('hidden');
-  
-  const firstUser = users.length > 0 ? users[0] : null;
-  if (firstUser) {
-    initMap(firstUser.lat, firstUser.lon, 'map-fullscreen-container');
-  } else {
-    initMap(40.4168, -3.7038, 'map-fullscreen-container');
-  }
-  
-  setTimeout(() => {
-    if (mapFullscreen) {
-      mapFullscreen.invalidateSize();
-      updateMap();
+    // Detener seguimiento
+    function stopTracking() {
+      console.log('⏹️ DETENIENDO SEGUIMIENTO');
+      
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+      
+      stopKeepAlive();
+      releaseWakeLock();
+      
+      isTracking = false;
+      reconnectAttempts = 0;
+      updateGpsStatus(false);
+      updateConnectionStatus(false);
+      elements.speedDisplay.textContent = '0';
+      elements.gpsInfo.style.display = 'none';
+      
+      // Cambiar visibilidad
+      elements.configSection.classList.remove('hidden');
+      elements.configSection.style.display = 'block';
+      elements.statusSection.classList.add('hidden');
+      elements.statusSection.style.display = 'none';
+      
+      // Restaurar botón iniciar a su estilo original
+      elements.trackButton.textContent = '▶️ Iniciar Seguimiento';
+      elements.trackButton.className = 'flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
+      
+      console.log('✅ Status oculto, Config visible');
+      console.log('✅ SEGUIMIENTO DETENIDO');
     }
-  }, 200);
-});
 
-elements.exitFullscreenButton.addEventListener('click', () => {
-  isFullscreen = false;
-  elements.mapFullscreen.classList.add('hidden');
-  elements.mapContainer.classList.remove('hidden');
-  
-  setTimeout(() => {
-    if (map) {
-      map.invalidateSize();
-      updateMap();
-    }
-  }, 100);
-});
+    // Eventos de los botones
+    elements.trackButton.addEventListener('click', () => {
+      startTracking();
+    });
 
-elements.settingsButton.addEventListener('click', () => {
-  elements.settingsModal.classList.remove('hidden');
-});
+    elements.stopButton.addEventListener('click', () => {
+      stopTracking();
+    });
 
-elements.closeSettings.addEventListener('click', () => {
-  elements.settingsModal.classList.add('hidden');
-});
+    // Limpiar al cerrar/recargar página
+    window.addEventListener('beforeunload', () => {
+      if (isTracking) {
+        stopTracking();
+      }
+    });
 
-elements.brightnessButton.addEventListener('click', toggleBrightness);
-
-console.log('✓ GPS Tracker listo');
+    console.log('✓ GPS Tracker listo');
+    console.log('📱 iOS:', isIOS, '| Standalone:', isStandalone);
   </script>
 </body>
 </html>
