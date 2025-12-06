@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#1976D2"/>
+        </shape>
+    </item>
+
+    <!-- Icon -->
+    <item android:gravity="center">
+        <vector
+            android:width="48dp"
+            android:height="48dp"
+            android:viewportWidth="108"
+            android:viewportHeight="108">
+            <!-- GPS Pin -->
+            <path
+                android:fillColor="#FFFFFF"
+                android:pathData="M54,30c-8.8,0-16,7.2-16,16c0,12,16,32,16,32s16-20,16-32C70,37.2,62.8,30,54,30z M54,52c-3.3,0-6-2.7-6-6s2.7-6,6-6s6,2.7,6,6S57.3,52,54,52z"/>
+            <!-- Speed Lines -->
+            <path
+                android:fillColor="#FFC107"
+                android:pathData="M30,50h8v3h-8z"/>
+            <path
+                android:fillColor="#FFC107"
+                android:pathData="M32,42h6v3h-6z"/>
+            <path
+                android:fillColor="#FFC107"
+                android:pathData="M34,58h6v3h-6z"/>
+        </vector>
+    </item>
+</layer-list>
