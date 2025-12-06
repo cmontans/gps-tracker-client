@@ -122,7 +122,7 @@
       <!-- Configuración -->
       <div id="config-section" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label id="your-name-label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Tu Nombre
           </label>
           <input
@@ -132,11 +132,11 @@
             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
             placeholder="Ej: Juan, María, Alex..."
           />
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Así te verán los demás usuarios</p>
+          <p id="name-helper" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Así te verán los demás usuarios</p>
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label id="group-name-label" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             🔐 Nombre del Grupo
           </label>
           <input
@@ -146,7 +146,7 @@
             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
             placeholder="Ej: Amigos, Carrera2024, Familia..."
           />
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Solo verás usuarios de tu mismo grupo</p>
+          <p id="group-helper" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Solo verás usuarios de tu mismo grupo</p>
         </div>
         
         <div class="flex gap-2">
@@ -176,19 +176,19 @@
         <!-- Velocidad y Estadísticas -->
         <div class="text-center py-4 sm:py-8">
           <div class="mb-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Velocidad Actual</div>
+            <div id="current-speed-label" class="text-sm text-gray-600 dark:text-gray-400 mb-1">Velocidad Actual</div>
             <div id="speed-display" class="text-5xl sm:text-7xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">0.0</div>
             <div class="text-xl sm:text-2xl text-gray-600 dark:text-gray-400">km/h</div>
           </div>
 
           <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-6">
             <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-3 sm:p-4 transition-colors">
-              <div class="text-xs text-green-600 dark:text-green-300 font-semibold mb-1">🏆 MÁXIMA SESIÓN</div>
+              <div id="max-session-label" class="text-xs text-green-600 dark:text-green-300 font-semibold mb-1">🏆 MÁXIMA SESIÓN</div>
               <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-200">0.0</div>
               <div class="text-xs sm:text-sm text-green-600 dark:text-green-300">km/h</div>
             </div>
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-3 sm:p-4 transition-colors">
-              <div class="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1">📊 PROMEDIO</div>
+              <div id="average-label" class="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1">📊 PROMEDIO</div>
               <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-200">0.0</div>
               <div class="text-xs sm:text-sm text-blue-600 dark:text-blue-300">km/h</div>
             </div>
@@ -216,8 +216,8 @@
 
         <!-- Info GPS -->
         <div id="gps-info" class="hidden mt-4 p-3 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-700 dark:text-blue-200 text-sm transition-colors">
-          <p class="mb-1"><strong>Precisión GPS:</strong> <span id="accuracy">--</span> metros</p>
-          <p class="mb-1"><strong>Coordenadas:</strong> <span id="coords" class="text-xs break-all">--</span></p>
+          <p class="mb-1"><strong id="gps-accuracy-label">Precisión GPS:</strong> <span id="accuracy">--</span> <span id="meters-label">metros</span></p>
+          <p class="mb-1"><strong id="coordinates-label">Coordenadas:</strong> <span id="coords" class="text-xs break-all">--</span></p>
         </div>
 
         <!-- Botón Detener -->
@@ -234,7 +234,7 @@
       <!-- Usuarios -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-          <h2 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          <h2 id="users-title" class="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span class="text-xl sm:text-2xl">👥</span>
             Usuarios (<span id="user-count">0</span>)
           </h2>
@@ -246,14 +246,14 @@
           </button>
         </div>
         <div id="users-list" class="space-y-3">
-          <p class="text-gray-500 dark:text-gray-400 text-center py-8">No hay usuarios conectados</p>
+          <p id="no-users-message" class="text-gray-500 dark:text-gray-400 text-center py-8">No hay usuarios conectados</p>
         </div>
       </div>
 
       <!-- Mapa -->
       <div id="map-container" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 mb-4 transition-colors">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
-          <h2 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          <h2 id="map-title" class="text-lg sm:text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
             <span class="text-xl sm:text-2xl">🗺️</span>
             Mapa en Tiempo Real
           </h2>
@@ -280,19 +280,19 @@
         </div>
         <div id="map" class="w-full h-64 sm:h-96 lg:h-[500px] rounded-lg border-2 border-gray-200 dark:border-gray-700"></div>
         <div class="mt-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-          <p class="font-semibold mb-2">Leyenda:</p>
+          <p id="legend-label" class="font-semibold mb-2">Leyenda:</p>
           <div class="flex flex-wrap gap-3 sm:gap-4">
             <div class="flex items-center gap-2">
               <span class="text-xl sm:text-2xl">📍</span>
-              <span>Tu posición</span>
+              <span id="your-position-label">Tu posición</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xl sm:text-2xl">👤</span>
-              <span>Otros usuarios</span>
+              <span id="other-users-label">Otros usuarios</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="inline-block w-4 h-1 bg-blue-500"></span>
-              <span>Trayectoria</span>
+              <span id="trajectory-label">Trayectoria</span>
             </div>
           </div>
         </div>
@@ -302,7 +302,7 @@
       <div id="map-fullscreen" class="hidden fixed inset-0 bg-white dark:bg-gray-900 z-50 transition-colors">
         <div class="h-full flex flex-col">
           <div class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-3 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-gray-800 dark:text-white">🗺️ Mapa - Pantalla Completa</h2>
+            <h2 id="map-fullscreen-title" class="text-lg font-bold text-gray-800 dark:text-white">🗺️ Mapa - Pantalla Completa</h2>
             <button
               id="exit-fullscreen-button"
               class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
@@ -818,12 +818,12 @@
       elements.languageLabel.textContent = t('language');
 
       // Config section
-      document.querySelectorAll('label.block.text-sm')[0].textContent = t('yourName');
+      document.getElementById('your-name-label').textContent = t('yourName');
       document.getElementById('user-name').placeholder = t('namePlaceholder');
-      document.querySelectorAll('p.text-xs.text-gray-500')[0].textContent = t('nameHelper');
-      document.querySelectorAll('label.block.text-sm')[1].innerHTML = t('groupName');
+      document.getElementById('name-helper').textContent = t('nameHelper');
+      document.getElementById('group-name-label').innerHTML = t('groupName');
       document.getElementById('group-name').placeholder = t('groupPlaceholder');
-      document.querySelectorAll('p.text-xs.text-gray-500')[1].textContent = t('groupHelper');
+      document.getElementById('group-helper').textContent = t('groupHelper');
 
       // Track button
       if (!isTracking) {
@@ -844,27 +844,56 @@
         elements.gpsStatus.textContent = t('gpsInactive');
       }
 
-      document.querySelectorAll('.text-sm.text-gray-600.dark\\:text-gray-400.mb-1')[0].textContent = t('currentSpeed');
-      document.querySelectorAll('.text-xs')[2].textContent = t('maxSession');
-      document.querySelectorAll('.text-xs')[3].textContent = t('average');
+      document.getElementById('current-speed-label').textContent = t('currentSpeed');
+      document.getElementById('max-session-label').textContent = t('maxSession');
+      document.getElementById('average-label').textContent = t('average');
       document.getElementById('reset-stats-button').innerHTML = t('resetStats');
       document.getElementById('group-horn-button').innerHTML = t('groupHorn');
       document.getElementById('stop-button').innerHTML = t('stopTracking');
 
+      // GPS Info
+      const gpsAccuracyLabel = document.getElementById('gps-accuracy-label');
+      const coordinatesLabel = document.getElementById('coordinates-label');
+      const metersLabel = document.getElementById('meters-label');
+      if (gpsAccuracyLabel) gpsAccuracyLabel.textContent = t('gpsAccuracy');
+      if (coordinatesLabel) coordinatesLabel.textContent = t('coordinates');
+      if (metersLabel) metersLabel.textContent = t('meters');
+
       // Users section
-      const usersTitle = document.querySelector('h2.text-lg.sm\\:text-xl');
-      if (usersTitle && usersTitle.textContent.includes('Usuarios') || usersTitle.textContent.includes('Users') ||
-          usersTitle.textContent.includes('Utilisateurs') || usersTitle.textContent.includes('Benutzer')) {
+      const usersTitle = document.getElementById('users-title');
+      if (usersTitle) {
         const count = document.getElementById('user-count').textContent;
         usersTitle.innerHTML = `<span class="text-xl sm:text-2xl">👥</span> ${t('users')} (<span id="user-count">${count}</span>)`;
+      }
+      const noUsersMsg = document.getElementById('no-users-message');
+      if (noUsersMsg) {
+        noUsersMsg.textContent = t('noUsersConnected');
       }
       document.getElementById('toggle-map-button').innerHTML = t('viewMap');
 
       // Map section
+      const mapTitle = document.getElementById('map-title');
+      if (mapTitle) {
+        mapTitle.innerHTML = `<span class="text-xl sm:text-2xl">🗺️</span> ${t('mapRealTime')}`;
+      }
+      const mapFullscreenTitle = document.getElementById('map-fullscreen-title');
+      if (mapFullscreenTitle) {
+        mapFullscreenTitle.textContent = `🗺️ ${t('mapFullscreen')}`;
+      }
       document.getElementById('fullscreen-button').innerHTML = t('fullscreen');
       document.getElementById('clear-tracks-button').innerHTML = t('clean');
       document.getElementById('close-map-button').innerHTML = t('close');
       document.getElementById('exit-fullscreen-button').innerHTML = t('exit');
+
+      // Map legend
+      const legendLabel = document.getElementById('legend-label');
+      const yourPositionLabel = document.getElementById('your-position-label');
+      const otherUsersLabel = document.getElementById('other-users-label');
+      const trajectoryLabel = document.getElementById('trajectory-label');
+      if (legendLabel) legendLabel.textContent = t('legend');
+      if (yourPositionLabel) yourPositionLabel.textContent = t('yourPosition');
+      if (otherUsersLabel) otherUsersLabel.textContent = t('otherUsers');
+      if (trajectoryLabel) trajectoryLabel.textContent = t('trajectory');
 
       // Instructions
       const instructionsTitle = document.querySelector('.bg-blue-50 p.font-semibold');
