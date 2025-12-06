@@ -1,6 +1,11 @@
 # GPS Speed Tracker Client
 
-A real-time GPS speed tracking web application with live telemetry, group sharing, and map visualization. Track your speed, view other users in your group, and visualize movement on an interactive map.
+A real-time GPS speed tracking application with live telemetry, group sharing, and map visualization. Available as both a web application and a native Android app. Track your speed, view other users in your group, and visualize movement on an interactive map.
+
+## Platform Support
+
+- **Web Application**: Progressive Web App (PWA) for iOS and Android browsers
+- **Native Android**: Full-featured Android application (see `android/` directory)
 
 ## Features
 
@@ -225,9 +230,31 @@ This project is available for use under standard open source terms. Check with t
 
 Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
 
+## Native Android App
+
+A fully-featured native Android application is available in the `android/` directory with:
+
+- Native performance and better battery optimization
+- Google Maps integration
+- Foreground service for reliable tracking
+- Material Design UI with dark mode
+- Full compatibility with the same WebSocket server
+
+See [android/README.md](android/README.md) for setup instructions.
+
+**Quick Start**:
+```bash
+cd android
+./gradlew build
+# Configure Google Maps API key in AndroidManifest.xml
+./gradlew installDebug
+```
+
 ## Server
 
 This client requires a compatible WebSocket server. See the server repository for setup instructions.
+
+Both the web app and Android app use the same WebSocket protocol and can interact with each other in real-time.
 
 ## Support
 

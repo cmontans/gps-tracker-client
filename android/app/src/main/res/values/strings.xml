@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">3WB Speed Tracker</string>
+
+    <!-- Main Screen -->
+    <string name="your_name">Your Name</string>
+    <string name="group_name">Group Name</string>
+    <string name="start_tracking">▶️ Start Tracking</string>
+    <string name="stop_tracking">⏹️ Stop Tracking</string>
+    <string name="settings">⚙️ Settings</string>
+
+    <!-- Speed Statistics -->
+    <string name="current_speed">Current Speed</string>
+    <string name="max_speed">Max Speed</string>
+    <string name="avg_speed">Average Speed</string>
+    <string name="kmh">km/h</string>
+
+    <!-- Status -->
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting...</string>
+    <string name="status_connected">Connected</string>
+    <string name="gps_searching">Searching GPS...</string>
+    <string name="gps_active">GPS Active</string>
+
+    <!-- Map -->
+    <string name="view_map">🗺️ View Map</string>
+    <string name="hide_map">Hide Map</string>
+    <string name="fullscreen_map">⛶ Fullscreen Map</string>
+    <string name="clear_tracks">Clear Tracks</string>
+
+    <!-- Group -->
+    <string name="group_horn">📢 Group Horn</string>
+    <string name="users_in_group">Users in Group</string>
+
+    <!-- Actions -->
+    <string name="reset_stats">🔄 Reset Statistics</string>
+
+    <!-- Settings -->
+    <string name="server_url">Server URL</string>
+    <string name="user_id">User ID</string>
+    <string name="default_server_url">wss://gps-tracker-server-production-5900.up.railway.app</string>
+
+    <!-- Messages -->
+    <string name="enter_name">Please enter your name</string>
+    <string name="enter_group">Please enter a group name</string>
+    <string name="location_permission_required">Location permission is required for GPS tracking</string>
+    <string name="notification_permission_required">Notification permission is required for Android 13+</string>
+    <string name="tracking_active">GPS Tracking Active</string>
+    <string name="tracking_notification_text">Speed: %1$.1f km/h</string>
+
+    <!-- Errors -->
+    <string name="gps_error">GPS error: %1$s</string>
+    <string name="connection_error">Connection error</string>
+
+    <!-- Preferences -->
+    <string name="pref_server_url_key">server_url</string>
+    <string name="pref_user_id_key">user_id</string>
+    <string name="pref_dark_mode_key">dark_mode</string>
+</resources>
