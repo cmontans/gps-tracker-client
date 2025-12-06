@@ -554,22 +554,24 @@
       return (bearing + 360) % 360;
     }
 
-    // Crear icono de flecha para dirección con velocidad visible
-    function createArrowIcon(speed, isCurrentUser, bearing = 0) {
+    // Crear icono de flecha para dirección con velocidad y nombre visible
+    function createArrowIcon(speed, isCurrentUser, bearing = 0, userName = '') {
       const color = isCurrentUser ? '#4F46E5' : '#10B981';
       const size = isCurrentUser ? 40 : 35;
-      
+      const displayName = userName || 'Usuario';
+
       const html = `
         <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
-          <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: ${color}; color: white; padding: 3px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 1000;">
-            ${speed} km/h
+          <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: ${color}; color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 1000; text-align: center; line-height: 1.3;">
+            <div style="font-size: 10px; opacity: 0.9;">${displayName}</div>
+            <div style="font-size: 13px; margin-top: 1px;">${speed} km/h</div>
           </div>
           <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform: rotate(${bearing}deg); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
             <path d="M12 2 L4 20 L12 16 L20 20 Z" fill="${color}" stroke="white" stroke-width="1.5"/>
           </svg>
         </div>
       `;
-      
+
       return L.divIcon({
         html: html,
         className: '',
@@ -595,12 +597,12 @@
         // Crear o actualizar marcador
         if (!userMarkers[markerId]) {
           console.log('✨ Creando nuevo marcador para:', markerId);
-          
+
           try {
-            const icon = createArrowIcon(user.speed, isCurrentUser, user.bearing || 0);
-            const marker = L.marker([user.lat, user.lon], { icon: icon }).addTo(activeMap);
-            
             const displayName = user.userName || user.userId.substring(0, 15);
+            const icon = createArrowIcon(user.speed, isCurrentUser, user.bearing || 0, displayName);
+            const marker = L.marker([user.lat, user.lon], { icon: icon }).addTo(activeMap);
+
             marker.bindPopup(`
               <div style="text-align: center;">
                 <strong>${displayName}</strong><br>
@@ -609,10 +611,10 @@
                 <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             `);
-            
+
             userMarkers[markerId] = marker;
             userTracks[markerId] = [];
-            
+
             console.log('✅ Marcador creado exitosamente');
           } catch (error) {
             console.error('❌ Error creando marcador:', error);
@@ -620,11 +622,11 @@
         } else {
           // Actualizar posición y rotación
           try {
+            const displayName = user.userName || user.userId.substring(0, 15);
             const marker = userMarkers[markerId];
             marker.setLatLng([user.lat, user.lon]);
-            marker.setIcon(createArrowIcon(user.speed, isCurrentUser, user.bearing || 0));
-            
-            const displayName = user.userName || user.userId.substring(0, 15);
+            marker.setIcon(createArrowIcon(user.speed, isCurrentUser, user.bearing || 0, displayName));
+
             marker.setPopupContent(`
               <div style="text-align: center;">
                 <strong>${displayName}</strong><br>
