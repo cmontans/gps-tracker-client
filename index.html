@@ -13,9 +13,19 @@
     body {
       overscroll-behavior: contain;
       -webkit-tap-highlight-color: transparent;
+      transition: filter 0.3s ease;
     }
     * {
       box-sizing: border-box;
+    }
+    body.night-mode {
+      filter: brightness(0.4);
+    }
+    body.night-mode-medium {
+      filter: brightness(0.6);
+    }
+    body.night-mode-light {
+      filter: brightness(0.8);
     }
   </style>
 </head>
@@ -28,9 +38,12 @@
           <div>
             <h1 class="text-3xl font-bold text-gray-800 mb-2">🚀 GPS Speed Tracker</h1>
             <p class="text-gray-600">Telemetría de velocidad en tiempo real</p>
-            <p class="text-xs text-gray-400 mt-2">v4.0 Final ✓</p>
+            <p class="text-xs text-gray-400 mt-2">v4.0 Final ✔</p>
           </div>
-          <button id="settings-button" class="text-2xl hover:bg-gray-100 p-2 rounded-lg">⚙️</button>
+          <div class="flex gap-2">
+            <button id="brightness-button" class="text-2xl hover:bg-gray-100 p-2 rounded-lg" title="Modo Nocturno">🌙</button>
+            <button id="settings-button" class="text-2xl hover:bg-gray-100 p-2 rounded-lg" title="Configuración">⚙️</button>
+          </div>
         </div>
       </div>
 
@@ -43,7 +56,7 @@
         </div>
 
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">🔐 Nombre del Grupo</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">📍 Nombre del Grupo</label>
           <input id="group-name" type="text" maxlength="30" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Ej: Amigos, Carrera2024, Familia..." />
           <p class="text-xs text-gray-500 mt-1">Solo verás usuarios de tu mismo grupo</p>
         </div>
@@ -170,7 +183,7 @@
       </div>
 
       <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 text-sm text-purple-800 mb-4">
-        <p class="font-semibold mb-2">🔐 Sistema de Grupos:</p>
+        <p class="font-semibold mb-2">📍 Sistema de Grupos:</p>
         <ul class="list-disc list-inside space-y-1">
           <li>Solo verás usuarios de tu mismo grupo</li>
           <li>El nombre distingue mayúsculas/minúsculas</li>
@@ -180,6 +193,686 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script>
+// ===== GPS TRACKER v4.0 - JAVASCRIPT COMPLETO =====
+
+console.log('🚀 GPS Tracker v4.0 iniciado');
+
+// ===== VARIABLES GLOBALES =====
+let userId = localStorage.getItem('userId') || `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+localStorage.setItem('userId', userId);
+
+let userName = localStorage.getItem('userName') || '';
+let groupName = localStorage.getItem('groupName') || '';
+let serverUrl = localStorage.getItem('serverUrl') || 'wss://gps-tracker-server-production-5900.up.railway.app';
+
+let ws = null;
+let watchId = null;
+let isTracking = false;
+let users = [];
+let wakeLock = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+
+let maxSpeed = 0;
+let speedReadings = [];
+
+let map = null;
+let mapFullscreen = null;
+let userMarkers = {};
+let userTracks = {};
+let trackPolylines = {};
+let mapVisible = false;
+let isFullscreen = false;
+
+let keepAliveInterval = null;
+
+// Control de brillo
+let brightnessLevel = 0; // 0 = normal, 1 = 80%, 2 = 60%, 3 = 40%
+const brightnessLevels = [
+  { class: '', emoji: '🌙', name: 'Normal' },
+  { class: 'night-mode-light', emoji: '🌙', name: '80%' },
+  { class: 'night-mode-medium', emoji: '🌙', name: '60%' },
+  { class: 'night-mode', emoji: '🌙', name: '40%' }
+];
+
+// ===== ELEMENTOS DOM =====
+const elements = {
+  userId: document.getElementById('user-id'),
+  userName: document.getElementById('user-name'),
+  groupName: document.getElementById('group-name'),
+  serverUrl: document.getElementById('server-url'),
+  configSection: document.getElementById('config-section'),
+  statusSection: document.getElementById('status-section'),
+  gpsStatusContainer: document.getElementById('gps-status-container'),
+  wifiIcon: document.getElementById('wifi-icon'),
+  connectionStatus: document.getElementById('connection-status'),
+  gpsIcon: document.getElementById('gps-icon'),
+  gpsStatus: document.getElementById('gps-status'),
+  speedDisplay: document.getElementById('speed-display'),
+  maxSpeed: document.getElementById('max-speed'),
+  avgSpeed: document.getElementById('avg-speed'),
+  errorBox: document.getElementById('error-box'),
+  successBox: document.getElementById('success-box'),
+  gpsInfo: document.getElementById('gps-info'),
+  trackButton: document.getElementById('track-button'),
+  stopButton: document.getElementById('stop-button'),
+  resetStatsButton: document.getElementById('reset-stats-button'),
+  userCount: document.getElementById('user-count'),
+  usersList: document.getElementById('users-list'),
+  accuracy: document.getElementById('accuracy'),
+  coords: document.getElementById('coords'),
+  mapContainer: document.getElementById('map-container'),
+  toggleMapButton: document.getElementById('toggle-map-button'),
+  closeMapButton: document.getElementById('close-map-button'),
+  clearTracksButton: document.getElementById('clear-tracks-button'),
+  fullscreenButton: document.getElementById('fullscreen-button'),
+  exitFullscreenButton: document.getElementById('exit-fullscreen-button'),
+  mapFullscreen: document.getElementById('map-fullscreen'),
+  settingsButton: document.getElementById('settings-button'),
+  settingsModal: document.getElementById('settings-modal'),
+  closeSettings: document.getElementById('close-settings'),
+  brightnessButton: document.getElementById('brightness-button')
+};
+
+// Inicializar valores
+elements.userId.textContent = userId.substring(0, 30);
+elements.userName.value = userName;
+elements.groupName.value = groupName;
+elements.serverUrl.value = serverUrl;
+
+// Restaurar nivel de brillo guardado
+const savedBrightness = localStorage.getItem('brightnessLevel');
+if (savedBrightness !== null) {
+  brightnessLevel = parseInt(savedBrightness);
+  const currentLevel = brightnessLevels[brightnessLevel];
+  if (currentLevel.class) {
+    document.body.classList.add(currentLevel.class);
+  }
+  elements.brightnessButton.textContent = currentLevel.emoji;
+}
+
+// ===== EVENT LISTENERS - INPUTS =====
+elements.userName.addEventListener('input', (e) => {
+  userName = e.target.value.trim();
+  localStorage.setItem('userName', userName);
+});
+
+elements.groupName.addEventListener('input', (e) => {
+  groupName = e.target.value.trim();
+  localStorage.setItem('groupName', groupName);
+});
+
+elements.serverUrl.addEventListener('input', (e) => {
+  serverUrl = e.target.value.trim();
+  localStorage.setItem('serverUrl', serverUrl);
+});
+
+// ===== FUNCIONES UI =====
+function showError(message) {
+  console.error('❌', message);
+  elements.errorBox.textContent = message;
+  elements.errorBox.classList.remove('hidden');
+  elements.successBox.classList.add('hidden');
+  setTimeout(() => elements.errorBox.classList.add('hidden'), 8000);
+}
+
+function showSuccess(message) {
+  console.log('✓', message);
+  elements.successBox.textContent = message;
+  elements.successBox.classList.remove('hidden');
+  elements.errorBox.classList.add('hidden');
+  setTimeout(() => elements.successBox.classList.add('hidden'), 3000);
+}
+
+function updateConnectionStatus(connected) {
+  elements.wifiIcon.textContent = connected ? '✅' : '❌';
+  elements.connectionStatus.textContent = connected ? 'Conectado' : 'Desconectado';
+  elements.connectionStatus.className = `text-xs sm:text-sm font-medium ${connected ? 'text-green-600' : 'text-red-600'}`;
+}
+
+function updateGpsStatus(active) {
+  elements.gpsIcon.textContent = active ? '✅' : '📍';
+  elements.gpsStatus.textContent = active ? 'GPS Activo' : 'GPS Inactivo';
+  elements.gpsStatus.className = `text-xs sm:text-sm font-medium ${active ? 'text-green-600' : 'text-gray-600'}`;
+}
+
+function updateUsersList() {
+  elements.userCount.textContent = users.length;
+  
+  if (users.length === 0) {
+    elements.usersList.innerHTML = '<p class="text-gray-500 text-center py-8">No hay usuarios conectados</p>';
+    return;
+  }
+
+  elements.usersList.innerHTML = users.map(user => {
+    const displayName = user.userName || user.userId.substring(0, 15);
+    const isCurrentUser = user.userId === userId;
+    
+    let direction = '';
+    if (user.bearing !== undefined) {
+      const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+      const index = Math.round(user.bearing / 45) % 8;
+      direction = dirs[index];
+    }
+    
+    return `
+    <div class="p-4 rounded-lg border-2 ${isCurrentUser ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50 border-gray-200'}">
+      <div class="flex items-center justify-between">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-lg font-semibold text-gray-800">${displayName}</span>
+            ${isCurrentUser ? '<span class="text-xs bg-indigo-500 text-white px-2 py-1 rounded-full">Tú</span>' : ''}
+          </div>
+          <div class="text-xs text-gray-500 font-mono truncate">ID: ${user.userId.substring(0, 20)}...</div>
+          <div class="flex items-center gap-3 mt-2 text-sm text-gray-600">
+            <span>🧭 ${direction || '--'}</span>
+            <span>🏆 ${user.maxSpeed || 0} km/h</span>
+            <span class="text-xs">${new Date(user.timestamp).toLocaleTimeString()}</span>
+          </div>
+        </div>
+        <div class="text-right ml-4">
+          <div class="text-3xl font-bold text-indigo-600">${user.speed}</div>
+          <div class="text-sm text-gray-600">km/h</div>
+        </div>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+// ===== WEBSOCKET =====
+function connectWebSocket() {
+  console.log('🔌 Conectando a:', serverUrl);
+  
+  try {
+    ws = new WebSocket(serverUrl);
+    
+    ws.onopen = () => {
+      updateConnectionStatus(true);
+      showSuccess('✓ Conectado al servidor');
+      reconnectAttempts = 0;
+      
+      ws.send(JSON.stringify({ 
+        type: 'register', 
+        userId,
+        userName: userName || 'Usuario',
+        groupName: groupName || 'default'
+      }));
+      console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
+      
+      startKeepAlive();
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'users') {
+        users = data.users;
+        updateUsersList();
+        updateMap();
+      } else if (data.type === 'pong') {
+        console.log('💓 Pong recibido');
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('❌ Error WebSocket:', error);
+      showError('⚠️ Error de conexión. Verifica el servidor.');
+      updateConnectionStatus(false);
+    };
+
+    ws.onclose = () => {
+      console.log('🔌 Conexión cerrada');
+      updateConnectionStatus(false);
+      stopKeepAlive();
+      
+      if (isTracking && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        reconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+        console.log(`↻ Reconectando en ${delay/1000}s (intento ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+        setTimeout(connectWebSocket, delay);
+      }
+    };
+  } catch (error) {
+    console.error('❌ Error al crear WebSocket:', error);
+    showError('No se pudo conectar: ' + error.message);
+  }
+}
+
+function startKeepAlive() {
+  stopKeepAlive();
+  keepAliveInterval = setInterval(() => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'ping' }));
+      console.log('💓 Ping enviado');
+    }
+  }, 25000);
+}
+
+function stopKeepAlive() {
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+    keepAliveInterval = null;
+  }
+}
+
+// ===== GPS =====
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('✓ Screen Wake Lock activado');
+      wakeLock.addEventListener('release', () => {
+        console.log('⚠ Screen Wake Lock liberado');
+      });
+    } catch (err) {
+      console.warn('⚠ No se pudo activar Wake Lock:', err);
+    }
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+    console.log('✓ Wake Lock liberado');
+  }
+}
+
+function updateSpeed(speed, accuracy, lat, lon, bearing) {
+  elements.speedDisplay.textContent = speed;
+  elements.accuracy.textContent = accuracy.toFixed(1);
+  elements.coords.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+  
+  if (speed > maxSpeed) {
+    maxSpeed = speed;
+    elements.maxSpeed.textContent = maxSpeed;
+  }
+  
+  if (speed > 0) {
+    speedReadings.push(speed);
+    if (speedReadings.length > 100) speedReadings.shift();
+    const avg = speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length;
+    elements.avgSpeed.textContent = avg.toFixed(1);
+  }
+  
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'update',
+      userId,
+      userName: userName || 'Usuario',
+      groupName: groupName || 'default',
+      speed,
+      maxSpeed,
+      lat,
+      lon,
+      bearing: bearing || 0,
+      accuracy,
+      timestamp: Date.now()
+    }));
+  }
+}
+
+function startGPS() {
+  if (!navigator.geolocation) {
+    showError('❌ GPS no disponible en este dispositivo');
+    return;
+  }
+
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+  };
+
+  watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const { latitude, longitude, accuracy, speed, heading } = position.coords;
+      
+      updateGpsStatus(true);
+      elements.gpsInfo.style.display = 'block';
+      
+      const speedKmh = speed !== null && speed >= 0 
+        ? Math.round(speed * 3.6) 
+        : 0;
+      
+      const bearing = heading !== null ? heading : 0;
+      
+      updateSpeed(speedKmh, accuracy, latitude, longitude, bearing);
+    },
+    (error) => {
+      console.error('❌ Error GPS:', error);
+      let errorMsg = 'Error de GPS: ';
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          errorMsg += 'Permiso denegado. Activa ubicación en Configuración.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMsg += 'Posición no disponible. Sal al exterior.';
+          break;
+        case error.TIMEOUT:
+          errorMsg += 'Timeout. Sal al exterior para mejor señal.';
+          break;
+        default:
+          errorMsg += error.message;
+      }
+      showError(errorMsg);
+      updateGpsStatus(false);
+    },
+    options
+  );
+}
+
+function stopGPS() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    updateGpsStatus(false);
+    console.log('✓ GPS detenido');
+  }
+}
+
+// ===== CONTROL PRINCIPAL =====
+async function startTracking() {
+  if (!userName.trim()) {
+    showError('⚠️ Debes introducir tu nombre');
+    return;
+  }
+  
+  isTracking = true;
+  
+  elements.configSection.classList.add('hidden');
+  elements.configSection.style.display = 'none';
+  elements.statusSection.classList.remove('hidden');
+  elements.statusSection.style.display = 'block';
+  
+  connectWebSocket();
+  startGPS();
+  await requestWakeLock();
+  
+  elements.trackButton.textContent = '🟢 Seguimiento Activo';
+  elements.trackButton.className = 'flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors cursor-not-allowed opacity-75';
+  elements.trackButton.disabled = true;
+  
+  showSuccess('✓ Seguimiento iniciado correctamente');
+  console.log('✅ SEGUIMIENTO INICIADO');
+}
+
+function stopTracking() {
+  isTracking = false;
+  
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+  
+  stopGPS();
+  releaseWakeLock();
+  stopKeepAlive();
+  
+  updateConnectionStatus(false);
+  updateGpsStatus(false);
+  
+  elements.speedDisplay.textContent = '0';
+  elements.gpsInfo.style.display = 'none';
+  
+  elements.configSection.classList.remove('hidden');
+  elements.configSection.style.display = 'block';
+  elements.statusSection.classList.add('hidden');
+  elements.statusSection.style.display = 'none';
+  
+  elements.trackButton.textContent = '▶️ Iniciar Seguimiento';
+  elements.trackButton.className = 'flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors';
+  elements.trackButton.disabled = false;
+  
+  console.log('✅ SEGUIMIENTO DETENIDO');
+}
+
+function resetStats() {
+  maxSpeed = 0;
+  speedReadings = [];
+  elements.maxSpeed.textContent = '0';
+  elements.avgSpeed.textContent = '0';
+  showSuccess('✓ Estadísticas reseteadas');
+}
+
+// ===== CONTROL DE BRILLO =====
+function toggleBrightness() {
+  brightnessLevel = (brightnessLevel + 1) % brightnessLevels.length;
+  
+  // Remover todas las clases de brillo
+  document.body.classList.remove('night-mode', 'night-mode-medium', 'night-mode-light');
+  
+  // Añadir la clase correspondiente si no es nivel normal
+  const currentLevel = brightnessLevels[brightnessLevel];
+  if (currentLevel.class) {
+    document.body.classList.add(currentLevel.class);
+  }
+  
+  // Actualizar botón
+  elements.brightnessButton.textContent = currentLevel.emoji;
+  
+  // Mostrar mensaje
+  const messages = [
+    '☀️ Brillo normal',
+    '🌤️ Brillo reducido 80%',
+    '🌥️ Brillo reducido 60%',
+    '🌙 Modo nocturno 40%'
+  ];
+  showSuccess(messages[brightnessLevel]);
+  
+  // Guardar preferencia
+  localStorage.setItem('brightnessLevel', brightnessLevel);
+  
+  console.log('✓ Brillo ajustado:', currentLevel.name);
+}
+
+// ===== MAPA =====
+function initMap(lat, lon, containerId) {
+  const container = document.getElementById(containerId);
+  const isFs = containerId.includes('fullscreen');
+  
+  if (isFs) {
+    if (mapFullscreen) return;
+    mapFullscreen = L.map(containerId).setView([lat, lon], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(mapFullscreen);
+  } else {
+    if (map) return;
+    map = L.map(containerId).setView([lat, lon], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+  }
+}
+
+function createArrowIcon(speed, isCurrentUser, bearing = 0) {
+  const color = isCurrentUser ? '#4F46E5' : '#10B981';
+  const size = isCurrentUser ? 40 : 35;
+  
+  const html = `
+    <div style="position: relative; width: ${size}px; height: ${size}px;">
+      <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: ${color}; color: white; padding: 3px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 1000;">
+        ${speed} km/h
+      </div>
+      <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform: rotate(${bearing}deg); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
+        <path d="M12 2 L4 20 L12 16 L20 20 Z" fill="${color}" stroke="white" stroke-width="1.5"/>
+      </svg>
+    </div>
+  `;
+  
+  return L.divIcon({
+    html: html,
+    className: '',
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2],
+    popupAnchor: [0, -size/2]
+  });
+}
+
+function updateMap() {
+  const activeMap = isFullscreen ? mapFullscreen : map;
+  if (!activeMap || (!mapVisible && !isFullscreen)) return;
+
+  users.forEach(user => {
+    const isCurrentUser = user.userId === userId;
+    const markerId = user.userId + (isFullscreen ? '_fs' : '_normal');
+    
+    if (!userMarkers[markerId]) {
+      try {
+        const icon = createArrowIcon(user.speed, isCurrentUser, user.bearing || 0);
+        const marker = L.marker([user.lat, user.lon], { icon: icon }).addTo(activeMap);
+        
+        const displayName = user.userName || user.userId.substring(0, 15);
+        marker.bindPopup(`
+          <div style="text-align: center;">
+            <strong>${displayName}</strong><br>
+            <span style="font-size: 18px; font-weight: bold;">${user.speed} km/h</span><br>
+            <span style="font-size: 14px;">🏆 Max: ${user.maxSpeed || 0} km/h</span><br>
+            <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
+          </div>
+        `);
+        
+        userMarkers[markerId] = marker;
+        userTracks[markerId] = [];
+      } catch (error) {
+        console.error('Error creando marcador:', error);
+      }
+    } else {
+      try {
+        const marker = userMarkers[markerId];
+        marker.setLatLng([user.lat, user.lon]);
+        marker.setIcon(createArrowIcon(user.speed, isCurrentUser, user.bearing || 0));
+      } catch (error) {
+        console.error('Error actualizando marcador:', error);
+      }
+    }
+    
+    if (user.speed > 3.6) {
+      const track = userTracks[markerId];
+      if (track) {
+        track.push([user.lat, user.lon]);
+        if (track.length > 50) track.shift();
+        
+        const polylineId = markerId + '_polyline';
+        if (trackPolylines[polylineId]) {
+          activeMap.removeLayer(trackPolylines[polylineId]);
+        }
+        
+        if (track.length > 1) {
+          const color = isCurrentUser ? '#4F46E5' : '#10B981';
+          trackPolylines[polylineId] = L.polyline(track, {
+            color: color,
+            weight: 3,
+            opacity: 0.7
+          }).addTo(activeMap);
+        }
+      }
+    }
+  });
+
+  const currentUser = users.find(u => u.userId === userId);
+  if (currentUser) {
+    activeMap.setView([currentUser.lat, currentUser.lon], activeMap.getZoom());
+  }
+}
+
+function clearMapTracks() {
+  const activeMap = isFullscreen ? mapFullscreen : map;
+  if (!activeMap) return;
+  
+  Object.keys(trackPolylines).forEach(polylineId => {
+    if (trackPolylines[polylineId]) {
+      activeMap.removeLayer(trackPolylines[polylineId]);
+      delete trackPolylines[polylineId];
+    }
+  });
+  
+  Object.keys(userTracks).forEach(trackId => {
+    userTracks[trackId] = [];
+  });
+  
+  showSuccess('✓ Trayectorias limpiadas');
+}
+
+// ===== EVENT LISTENERS =====
+elements.trackButton.addEventListener('click', startTracking);
+elements.stopButton.addEventListener('click', stopTracking);
+elements.resetStatsButton.addEventListener('click', resetStats);
+
+elements.toggleMapButton.addEventListener('click', () => {
+  mapVisible = true;
+  elements.mapContainer.classList.remove('hidden');
+  
+  const currentUser = users.find(u => u.userId === userId);
+  if (currentUser) {
+    initMap(currentUser.lat, currentUser.lon, 'map');
+  } else if (users.length > 0) {
+    initMap(users[0].lat, users[0].lon, 'map');
+  } else {
+    initMap(40.4168, -3.7038, 'map');
+  }
+  
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+    updateMap();
+  }, 100);
+});
+
+elements.closeMapButton.addEventListener('click', () => {
+  mapVisible = false;
+  elements.mapContainer.classList.add('hidden');
+});
+
+elements.clearTracksButton.addEventListener('click', clearMapTracks);
+
+elements.fullscreenButton.addEventListener('click', () => {
+  isFullscreen = true;
+  elements.mapContainer.classList.add('hidden');
+  elements.mapFullscreen.classList.remove('hidden');
+  
+  const firstUser = users.length > 0 ? users[0] : null;
+  if (firstUser) {
+    initMap(firstUser.lat, firstUser.lon, 'map-fullscreen-container');
+  } else {
+    initMap(40.4168, -3.7038, 'map-fullscreen-container');
+  }
+  
+  setTimeout(() => {
+    if (mapFullscreen) {
+      mapFullscreen.invalidateSize();
+      updateMap();
+    }
+  }, 200);
+});
+
+elements.exitFullscreenButton.addEventListener('click', () => {
+  isFullscreen = false;
+  elements.mapFullscreen.classList.add('hidden');
+  elements.mapContainer.classList.remove('hidden');
+  
+  setTimeout(() => {
+    if (map) {
+      map.invalidateSize();
+      updateMap();
+    }
+  }, 100);
+});
+
+elements.settingsButton.addEventListener('click', () => {
+  elements.settingsModal.classList.remove('hidden');
+});
+
+elements.closeSettings.addEventListener('click', () => {
+  elements.settingsModal.classList.add('hidden');
+});
+
+elements.brightnessButton.addEventListener('click', toggleBrightness);
+
+console.log('✓ GPS Tracker listo');
+  </script>
 </body>
 </html>
