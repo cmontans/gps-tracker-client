@@ -40,6 +40,8 @@ Replace `YOUR_GOOGLE_MAPS_API_KEY_HERE` with your actual API key.
 5. Run → Run 'app' (or press Shift+F10)
 
 #### Using Command Line:
+
+**Linux/macOS:**
 ```bash
 cd android
 
@@ -52,6 +54,21 @@ cd android
 # Or build release APK
 ./gradlew assembleRelease
 # APK will be in app/build/outputs/apk/release/
+```
+
+**Windows:**
+```cmd
+cd android
+
+# Build the app
+gradlew.bat build
+
+# Install on connected device
+gradlew.bat installDebug
+
+# Or build release APK
+gradlew.bat assembleRelease
+REM APK will be in app\build\outputs\apk\release\
 ```
 
 ## First Run

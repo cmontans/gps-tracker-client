@@ -356,7 +356,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
         // Wait a bit for service to bind, then start tracking
-        window.postDelayed({
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             trackingService?.startTracking(userId, userName, groupName, serverUrl)
             isTracking = true
             updateUIForTracking(true)
