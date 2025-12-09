@@ -106,7 +106,7 @@ class SpeedComplicationService : ComplicationDataSourceService() {
         }
     }
 
-    companion fun {
+    companion object {
         fun requestUpdate(context: Context) {
             val componentName = ComponentName(context, SpeedComplicationService::class.java)
             // Request complication update
