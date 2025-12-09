@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    android:padding="8dp"
+    app:boxedEdges="all">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+            <!-- Current Speed Display -->
+            <TextView
+                android:id="@+id/currentSpeedLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/current_speed"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/currentSpeedText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.0"
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/speedUnit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/kmh"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <!-- Statistics -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/max_speed"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/maxSpeedText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0.0"
+                        android:textColor="@android:color/holo_orange_light"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/avg_speed"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/avgSpeedText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0.0"
+                        android:textColor="@android:color/holo_blue_light"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Status Indicators -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/gpsStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/gps_inactive"
+                    android:textColor="@android:color/holo_red_light"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:id="@+id/connectionStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/disconnected"
+                    android:textColor="@android:color/holo_red_light"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <!-- Control Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/startStopButton"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/start_tracking"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/resetButton"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="@string/reset_stats"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/hornButton"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="4dp"
+                android:text="@string/group_horn"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.wear.widget.BoxInsetLayout>
