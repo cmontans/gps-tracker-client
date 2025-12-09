@@ -120,6 +120,14 @@
               </label>
             </div>
             <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <label for="visualizer-mode-toggle" class="text-sm font-medium text-gray-700 dark:text-gray-300" id="visualizer-mode-label">
+                Modo Visualizador (ver grupo sin publicar mi ubicación)
+              </label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="visualizer-mode-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
               <label for="voice-enabled-toggle" class="text-sm font-medium text-gray-700 dark:text-gray-300" id="voice-enabled-label">
                 🔊 Anunciar velocidad por voz
               </label>
@@ -414,6 +422,7 @@
         serverPlaceholder: 'wss://tu-servidor.up.railway.app',
         language: 'Idioma',
         autoCenterMap: 'Auto-centrar mapa en mi ubicación',
+        visualizerMode: 'Modo Visualizador (ver grupo sin publicar mi ubicación)',
         voiceEnabled: '🔊 Anunciar velocidad por voz',
         minSpeedLabel: 'Velocidad mínima para anunciar (km/h)',
 
@@ -521,6 +530,7 @@
         serverPlaceholder: 'wss://your-server.up.railway.app',
         language: 'Language',
         autoCenterMap: 'Auto-center map on my location',
+        visualizerMode: 'Visualizer Mode (view group without publishing my location)',
         voiceEnabled: '🔊 Announce speed by voice',
         minSpeedLabel: 'Minimum speed to announce (km/h)',
 
@@ -628,6 +638,7 @@
         serverPlaceholder: 'wss://votre-serveur.up.railway.app',
         language: 'Langue',
         autoCenterMap: 'Centrer automatiquement la carte sur ma position',
+        visualizerMode: 'Mode Visualisateur (voir le groupe sans publier ma position)',
         voiceEnabled: '🔊 Annoncer la vitesse par voix',
         minSpeedLabel: 'Vitesse minimale pour annoncer (km/h)',
 
@@ -735,6 +746,7 @@
         serverPlaceholder: 'wss://ihr-server.up.railway.app',
         language: 'Sprache',
         autoCenterMap: 'Karte automatisch auf meinen Standort zentrieren',
+        visualizerMode: 'Visualisierungsmodus (Gruppe sehen ohne meinen Standort zu veröffentlichen)',
         voiceEnabled: '🔊 Geschwindigkeit per Sprache ankündigen',
         minSpeedLabel: 'Mindestgeschwindigkeit zum Ankündigen (km/h)',
 
@@ -861,6 +873,7 @@
       document.getElementById('server-url').placeholder = t('serverPlaceholder');
       elements.languageLabel.textContent = t('language');
       document.getElementById('auto-center-label').textContent = t('autoCenterMap');
+      document.getElementById('visualizer-mode-label').textContent = t('visualizerMode');
       document.getElementById('voice-enabled-label').textContent = t('voiceEnabled');
       document.getElementById('min-speed-label').textContent = t('minSpeedLabel');
 
@@ -1127,6 +1140,7 @@
       languageSelect: document.getElementById('language-select'),
       languageLabel: document.getElementById('language-label'),
       autoCenterToggle: document.getElementById('auto-center-toggle'),
+      visualizerModeToggle: document.getElementById('visualizer-mode-toggle')
       voiceEnabledToggle: document.getElementById('voice-enabled-toggle'),
       minSpeedInput: document.getElementById('min-speed-input')
     };
@@ -1142,6 +1156,9 @@
     const autoCenterEnabled = localStorage.getItem('autoCenterMap') !== 'false';
     elements.autoCenterToggle.checked = autoCenterEnabled;
 
+    // Load visualizer mode preference (default: false)
+    const visualizerModeEnabled = localStorage.getItem('visualizerMode') === 'true';
+    elements.visualizerModeToggle.checked = visualizerModeEnabled;
     // Load voice announcement preferences
     elements.voiceEnabledToggle.checked = voiceEnabled;
     elements.minSpeedInput.value = minSpeedThreshold;
@@ -1195,6 +1212,14 @@
       console.log('🗺️ Auto-center map:', isEnabled ? 'enabled' : 'disabled');
     });
 
+    // Visualizer mode toggle
+    elements.visualizerModeToggle.addEventListener('change', (e) => {
+      const isEnabled = e.target.checked;
+      localStorage.setItem('visualizerMode', isEnabled);
+      console.log('👁️ Visualizer mode:', isEnabled ? 'enabled' : 'disabled');
+      if (isEnabled) {
+        console.log('📍 Your location will NOT be published to the group');
+      }
     // Voice announcements toggle
     elements.voiceEnabledToggle.addEventListener('change', (e) => {
       voiceEnabled = e.target.checked;
@@ -1925,7 +1950,11 @@
           elements.accuracy.textContent = accuracy;
           elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
 
-          if (ws && ws.readyState === WebSocket.OPEN) {
+          // Check if visualizer mode is enabled
+          const visualizerMode = localStorage.getItem('visualizerMode') === 'true';
+
+          // Only send location updates if NOT in visualizer mode
+          if (!visualizerMode && ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
               type: 'speed',
               userId,
@@ -1939,7 +1968,7 @@
               timestamp: Date.now()
             }));
           }
-          
+
           lastPosition = position;
         },
         (error) => {

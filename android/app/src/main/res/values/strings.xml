@@ -57,7 +57,9 @@
     <string name="pref_user_id_key">user_id</string>
     <string name="pref_dark_mode_key">dark_mode</string>
     <string name="pref_auto_center_key">auto_center</string>
+    <string name="pref_visualizer_mode_key">visualizer_mode</string>
     <string name="auto_center_map">Auto-center map on my location</string>
+    <string name="visualizer_mode">Visualizer Mode (view group without publishing my location)</string>
     <string name="pref_voice_enabled_key">voice_enabled</string>
     <string name="pref_voice_min_speed_key">voice_min_speed</string>
     <string name="voice_announcements">Voice Speed Announcements</string>
