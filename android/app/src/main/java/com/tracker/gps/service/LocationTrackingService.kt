@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -12,6 +13,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -21,6 +23,7 @@ import com.tracker.gps.R
 import com.tracker.gps.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
 import java.net.URI
+import java.util.Locale
 
 class LocationTrackingService : Service() {
 
@@ -38,6 +41,12 @@ class LocationTrackingService : Service() {
     private var maxSpeed: Double = 0.0
     private var speedReadings = mutableListOf<Double>()
     private val maxSpeedReadings = 20
+
+    // Voice announcement settings
+    private var textToSpeech: TextToSpeech? = null
+    private var lastAnnouncedSpeed: Int = -1
+    private var lastAnnouncementTime: Long = 0
+    private val announcementCooldownMs = 3000L // 3 seconds between announcements
 
     private var lastLocation: Location? = null
     private val userTracks = mutableMapOf<String, MutableList<Pair<Double, Double>>>()
@@ -62,6 +71,7 @@ class LocationTrackingService : Service() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
+        initializeTextToSpeech()
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -160,6 +170,9 @@ class LocationTrackingService : Service() {
         serviceListener?.onSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
         serviceListener?.onLocationUpdate(location)
 
+        // Voice announcement
+        checkAndAnnounceSpeed(currentSpeed)
+
         // Send to WebSocket
         webSocketClient?.let {
             if (it.isOpen) {
@@ -230,6 +243,54 @@ class LocationTrackingService : Service() {
 
     fun getUserTracks(): Map<String, List<Pair<Double, Double>>> {
         return userTracks
+    }
+
+    private fun initializeTextToSpeech() {
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.getDefault()
+                Log.d(TAG, "TextToSpeech initialized successfully")
+            } else {
+                Log.e(TAG, "TextToSpeech initialization failed")
+            }
+        }
+    }
+
+    private fun checkAndAnnounceSpeed(speed: Double) {
+        val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
+        val voiceEnabled = prefs.getBoolean(getString(R.string.pref_voice_enabled_key), false)
+        val minSpeed = prefs.getFloat(getString(R.string.pref_voice_min_speed_key), 22f).toDouble()
+
+        if (!voiceEnabled) return
+        if (speed < minSpeed) return
+
+        val currentTime = System.currentTimeMillis()
+        val speedInt = speed.toInt()
+
+        // Only announce if speed changed by at least 1 km/h and cooldown period passed
+        if (speedInt != lastAnnouncedSpeed &&
+            (currentTime - lastAnnouncementTime) >= announcementCooldownMs) {
+            announceSpeed(speedInt)
+            lastAnnouncedSpeed = speedInt
+            lastAnnouncementTime = currentTime
+        }
+    }
+
+    private fun announceSpeed(speed: Int) {
+        textToSpeech?.let { tts ->
+            if (tts.isSpeaking) {
+                tts.stop()
+            }
+            val announcement = speed.toString()
+            tts.speak(announcement, TextToSpeech.QUEUE_FLUSH, null, null)
+            Log.d(TAG, "Announcing speed: $speed km/h")
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        textToSpeech?.shutdown()
+        Log.d(TAG, "Service destroyed, TextToSpeech shut down")
     }
 
     private fun createNotificationChannel() {
