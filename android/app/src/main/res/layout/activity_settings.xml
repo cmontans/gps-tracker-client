@@ -41,6 +41,28 @@
         android:text="@string/auto_center_map"
         android:checked="true" />
 
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchVoiceEnabled"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="@string/voice_announcements"
+        android:checked="false" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:hint="@string/min_speed_threshold">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etMinSpeed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:text="@string/min_speed_hint" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <Button
         android:id="@+id/btnSave"
         android:layout_width="match_parent"
