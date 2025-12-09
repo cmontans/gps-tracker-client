@@ -32,7 +32,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
-import com.tracker.gps.model.UserData
+import com.tracker.gps.shared.model.UserData
 import com.tracker.gps.service.LocationTrackingService
 import java.util.*
 

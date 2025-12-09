@@ -3,13 +3,12 @@ package com.tracker.gps.websocket
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.tracker.gps.model.UserData
-import com.tracker.gps.model.UsersUpdateMessage
-import com.tracker.gps.model.WebSocketMessage
+import com.tracker.gps.shared.model.UserData
+import com.tracker.gps.shared.model.UsersUpdateMessage
+import com.tracker.gps.shared.model.WebSocketMessage
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
-import java.util.concurrent.TimeUnit
 
 class GPSWebSocketClient(
     serverUri: URI,

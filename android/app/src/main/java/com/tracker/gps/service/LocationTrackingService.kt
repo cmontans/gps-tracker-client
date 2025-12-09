@@ -18,8 +18,10 @@ import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
 import com.tracker.gps.MainActivity
 import com.tracker.gps.R
-import com.tracker.gps.model.UserData
+import com.tracker.gps.shared.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
+import com.tracker.gps.wearable.PhoneDataLayerService
+import com.tracker.gps.garmin.GarminCommService
 import java.net.URI
 
 class LocationTrackingService : Service() {
@@ -28,6 +30,8 @@ class LocationTrackingService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private var webSocketClient: GPSWebSocketClient? = null
+    private lateinit var phoneDataLayerService: PhoneDataLayerService
+    private lateinit var garminCommService: GarminCommService
 
     private var userId: String = ""
     private var userName: String = ""
@@ -61,6 +65,9 @@ class LocationTrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        phoneDataLayerService = PhoneDataLayerService(this)
+        garminCommService = GarminCommService(this)
+        garminCommService.initialize()
         createNotificationChannel()
     }
 
@@ -77,11 +84,15 @@ class LocationTrackingService : Service() {
         startForeground(NOTIFICATION_ID, createNotification(0.0))
         startLocationUpdates()
         connectWebSocket()
+        phoneDataLayerService.sendTrackingState(true)
+        garminCommService.sendTrackingState(true)
     }
 
     fun stopTracking() {
         stopLocationUpdates()
         disconnectWebSocket()
+        phoneDataLayerService.sendTrackingState(false)
+        garminCommService.sendTrackingState(false)
         stopForeground(true)
         stopSelf()
     }
@@ -168,6 +179,12 @@ class LocationTrackingService : Service() {
             }
         }
 
+        // Send to watch
+        phoneDataLayerService.sendSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
+
+        // Send to Garmin
+        garminCommService.sendSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
+
         Log.d(TAG, "Location: ${location.latitude}, ${location.longitude}, Speed: $currentSpeed km/h")
     }
 
@@ -178,10 +195,14 @@ class LocationTrackingService : Service() {
                 override fun onConnected() {
                     webSocketClient?.sendRegister(userId, userName, groupName)
                     serviceListener?.onConnectionStatusChanged(true)
+                    phoneDataLayerService.sendConnectionStatus(true, true)
+                    garminCommService.sendConnectionStatus(true, true)
                 }
 
                 override fun onDisconnected() {
                     serviceListener?.onConnectionStatusChanged(false)
+                    phoneDataLayerService.sendConnectionStatus(false, false)
+                    garminCommService.sendConnectionStatus(false, false)
                 }
 
                 override fun onUsersUpdate(users: List<UserData>) {
@@ -193,6 +214,8 @@ class LocationTrackingService : Service() {
                         userTracks[user.userId]?.add(Pair(user.latitude, user.longitude))
                     }
                     serviceListener?.onUsersUpdate(users)
+                    phoneDataLayerService.sendUsersUpdate(users)
+                    garminCommService.sendUsersUpdate(users)
                 }
 
                 override fun onGroupHorn() {
