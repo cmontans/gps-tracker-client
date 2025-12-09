@@ -1,0 +1,15 @@
+# Garmin Connect IQ GPS Tracker Project Configuration
+
+project.manifest = manifest.xml
+
+# Base sources
+base.sourcePath = source
+base.resourcePath = resources
+
+# Device-specific settings
+fenix7.resourcePath = $(fenix7.resourcePath);resources-fenix7
+fr955.resourcePath = $(fr955.resourcePath);resources-fr955
+venu3.resourcePath = $(venu3.resourcePath);resources-venu3
+
+# Annotations
+base.annotations = annotations.cfg

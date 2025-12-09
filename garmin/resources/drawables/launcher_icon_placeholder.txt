@@ -1,0 +1,16 @@
+This is a placeholder for the launcher icon PNG file.
+
+The actual launcher icon should be a 60x60 or 80x80 pixel PNG image
+with the GPS Tracker logo or a speedometer icon.
+
+To create the icon:
+1. Design icon in image editor (GIMP, Photoshop, etc.)
+2. Export as PNG with transparency
+3. Save as launcher_icon.png in this directory
+4. Delete this placeholder file
+
+Icon design suggestions:
+- Simple speedometer or GPS pin icon
+- Use high contrast colors
+- Ensure visibility on dark backgrounds
+- Follow Garmin design guidelines
