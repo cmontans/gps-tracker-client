@@ -191,18 +191,13 @@ class LocationTrackingService : Service() {
                     val bearing = if (location.hasBearing()) location.bearing else 0f
                     it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
                 }
-        // Voice announcement
-        checkAndAnnounceSpeed(currentSpeed)
-
-        // Send to WebSocket
-        webSocketClient?.let {
-            if (it.isOpen) {
-                val bearing = if (location.hasBearing()) location.bearing else 0f
-                it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
             }
         } else {
             Log.d(TAG, "Visualizer mode enabled - location NOT sent to server")
         }
+
+        // Voice announcement
+        checkAndAnnounceSpeed(currentSpeed)
 
         // Send to watch
         phoneDataLayerService.sendSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
