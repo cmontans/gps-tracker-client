@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.tracker.gps.model.UserData
+import com.tracker.gps.shared.model.UserData
 
 class UsersAdapter : RecyclerView.Adapter<UsersAdapter.UserViewHolder>() {
 

@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<settings>
+    <setting propertyKey="@Properties.ServerUrl" title="@Strings.ServerUrl">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+
+    <setting propertyKey="@Properties.UserName" title="@Strings.UserName">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+
+    <setting propertyKey="@Properties.GroupName" title="@Strings.GroupName">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+
+    <setting propertyKey="@Properties.AutoStart" title="@Strings.AutoStart">
+        <settingConfig type="boolean" />
+    </setting>
+
+    <setting propertyKey="@Properties.PhoneSync" title="@Strings.PhoneSync">
+        <settingConfig type="boolean" />
+    </setting>
+</settings>

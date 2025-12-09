@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -12,15 +13,19 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
 import com.tracker.gps.MainActivity
 import com.tracker.gps.R
-import com.tracker.gps.model.UserData
+import com.tracker.gps.shared.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
+import com.tracker.gps.wearable.PhoneDataLayerService
+import com.tracker.gps.garmin.GarminCommService
 import java.net.URI
+import java.util.Locale
 
 class LocationTrackingService : Service() {
 
@@ -28,6 +33,8 @@ class LocationTrackingService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private var webSocketClient: GPSWebSocketClient? = null
+    private lateinit var phoneDataLayerService: PhoneDataLayerService
+    private lateinit var garminCommService: GarminCommService
 
     private var userId: String = ""
     private var userName: String = ""
@@ -38,6 +45,12 @@ class LocationTrackingService : Service() {
     private var maxSpeed: Double = 0.0
     private var speedReadings = mutableListOf<Double>()
     private val maxSpeedReadings = 20
+
+    // Voice announcement settings
+    private var textToSpeech: TextToSpeech? = null
+    private var lastAnnouncedSpeed: Int = -1
+    private var lastAnnouncementTime: Long = 0
+    private val announcementCooldownMs = 3000L // 3 seconds between announcements
 
     private var lastLocation: Location? = null
     private val userTracks = mutableMapOf<String, MutableList<Pair<Double, Double>>>()
@@ -61,7 +74,11 @@ class LocationTrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        phoneDataLayerService = PhoneDataLayerService(this)
+        garminCommService = GarminCommService(this)
+        garminCommService.initialize()
         createNotificationChannel()
+        initializeTextToSpeech()
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -77,11 +94,15 @@ class LocationTrackingService : Service() {
         startForeground(NOTIFICATION_ID, createNotification(0.0))
         startLocationUpdates()
         connectWebSocket()
+        phoneDataLayerService.sendTrackingState(true)
+        garminCommService.sendTrackingState(true)
     }
 
     fun stopTracking() {
         stopLocationUpdates()
         disconnectWebSocket()
+        phoneDataLayerService.sendTrackingState(false)
+        garminCommService.sendTrackingState(false)
         stopForeground(true)
         stopSelf()
     }
@@ -170,10 +191,24 @@ class LocationTrackingService : Service() {
                     val bearing = if (location.hasBearing()) location.bearing else 0f
                     it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
                 }
+        // Voice announcement
+        checkAndAnnounceSpeed(currentSpeed)
+
+        // Send to WebSocket
+        webSocketClient?.let {
+            if (it.isOpen) {
+                val bearing = if (location.hasBearing()) location.bearing else 0f
+                it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
             }
         } else {
             Log.d(TAG, "Visualizer mode enabled - location NOT sent to server")
         }
+
+        // Send to watch
+        phoneDataLayerService.sendSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
+
+        // Send to Garmin
+        garminCommService.sendSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
 
         Log.d(TAG, "Location: ${location.latitude}, ${location.longitude}, Speed: $currentSpeed km/h")
     }
@@ -185,10 +220,14 @@ class LocationTrackingService : Service() {
                 override fun onConnected() {
                     webSocketClient?.sendRegister(userId, userName, groupName)
                     serviceListener?.onConnectionStatusChanged(true)
+                    phoneDataLayerService.sendConnectionStatus(true, true)
+                    garminCommService.sendConnectionStatus(true, true)
                 }
 
                 override fun onDisconnected() {
                     serviceListener?.onConnectionStatusChanged(false)
+                    phoneDataLayerService.sendConnectionStatus(false, false)
+                    garminCommService.sendConnectionStatus(false, false)
                 }
 
                 override fun onUsersUpdate(users: List<UserData>) {
@@ -200,6 +239,8 @@ class LocationTrackingService : Service() {
                         userTracks[user.userId]?.add(Pair(user.latitude, user.longitude))
                     }
                     serviceListener?.onUsersUpdate(users)
+                    phoneDataLayerService.sendUsersUpdate(users)
+                    garminCommService.sendUsersUpdate(users)
                 }
 
                 override fun onGroupHorn() {
@@ -237,6 +278,54 @@ class LocationTrackingService : Service() {
 
     fun getUserTracks(): Map<String, List<Pair<Double, Double>>> {
         return userTracks
+    }
+
+    private fun initializeTextToSpeech() {
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.getDefault()
+                Log.d(TAG, "TextToSpeech initialized successfully")
+            } else {
+                Log.e(TAG, "TextToSpeech initialization failed")
+            }
+        }
+    }
+
+    private fun checkAndAnnounceSpeed(speed: Double) {
+        val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
+        val voiceEnabled = prefs.getBoolean(getString(R.string.pref_voice_enabled_key), false)
+        val minSpeed = prefs.getFloat(getString(R.string.pref_voice_min_speed_key), 22f).toDouble()
+
+        if (!voiceEnabled) return
+        if (speed < minSpeed) return
+
+        val currentTime = System.currentTimeMillis()
+        val speedInt = speed.toInt()
+
+        // Only announce if speed changed by at least 1 km/h and cooldown period passed
+        if (speedInt != lastAnnouncedSpeed &&
+            (currentTime - lastAnnouncementTime) >= announcementCooldownMs) {
+            announceSpeed(speedInt)
+            lastAnnouncedSpeed = speedInt
+            lastAnnouncementTime = currentTime
+        }
+    }
+
+    private fun announceSpeed(speed: Int) {
+        textToSpeech?.let { tts ->
+            if (tts.isSpeaking) {
+                tts.stop()
+            }
+            val announcement = speed.toString()
+            tts.speak(announcement, TextToSpeech.QUEUE_FLUSH, null, null)
+            Log.d(TAG, "Announcing speed: $speed km/h")
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        textToSpeech?.shutdown()
+        Log.d(TAG, "Service destroyed, TextToSpeech shut down")
     }
 
     private fun createNotificationChannel() {
