@@ -55,7 +55,9 @@ dependencies {
 
     // Wearable Data Layer
     implementation 'com.google.android.gms:play-services-wearable:18.1.0'
-    wearApp project(':wear')
+
+    // Note: Wear app is distributed separately via Play Store, not bundled
+    // This is the recommended approach for Wear OS 2.0+ apps
 
     // WebSocket
     implementation 'org.java-websocket:Java-WebSocket:1.5.5'

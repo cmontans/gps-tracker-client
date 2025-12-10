@@ -67,10 +67,7 @@
             </intent-filter>
         </service>
 
-        <!-- Wearable capabilities -->
-        <meta-data
-            android:name="com.google.android.wearable.beta.app"
-            android:resource="@xml/wearable_app_desc" />
+        <!-- Note: Wear app distributed separately, not as embedded micro APK -->
     </application>
 
 </manifest>
