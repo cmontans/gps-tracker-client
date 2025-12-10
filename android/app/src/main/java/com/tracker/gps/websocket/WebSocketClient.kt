@@ -96,13 +96,17 @@ class GPSWebSocketClient(
         Log.d(TAG, "Sent register: $userId, $userName, $groupName")
     }
 
-    fun sendSpeed(userId: String, speed: Double, latitude: Double, longitude: Double, bearing: Float) {
+    fun sendSpeed(userId: String, userName: String, groupName: String, speed: Double, maxSpeed: Double, latitude: Double, longitude: Double, bearing: Float) {
         val message = WebSocketMessage.Speed(
             userId = userId,
+            userName = userName,
+            groupName = groupName,
             speed = speed,
-            latitude = latitude,
-            longitude = longitude,
-            bearing = bearing
+            maxSpeed = maxSpeed,
+            lat = latitude,
+            lon = longitude,
+            bearing = bearing,
+            timestamp = System.currentTimeMillis()
         )
         send(gson.toJson(message))
     }

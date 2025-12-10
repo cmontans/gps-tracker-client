@@ -13,10 +13,14 @@ sealed class WebSocketMessage {
     data class Speed(
         val type: String = "speed",
         val userId: String,
+        val userName: String,
+        val groupName: String,
         val speed: Double,
-        val latitude: Double,
-        val longitude: Double,
-        val bearing: Float
+        val maxSpeed: Double,
+        val lat: Double,
+        val lon: Double,
+        val bearing: Float,
+        val timestamp: Long
     ) : WebSocketMessage()
 
     data class GroupHorn(

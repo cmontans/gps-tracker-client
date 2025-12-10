@@ -213,7 +213,7 @@ class LocationTrackingService : Service() {
             webSocketClient?.let {
                 if (it.isOpen) {
                     val bearing = if (location.hasBearing()) location.bearing else 0f
-                    it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
+                    it.sendSpeed(userId, userName, groupName, currentSpeed, maxSpeed, location.latitude, location.longitude, bearing)
                 }
             }
         }
