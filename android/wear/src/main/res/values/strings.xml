@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GPS Tracker</string>
+    <string name="start_tracking">Start</string>
+    <string name="stop_tracking">Stop</string>
+    <string name="current_speed">Speed</string>
+    <string name="max_speed">Max</string>
+    <string name="avg_speed">Avg</string>
+    <string name="kmh">km/h</string>
+    <string name="group_horn">Horn</string>
+    <string name="reset_stats">Reset</string>
+    <string name="settings">Settings</string>
+    <string name="tracking">Tracking</string>
+    <string name="not_tracking">Not Tracking</string>
+    <string name="gps_searching">Searching GPS...</string>
+    <string name="gps_active">GPS Active</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="connecting">Connecting...</string>
+    <string name="standalone_mode">Standalone</string>
+    <string name="companion_mode">Phone Connected</string>
+    <string name="enter_name">Enter Name</string>
+    <string name="enter_group">Enter Group</string>
+    <string name="group_members">Group Members</string>
+    <string name="no_members">No members yet</string>
+    <string name="location_permission_required">Location permission required</string>
+    <string name="notification_channel_name">GPS Tracking</string>
+    <string name="notification_channel_description">Notifications for GPS tracking service</string>
+    <string name="tracking_notification_title">GPS Tracking Active</string>
+    <string name="tracking_notification_text">Speed: %s km/h</string>
+</resources>
