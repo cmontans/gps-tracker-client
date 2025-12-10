@@ -34,7 +34,7 @@ class HistoryActivity : AppCompatActivity() {
 
         // Get user ID from SharedPreferences
         val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
-        userId = prefs.getString("userId", "") ?: ""
+        userId = prefs.getString(getString(R.string.pref_user_id_key), "") ?: ""
 
         if (userId.isEmpty()) {
             Toast.makeText(this, R.string.error_user_id_not_found, Toast.LENGTH_LONG).show()
