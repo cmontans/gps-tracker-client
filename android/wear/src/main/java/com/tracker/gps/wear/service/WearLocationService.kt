@@ -21,6 +21,7 @@ import com.tracker.gps.shared.util.DataSerializer
 import com.tracker.gps.wear.MainActivity
 import com.tracker.gps.wear.R
 import kotlinx.coroutines.*
+import kotlinx.coroutines.tasks.await
 import java.util.*
 
 class WearLocationService : Service() {
@@ -382,7 +383,7 @@ class WearLocationService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("GPS Tracking Active")
             .setContentText("Speed: %.1f km/h".format(currentSpeed))
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(android.R.drawable.ic_dialog_map)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
