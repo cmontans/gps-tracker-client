@@ -20,6 +20,8 @@ import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
 import com.tracker.gps.MainActivity
 import com.tracker.gps.R
+import com.tracker.gps.api.SpeedHistoryApi
+import com.tracker.gps.api.SpeedHistoryRecord
 import com.tracker.gps.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
 import java.net.URI
@@ -90,10 +92,40 @@ class LocationTrackingService : Service() {
     }
 
     fun stopTracking() {
+        // Submit max speed record if we have a valid max speed and location
+        if (maxSpeed > 0 && lastLocation != null) {
+            submitMaxSpeedRecord()
+        }
+
         stopLocationUpdates()
         disconnectWebSocket()
         stopForeground(true)
         stopSelf()
+    }
+
+    private fun submitMaxSpeedRecord() {
+        lastLocation?.let { location ->
+            val speedHistoryApi = SpeedHistoryApi(serverUrl)
+            val record = SpeedHistoryRecord(
+                userId = userId,
+                userName = userName,
+                groupName = groupName,
+                maxSpeed = maxSpeed,
+                latitude = location.latitude,
+                longitude = location.longitude,
+                timestamp = System.currentTimeMillis()
+            )
+
+            speedHistoryApi.submitSpeedHistory(
+                record = record,
+                onSuccess = {
+                    Log.d(TAG, "Max speed record submitted successfully: $maxSpeed km/h")
+                },
+                onError = { error ->
+                    Log.e(TAG, "Failed to submit max speed record: $error")
+                }
+            )
+        }
     }
 
     private fun startLocationUpdates() {

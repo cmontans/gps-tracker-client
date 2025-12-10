@@ -2,6 +2,7 @@
 const WebSocket = require('ws');
 const express = require('express');
 const cors = require('cors');
+const db = require('./database');
 
 const app = express();
 const PORT = 3001;
@@ -9,6 +10,12 @@ const PORT = 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Inicializar base de datos
+db.initializeDatabase().catch(err => {
+  console.error('❌ Error fatal al inicializar base de datos:', err);
+  console.warn('⚠️  El servidor continuará sin persistencia de datos');
+});
 
 // Crear servidor HTTP
 const server = app.listen(PORT, () => {
@@ -258,16 +265,131 @@ app.get('/groups', (req, res) => {
 app.get('/groups/:groupName', (req, res) => {
   const groupName = req.params.groupName;
   const groupUsers = groups.get(groupName);
-  
+
   if (!groupUsers) {
     return res.status(404).json({ error: 'Grupo no encontrado' });
   }
-  
+
   res.json({
     groupName: groupName,
     users: Array.from(groupUsers.values()),
     count: groupUsers.size
   });
+});
+
+// ============================================
+// SPEED HISTORY API ENDPOINTS
+// ============================================
+
+// POST endpoint to save a speed history record
+app.post('/api/speed-history', async (req, res) => {
+  try {
+    const { userId, userName, groupName, maxSpeed, latitude, longitude, timestamp } = req.body;
+
+    // Validate required fields
+    if (!userId || maxSpeed === undefined || !latitude || !longitude || !timestamp) {
+      return res.status(400).json({
+        error: 'Faltan campos requeridos',
+        required: ['userId', 'maxSpeed', 'latitude', 'longitude', 'timestamp']
+      });
+    }
+
+    // Extract date and time from timestamp
+    const dateObj = new Date(timestamp);
+    const date = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+    const time = dateObj.toTimeString().split(' ')[0]; // HH:MM:SS
+
+    const record = await db.insertSpeedHistory({
+      userId,
+      userName: userName || 'Usuario',
+      groupName: groupName || 'default',
+      maxSpeed,
+      latitude,
+      longitude,
+      date,
+      time,
+      timestamp
+    });
+
+    console.log(`💾 Registro de velocidad guardado: ${userName || userId} - ${maxSpeed} km/h`);
+
+    res.status(201).json({
+      success: true,
+      record
+    });
+  } catch (error) {
+    console.error('❌ Error guardando registro de velocidad:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      message: error.message
+    });
+  }
+});
+
+// GET endpoint to retrieve speed history for a specific user
+app.get('/api/speed-history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const history = await db.getSpeedHistory(userId, limit, offset);
+
+    res.json({
+      success: true,
+      userId,
+      count: history.length,
+      records: history
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo historial:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      message: error.message
+    });
+  }
+});
+
+// GET endpoint to retrieve speed statistics for a user
+app.get('/api/speed-history/:userId/stats', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const stats = await db.getSpeedStatistics(userId);
+
+    res.json({
+      success: true,
+      userId,
+      statistics: stats
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo estadísticas:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      message: error.message
+    });
+  }
+});
+
+// GET endpoint to retrieve all speed history (admin)
+app.get('/api/speed-history', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const history = await db.getAllSpeedHistory(limit, offset);
+
+    res.json({
+      success: true,
+      count: history.length,
+      records: history
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo todo el historial:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      message: error.message
+    });
+  }
 });
 
 console.log(`🌐 Servidor WebSocket corriendo en ws://localhost:${PORT}`);
@@ -276,5 +398,10 @@ console.log(`\n💡 Endpoints disponibles:`);
 console.log(`   - GET /health - Estado del servidor`);
 console.log(`   - GET /groups - Lista de todos los grupos`);
 console.log(`   - GET /groups/:groupName - Usuarios de un grupo específico`);
+console.log(`\n📊 Speed History API:`);
+console.log(`   - POST /api/speed-history - Guardar registro de velocidad máxima`);
+console.log(`   - GET /api/speed-history/:userId - Obtener historial de un usuario`);
+console.log(`   - GET /api/speed-history/:userId/stats - Obtener estadísticas de un usuario`);
+console.log(`   - GET /api/speed-history - Obtener todo el historial (admin)`);
 console.log(`\n⚙️  Para usar desde otro dispositivo, reemplaza 'localhost' con la IP de este equipo`);
 console.log(`\n🔐 Sistema de grupos activado - Los usuarios solo verán a otros de su mismo grupo\n`);

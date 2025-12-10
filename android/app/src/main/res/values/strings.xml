@@ -8,6 +8,7 @@
     <string name="start_tracking">▶️ Start Tracking</string>
     <string name="stop_tracking">⏹️ Stop Tracking</string>
     <string name="settings">⚙️ Settings</string>
+    <string name="history">📊 History</string>
 
     <!-- Speed Statistics -->
     <string name="current_speed">Current Speed</string>
@@ -66,4 +67,15 @@
     <string name="pref_visualizer_mode_key">visualizer_mode</string>
     <string name="visualizer_mode">Visualizer Mode (view only, don\'t publish)</string>
     <string name="visualizer_mode_active">👁️ Visualizer Mode Active</string>
+
+    <!-- History Screen -->
+    <string name="speed_history">Speed History</string>
+    <string name="statistics">Statistics</string>
+    <string name="total_records">Total Records</string>
+    <string name="highest_speed">Highest</string>
+    <string name="average_max">Average</string>
+    <string name="history_records">History Records</string>
+    <string name="no_history_records">No speed history records yet</string>
+    <string name="loading">Loading...</string>
+    <string name="error_user_id_not_found">User ID not found. Please start tracking first.</string>
 </resources>
