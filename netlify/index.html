@@ -128,6 +128,15 @@
                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
               </label>
             </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <label for="visualizer-mode-toggle" class="text-sm font-medium text-gray-700 dark:text-gray-300" id="visualizer-mode-label">
+                👁️ Modo Visualizador (solo ver, no publicar)
+              </label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="visualizer-mode-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" id="min-speed-label">
                 Velocidad mínima para anunciar (km/h)
@@ -203,6 +212,15 @@
             <span id="gps-icon" class="text-xl sm:text-2xl">📍</span>
             <span id="gps-status" class="text-xs sm:text-sm font-medium">GPS Inactivo</span>
           </div>
+        </div>
+
+        <!-- Visualizer Mode Indicator -->
+        <div id="visualizer-mode-indicator" class="hidden mb-4 p-3 bg-orange-100 dark:bg-orange-900 border-l-4 border-orange-500 rounded">
+          <div class="flex items-center">
+            <span class="text-xl mr-2">👁️</span>
+            <span class="text-sm font-bold text-orange-700 dark:text-orange-200" id="visualizer-mode-text">Modo Visualizador Activo</span>
+          </div>
+          <p class="text-xs text-orange-600 dark:text-orange-300 mt-1">Viendo tracks del grupo sin publicar tu ubicación</p>
         </div>
 
         <!-- Velocidad y Estadísticas -->
@@ -415,6 +433,8 @@
         language: 'Idioma',
         autoCenterMap: 'Auto-centrar mapa en mi ubicación',
         voiceEnabled: '🔊 Anunciar velocidad por voz',
+        visualizerMode: '👁️ Modo Visualizador (solo ver, no publicar)',
+        visualizerModeActive: '👁️ Modo Visualizador Activo',
         minSpeedLabel: 'Velocidad mínima para anunciar (km/h)',
 
         // Config Section
@@ -522,6 +542,8 @@
         language: 'Language',
         autoCenterMap: 'Auto-center map on my location',
         voiceEnabled: '🔊 Announce speed by voice',
+        visualizerMode: '👁️ Visualizer Mode (view only, don\'t publish)',
+        visualizerModeActive: '👁️ Visualizer Mode Active',
         minSpeedLabel: 'Minimum speed to announce (km/h)',
 
         // Config Section
@@ -629,6 +651,8 @@
         language: 'Langue',
         autoCenterMap: 'Centrer automatiquement la carte sur ma position',
         voiceEnabled: '🔊 Annoncer la vitesse par voix',
+        visualizerMode: '👁️ Mode Visualiseur (voir uniquement, ne pas publier)',
+        visualizerModeActive: '👁️ Mode Visualiseur Actif',
         minSpeedLabel: 'Vitesse minimale pour annoncer (km/h)',
 
         // Config Section
@@ -736,6 +760,8 @@
         language: 'Sprache',
         autoCenterMap: 'Karte automatisch auf meinen Standort zentrieren',
         voiceEnabled: '🔊 Geschwindigkeit per Sprache ankündigen',
+        visualizerMode: '👁️ Visualisierungsmodus (nur ansehen, nicht veröffentlichen)',
+        visualizerModeActive: '👁️ Visualisierungsmodus Aktiv',
         minSpeedLabel: 'Mindestgeschwindigkeit zum Ankündigen (km/h)',
 
         // Config Section
@@ -862,6 +888,7 @@
       elements.languageLabel.textContent = t('language');
       document.getElementById('auto-center-label').textContent = t('autoCenterMap');
       document.getElementById('voice-enabled-label').textContent = t('voiceEnabled');
+      document.getElementById('visualizer-mode-label').textContent = t('visualizerMode');
       document.getElementById('min-speed-label').textContent = t('minSpeedLabel');
 
       // Config section
@@ -1061,6 +1088,7 @@
     let groupName = localStorage.getItem('groupName') || '';
     let serverUrl = localStorage.getItem('serverUrl') || 'wss://gps-tracker-server-production-5900.up.railway.app';
     let voiceEnabled = localStorage.getItem('voiceEnabled') === 'true';
+    let visualizerMode = localStorage.getItem('visualizerMode') === 'true';
     let minSpeedThreshold = parseFloat(localStorage.getItem('minSpeedThreshold')) || 22;
     let lastAnnouncedSpeed = -1;
     let lastAnnouncementTime = 0;
@@ -1128,6 +1156,9 @@
       languageLabel: document.getElementById('language-label'),
       autoCenterToggle: document.getElementById('auto-center-toggle'),
       voiceEnabledToggle: document.getElementById('voice-enabled-toggle'),
+      visualizerModeToggle: document.getElementById('visualizer-mode-toggle'),
+      visualizerModeIndicator: document.getElementById('visualizer-mode-indicator'),
+      visualizerModeText: document.getElementById('visualizer-mode-text'),
       minSpeedInput: document.getElementById('min-speed-input')
     };
 
@@ -1146,8 +1177,14 @@
     elements.voiceEnabledToggle.checked = voiceEnabled;
     elements.minSpeedInput.value = minSpeedThreshold;
 
+    // Load visualizer mode preference
+    elements.visualizerModeToggle.checked = visualizerMode;
+
     // Initialize UI language on load
     updateUILanguage();
+
+    // Initialize visualizer mode indicator
+    updateVisualizerModeIndicator();
 
     // VERIFICACIÓN CRÍTICA
     console.log('🔍 VERIFICACIÓN DE ELEMENTOS:');
@@ -1200,6 +1237,14 @@
       voiceEnabled = e.target.checked;
       localStorage.setItem('voiceEnabled', voiceEnabled);
       console.log('🔊 Voice announcements:', voiceEnabled ? 'enabled' : 'disabled');
+    });
+
+    // Visualizer mode toggle
+    elements.visualizerModeToggle.addEventListener('change', (e) => {
+      visualizerMode = e.target.checked;
+      localStorage.setItem('visualizerMode', visualizerMode);
+      console.log('👁️ Visualizer mode:', visualizerMode ? 'enabled' : 'disabled');
+      updateVisualizerModeIndicator();
     });
 
     // Min speed threshold
@@ -1735,6 +1780,16 @@
       elements.gpsStatus.className = `text-sm font-medium ${active ? 'text-green-600' : 'text-gray-600'}`;
     }
 
+    // Actualizar indicador de modo visualizador
+    function updateVisualizerModeIndicator() {
+      if (visualizerMode) {
+        elements.visualizerModeIndicator.classList.remove('hidden');
+        elements.visualizerModeText.textContent = t('visualizerModeActive');
+      } else {
+        elements.visualizerModeIndicator.classList.add('hidden');
+      }
+    }
+
     // Conectar WebSocket con reconexión mejorada
     function connectWebSocket() {
       const serverUrl = elements.serverUrl.value;
@@ -1925,7 +1980,8 @@
           elements.accuracy.textContent = accuracy;
           elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
 
-          if (ws && ws.readyState === WebSocket.OPEN) {
+          // Send to WebSocket (only if not in visualizer mode)
+          if (!visualizerMode && ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
               type: 'speed',
               userId,

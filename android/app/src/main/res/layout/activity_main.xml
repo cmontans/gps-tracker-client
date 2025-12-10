@@ -115,6 +115,20 @@
                     android:textColor="@color/white" />
             </LinearLayout>
 
+            <!-- Visualizer Mode Indicator -->
+            <TextView
+                android:id="@+id/tvVisualizerMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="#FF9800"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="@string/visualizer_mode_active"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
             <!-- Speed Statistics Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

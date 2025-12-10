@@ -173,11 +173,16 @@ class LocationTrackingService : Service() {
         // Voice announcement
         checkAndAnnounceSpeed(currentSpeed)
 
-        // Send to WebSocket
-        webSocketClient?.let {
-            if (it.isOpen) {
-                val bearing = if (location.hasBearing()) location.bearing else 0f
-                it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
+        // Send to WebSocket (only if not in visualizer mode)
+        val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
+        val visualizerMode = prefs.getBoolean(getString(R.string.pref_visualizer_mode_key), false)
+
+        if (!visualizerMode) {
+            webSocketClient?.let {
+                if (it.isOpen) {
+                    val bearing = if (location.hasBearing()) location.bearing else 0f
+                    it.sendSpeed(userId, currentSpeed, location.latitude, location.longitude, bearing)
+                }
             }
         }
 

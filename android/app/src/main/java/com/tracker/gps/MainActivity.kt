@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var tvAvgSpeed: TextView
     private lateinit var tvConnectionStatus: TextView
     private lateinit var tvGpsStatus: TextView
+    private lateinit var tvVisualizerMode: TextView
     private lateinit var cardMap: MaterialCardView
     private lateinit var rvUsers: RecyclerView
 
@@ -187,6 +188,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         initMap()
         initSound()
         loadPreferences()
+        updateVisualizerModeIndicator()
         setupClickListeners()
     }
 
@@ -205,6 +207,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         tvAvgSpeed = findViewById(R.id.tvAvgSpeed)
         tvConnectionStatus = findViewById(R.id.tvConnectionStatus)
         tvGpsStatus = findViewById(R.id.tvGpsStatus)
+        tvVisualizerMode = findViewById(R.id.tvVisualizerMode)
         cardMap = findViewById(R.id.cardMap)
         rvUsers = findViewById(R.id.rvUsers)
 
@@ -243,6 +246,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             prefs.edit().putString(getString(R.string.pref_user_id_key), newId).apply()
             newId
         }
+    }
+
+    private fun updateVisualizerModeIndicator() {
+        val prefs = getSharedPreferences(SettingsActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        val visualizerMode = prefs.getBoolean(getString(R.string.pref_visualizer_mode_key), false)
+
+        tvVisualizerMode.visibility = if (visualizerMode) View.VISIBLE else View.GONE
     }
 
     private fun setupClickListeners() {
@@ -525,6 +535,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         trackingService?.clearTracks()
         userPolylines.values.forEach { it.remove() }
         userPolylines.clear()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateVisualizerModeIndicator()
     }
 
     override fun onDestroy() {
