@@ -15,5 +15,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "GPS Speed Tracker"
 include ':app'
-include ':wear'
-include ':shared'

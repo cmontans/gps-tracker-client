@@ -14,30 +14,22 @@ A real-time GPS speed tracking application with live telemetry, group sharing, a
 - **Live Statistics**: View current speed, maximum speed, and average speed
 - **User Groups**: Only see and share data with users in your group
 - **WebSocket Connection**: Real-time data synchronization with other users
-- **Persistent Sessions**: Auto-reconnection with exponential backoff (up to 10 attempts)
-- **Keep-Alive System**: Automatic 25-second ping/pong to maintain connection stability
-- **Smart Reconnection**: Exponential backoff delays (1s, 2s, 4s, 8s... up to 30s max)
+- **Persistent Sessions**: Auto-reconnection with exponential backoff
 
 ### Map & Visualization
 - **Interactive Map**: OpenStreetMap integration via Leaflet
 - **Real-time User Positions**: See all group members on the map with directional indicators
-- **Directional Arrow Markers**: Rotating arrow icons show direction of travel based on GPS bearing
-- **Smart Movement Tracks**: Visual polylines showing user trajectories (only recorded when speed > 3.6 km/h)
-- **Track History**: Maintains last 50 position points per user for clean visualization
+- **Movement Tracks**: Visual polylines showing user trajectories
 - **Fullscreen Map Mode**: Dedicated fullscreen view for better visibility
-- **Interactive Markers**: Click any user marker to see detailed popup with speed, max speed, and timestamp
-- **Compass Directions**: 8-point compass display (N, NE, E, SE, S, SO, O, NO) in user list
+- **User Markers**: Display user names, speeds, and directions on the map
 
 ### User Experience
-- **Dark Mode**: Full dark mode support with automatic persistence (defaults to dark on first use)
+- **Dark Mode**: Full dark mode support with automatic persistence
 - **PWA Support**: Install as a standalone app on iOS and Android
 - **Wake Lock**: Keeps screen on during tracking (Android)
-- **Group Horn**: Alert all group members with a powerful dual-tone sound notification
-- **Mobile Optimized**: Responsive design for all screen sizes with touch-friendly controls
-- **GPS Status Indicators**: Visual feedback for connection and GPS status with emoji indicators
-- **Precision Speed Display**: All speeds shown with one decimal place (e.g., 45.3 km/h)
-- **GPS Accuracy Meter**: Real-time accuracy display in meters
-- **Live Coordinates**: Visible GPS coordinates with 6 decimal precision
+- **Group Horn**: Alert all group members with a sound notification
+- **Mobile Optimized**: Responsive design for all screen sizes
+- **GPS Status Indicators**: Visual feedback for connection and GPS status
 
 ## Technologies Used
 
@@ -111,23 +103,15 @@ A real-time GPS speed tracking application with live telemetry, group sharing, a
 ### Features Explained
 
 #### Speed Statistics
-- **Current Speed**: Real-time speed in km/h with one decimal precision (e.g., 42.7 km/h)
-- **Maximum Speed**: Highest speed reached in current session, persists until manual reset
-- **Average Speed**: Rolling average of last 20 speed readings for smooth calculation
-- **GPS Accuracy**: Live display of GPS accuracy in meters
-- **Direction/Bearing**: Automatic calculation and display using compass points (N, NE, E, etc.)
-- **Coordinates**: Real-time latitude/longitude with 6 decimal precision
+- **Current Speed**: Real-time speed in km/h with one decimal precision
+- **Maximum Speed**: Highest speed reached in current session
+- **Average Speed**: Rolling average of last 20 speed readings
 
 #### Map Features
 - **View Map**: Click "🗺️ Ver Mapa" to show the interactive map
 - **Fullscreen Mode**: Click "⛶ Pantalla Completa" for a larger map view
-- **Clear Tracks**: Remove trajectory lines from the map with "🗑️ Limpiar" button
-- **Directional Markers**: Arrow icons that rotate to show direction of travel
-- **Smart Tracking**: Trajectory lines only appear when moving (speed > 3.6 km/h)
-- **User Info Popups**: Click any marker to see detailed stats (current speed, max speed, timestamp)
-- **Color Coding**: Your marker is indigo/blue, other users are green
-- **Auto-Center**: Map automatically centers on your position
-- **Track Limits**: Each user's track maintains last 50 GPS points for performance
+- **Clear Tracks**: Remove trajectory lines from the map
+- **User Markers**: Show position, speed, direction, and name for each user
 
 #### Group System
 - Users are isolated by group name
@@ -138,10 +122,7 @@ A real-time GPS speed tracking application with live telemetry, group sharing, a
 #### Group Horn
 - Press "📢 Bocina Grupal" to send an audio alert to all group members
 - Must be actively tracking to use
-- Plays a distinctive dual-tone horn sound (220Hz + 330Hz sawtooth waves)
-- 1.5-second duration with fade-out for realistic car horn effect
-- Uses Web Audio API for cross-browser compatibility
-- Sender's name displayed in notification on receiving devices
+- Plays a distinctive horn sound on all devices in the group
 
 ### Settings
 Access settings via "⚙️ Ajustes":
@@ -189,12 +170,10 @@ The app uses high accuracy GPS with the following settings:
 4. Wait 10-30 seconds for GPS lock
 
 ### Connection Issues
-1. Verify server URL in settings (⚙️ Ajustes)
+1. Verify server URL in settings
 2. Check internet connection
-3. App auto-reconnects up to 10 times with exponential backoff
-4. Keep-alive pings every 25 seconds maintain connection
-5. Check browser console for detailed error messages
-6. Look for connection status indicator (✅ Conectado / ❌ Desconectado)
+3. App auto-reconnects up to 10 times
+4. Check browser console for errors
 
 ### Screen Turns Off (iOS)
 Set Auto-Lock to "Never" in Settings → Display & Brightness
@@ -213,9 +192,7 @@ gps-tracker-client/
 #### GPS Tracking
 - `startTracking()` - Initialize GPS watch and WebSocket connection
 - `stopTracking()` - Clean up resources and disconnect
-- `calculateBearing()` - Calculate direction between two GPS points using haversine formula
-- `requestWakeLock()` - Request screen wake lock (Android)
-- `releaseWakeLock()` - Release wake lock on tracking stop
+- `calculateBearing()` - Calculate direction between two GPS points
 
 #### Map Management
 - `initMap()` - Initialize Leaflet map instance
@@ -224,23 +201,13 @@ gps-tracker-client/
 - `clearMapTracks()` - Remove trajectory polylines
 
 #### WebSocket
-- `connectWebSocket()` - Establish server connection with auto-reconnect logic
-- `startKeepAlive()` - Initialize 25-second ping interval
-- `stopKeepAlive()` - Clear keep-alive interval
-- **Message types**:
-  - `register` - Initial registration with userId, userName, and groupName
-  - `speed` - GPS data update with position, speed, bearing, and timestamp
-  - `users` - Server broadcast of all active users in the group
-  - `group-horn` - Group notification for horn alerts
-  - `ping/pong` - Keep-alive heartbeat messages
+- `connectWebSocket()` - Establish server connection
+- Message types: `register`, `speed`, `users`, `group-horn`, `ping/pong`
 
 #### UI State
-- `updateConnectionStatus()` - Update WebSocket status indicator (✅/❌)
-- `updateGpsStatus()` - Update GPS status indicator (✅/📍)
-- `updateUsersList()` - Refresh user list display with speeds and directions
-- `showError()` - Display error messages with 8-second auto-hide
-- `showSuccess()` - Display success messages with 3-second auto-hide
-- `playHornSound()` - Generate and play horn audio using Web Audio API
+- `updateConnectionStatus()` - Update WebSocket status indicator
+- `updateGpsStatus()` - Update GPS status indicator
+- `updateUsersList()` - Refresh user list display
 
 ### Browser Compatibility
 - Chrome/Edge 90+
@@ -250,12 +217,10 @@ gps-tracker-client/
 
 ## Version History
 
-- **v4.1** - Dark mode with localStorage persistence, fullscreen map viewer, wake lock support, dark mode as default
-- **v4.0** - One decimal place precision for all speeds, powerful group horn with dual-tone audio
-- **v3.x** - User names displayed in map markers, dark mode set as default theme
-- **v3.0** - Direction/bearing calculation, compass point display, arrow rotation on map
-- **v2.x** - OpenStreetMap integration, real-time track polylines, smart track recording
-- **v1.x** - Initial release with core GPS tracking and WebSocket communication
+- **v4.1** - Dark mode, fullscreen map, wake lock support
+- **v4.0** - Decimal speed precision, group horn feature
+- **v3.x** - User names in map markers, dark mode default
+- Earlier versions - Core functionality
 
 ## License
 

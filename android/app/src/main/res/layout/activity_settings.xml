@@ -49,6 +49,7 @@
         android:text="@string/visualizer_mode"
         android:checked="false" />
 
+<<<<<<< HEAD
     <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/switchVoiceEnabled"
         android:layout_width="match_parent"
@@ -71,6 +72,8 @@
             android:text="@string/min_speed_hint" />
     </com.google.android.material.textfield.TextInputLayout>
 
+=======
+>>>>>>> parent of c87c3e6 (Merge branch 'main' into claude/add-track-visualizer-011AFmQ6CGfmVgwZtAdMCwz8)
     <Button
         android:id="@+id/btnSave"
         android:layout_width="match_parent"

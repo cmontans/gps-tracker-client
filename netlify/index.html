@@ -128,28 +128,6 @@
                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
               </label>
             </div>
-              <label for="voice-enabled-toggle" class="text-sm font-medium text-gray-700 dark:text-gray-300" id="voice-enabled-label">
-                🔊 Anunciar velocidad por voz
-              </label>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="voice-enabled-toggle" class="sr-only peer">
-                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-              </label>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" id="min-speed-label">
-                Velocidad mínima para anunciar (km/h)
-              </label>
-              <input
-                id="min-speed-input"
-                type="number"
-                value="22"
-                min="0"
-                max="200"
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-colors"
-                placeholder="22"
-              />
-            </div>
             <div class="pt-4 border-t dark:border-gray-700">
               <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
                 ID: <span id="user-id" class="font-mono text-xs bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded"></span>
@@ -423,8 +401,6 @@
         language: 'Idioma',
         autoCenterMap: 'Auto-centrar mapa en mi ubicación',
         visualizerMode: 'Modo Visualizador (ver grupo sin publicar mi ubicación)',
-        voiceEnabled: '🔊 Anunciar velocidad por voz',
-        minSpeedLabel: 'Velocidad mínima para anunciar (km/h)',
 
         // Config Section
         yourName: 'Tu Nombre',
@@ -531,8 +507,6 @@
         language: 'Language',
         autoCenterMap: 'Auto-center map on my location',
         visualizerMode: 'Visualizer Mode (view group without publishing my location)',
-        voiceEnabled: '🔊 Announce speed by voice',
-        minSpeedLabel: 'Minimum speed to announce (km/h)',
 
         // Config Section
         yourName: 'Your Name',
@@ -639,8 +613,6 @@
         language: 'Langue',
         autoCenterMap: 'Centrer automatiquement la carte sur ma position',
         visualizerMode: 'Mode Visualisateur (voir le groupe sans publier ma position)',
-        voiceEnabled: '🔊 Annoncer la vitesse par voix',
-        minSpeedLabel: 'Vitesse minimale pour annoncer (km/h)',
 
         // Config Section
         yourName: 'Votre Nom',
@@ -747,8 +719,6 @@
         language: 'Sprache',
         autoCenterMap: 'Karte automatisch auf meinen Standort zentrieren',
         visualizerMode: 'Visualisierungsmodus (Gruppe sehen ohne meinen Standort zu veröffentlichen)',
-        voiceEnabled: '🔊 Geschwindigkeit per Sprache ankündigen',
-        minSpeedLabel: 'Mindestgeschwindigkeit zum Ankündigen (km/h)',
 
         // Config Section
         yourName: 'Ihr Name',
@@ -874,8 +844,6 @@
       elements.languageLabel.textContent = t('language');
       document.getElementById('auto-center-label').textContent = t('autoCenterMap');
       document.getElementById('visualizer-mode-label').textContent = t('visualizerMode');
-      document.getElementById('voice-enabled-label').textContent = t('voiceEnabled');
-      document.getElementById('min-speed-label').textContent = t('minSpeedLabel');
 
       // Config section
       document.getElementById('your-name-label').textContent = t('yourName');
@@ -1073,11 +1041,6 @@
     let userName = localStorage.getItem('userName') || '';
     let groupName = localStorage.getItem('groupName') || '';
     let serverUrl = localStorage.getItem('serverUrl') || 'wss://gps-tracker-server-production-5900.up.railway.app';
-    let voiceEnabled = localStorage.getItem('voiceEnabled') === 'true';
-    let minSpeedThreshold = parseFloat(localStorage.getItem('minSpeedThreshold')) || 22;
-    let lastAnnouncedSpeed = -1;
-    let lastAnnouncementTime = 0;
-    const announcementCooldownMs = 3000; // 3 seconds between announcements
     let ws = null;
     let watchId = null;
     let isTracking = false;
@@ -1141,8 +1104,6 @@
       languageLabel: document.getElementById('language-label'),
       autoCenterToggle: document.getElementById('auto-center-toggle'),
       visualizerModeToggle: document.getElementById('visualizer-mode-toggle')
-      voiceEnabledToggle: document.getElementById('voice-enabled-toggle'),
-      minSpeedInput: document.getElementById('min-speed-input')
     };
 
     // Inicializar
@@ -1159,9 +1120,6 @@
     // Load visualizer mode preference (default: false)
     const visualizerModeEnabled = localStorage.getItem('visualizerMode') === 'true';
     elements.visualizerModeToggle.checked = visualizerModeEnabled;
-    // Load voice announcement preferences
-    elements.voiceEnabledToggle.checked = voiceEnabled;
-    elements.minSpeedInput.value = minSpeedThreshold;
 
     // Initialize UI language on load
     updateUILanguage();
@@ -1220,18 +1178,6 @@
       if (isEnabled) {
         console.log('📍 Your location will NOT be published to the group');
       }
-    // Voice announcements toggle
-    elements.voiceEnabledToggle.addEventListener('change', (e) => {
-      voiceEnabled = e.target.checked;
-      localStorage.setItem('voiceEnabled', voiceEnabled);
-      console.log('🔊 Voice announcements:', voiceEnabled ? 'enabled' : 'disabled');
-    });
-
-    // Min speed threshold
-    elements.minSpeedInput.addEventListener('change', (e) => {
-      minSpeedThreshold = parseFloat(e.target.value) || 22;
-      localStorage.setItem('minSpeedThreshold', minSpeedThreshold);
-      console.log('🎯 Min speed threshold:', minSpeedThreshold, 'km/h');
     });
 
     // Modal de configuración
@@ -1300,55 +1246,6 @@
         console.error('❌ Error reproduciendo bocina:', error);
         showError('Error al reproducir bocina: ' + error.message);
       }
-    }
-
-    // Voice speed announcement function
-    function announceSpeed(speed) {
-      if (!voiceEnabled || !('speechSynthesis' in window)) {
-        return;
-      }
-
-      const speedInt = Math.round(speed);
-
-      // Check if speed is above threshold
-      if (speedInt < minSpeedThreshold) {
-        return;
-      }
-
-      // Check cooldown
-      const currentTime = Date.now();
-      if (speedInt === lastAnnouncedSpeed ||
-          (currentTime - lastAnnouncementTime) < announcementCooldownMs) {
-        return;
-      }
-
-      // Stop any ongoing speech
-      if (window.speechSynthesis.speaking) {
-        window.speechSynthesis.cancel();
-      }
-
-      // Create and speak the announcement
-      const utterance = new SpeechSynthesisUtterance(speedInt.toString());
-
-      // Set language based on current language
-      const langMap = {
-        'es': 'es-ES',
-        'en': 'en-US',
-        'fr': 'fr-FR',
-        'de': 'de-DE'
-      };
-      utterance.lang = langMap[currentLanguage] || 'en-US';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      window.speechSynthesis.speak(utterance);
-
-      // Update tracking variables
-      lastAnnouncedSpeed = speedInt;
-      lastAnnouncementTime = currentTime;
-
-      console.log('🔊 Speed announced:', speedInt, 'km/h');
     }
 
     // Botón de bocina grupal
@@ -1931,10 +1828,7 @@
           if (speedReadings.length > 20) speedReadings.shift(); // Mantener últimos 20
           const avgSpeed = (speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length).toFixed(1);
           elements.avgSpeed.textContent = avgSpeed;
-
-          // Voice announcement
-          announceSpeed(speedNum);
-
+          
           // Calcular dirección/rumbo
           let bearing = 0;
           if (lastPosition && position.coords.speed > 1) { // Solo si hay movimiento

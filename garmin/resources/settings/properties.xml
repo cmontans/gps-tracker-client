@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<properties>
-    <property id="ServerUrl" type="string">wss://gps-tracker-server-production-5900.up.railway.app</property>
-    <property id="UserName" type="string">Garmin User</property>
-    <property id="GroupName" type="string">default</property>
-    <property id="AutoStart" type="boolean">false</property>
-    <property id="PhoneSync" type="boolean">true</property>
-</properties>
