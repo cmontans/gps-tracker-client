@@ -17,11 +17,21 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Header with Settings Button -->
+            <!-- Header with Settings and History Buttons -->
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp">
+
+                <ImageButton
+                    android:id="@+id/btnHistory"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentStart="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/history"
+                    android:padding="12dp"
+                    android:src="@android:drawable/ic_menu_recent_history" />
 
                 <TextView
                     android:layout_width="wrap_content"

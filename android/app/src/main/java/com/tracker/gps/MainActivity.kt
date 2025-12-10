@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var etGroupName: TextInputEditText
     private lateinit var btnStartStop: Button
     private lateinit var btnSettings: Button
+    private lateinit var btnHistory: View
     private lateinit var btnToggleMap: Button
     private lateinit var btnFullscreenMap: Button
     private lateinit var btnGroupHorn: Button
@@ -197,6 +198,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         etGroupName = findViewById(R.id.etGroupName)
         btnStartStop = findViewById(R.id.btnStartStop)
         btnSettings = findViewById(R.id.btnSettings)
+        btnHistory = findViewById(R.id.btnHistory)
         btnToggleMap = findViewById(R.id.btnToggleMap)
         btnFullscreenMap = findViewById(R.id.btnFullscreenMap)
         btnGroupHorn = findViewById(R.id.btnGroupHorn)
@@ -279,6 +281,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        btnHistory.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
         }
 
         btnToggleMap.setOnClickListener {
