@@ -17,7 +17,7 @@ object DataSerializer {
         return gson.fromJson(json, clazz)
     }
 
-    inline fun <reified T> fromJson(json: String): T {
+    fun <reified T> fromJson(json: String): T {
         return gson.fromJson(json, object : TypeToken<T>() {}.type)
     }
 
@@ -25,7 +25,7 @@ object DataSerializer {
         return toJson(data).toByteArray(Charsets.UTF_8)
     }
 
-    inline fun <reified T> fromBytes(bytes: ByteArray): T {
+    fun <reified T> fromBytes(bytes: ByteArray): T {
         val json = String(bytes, Charsets.UTF_8)
         return fromJson(json)
     }
