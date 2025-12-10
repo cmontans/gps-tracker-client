@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wearableApp package="com.tracker.gps.wear">
+    <versionCode>1</versionCode>
+    <versionName>1.0</versionName>
+
+    <!-- Automatically sync the companion app to paired watches -->
+    <distributionApk>
+        <apkDetails>
+            <apkFile>wear-release.apk</apkFile>
+        </apkDetails>
+    </distributionApk>
+</wearableApp>
