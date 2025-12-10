@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var btnGroupHorn: Button
     private lateinit var btnResetStats: Button
     private lateinit var btnClearTracks: Button
+    private lateinit var btnViewHistory: Button
     private lateinit var tvCurrentSpeed: TextView
     private lateinit var tvMaxSpeed: TextView
     private lateinit var tvAvgSpeed: TextView
@@ -202,6 +203,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnGroupHorn = findViewById(R.id.btnGroupHorn)
         btnResetStats = findViewById(R.id.btnResetStats)
         btnClearTracks = findViewById(R.id.btnClearTracks)
+        btnViewHistory = findViewById(R.id.btnViewHistory)
         tvCurrentSpeed = findViewById(R.id.tvCurrentSpeed)
         tvMaxSpeed = findViewById(R.id.tvMaxSpeed)
         tvAvgSpeed = findViewById(R.id.tvAvgSpeed)
@@ -300,6 +302,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             trackingService?.resetStatistics()
             tvMaxSpeed.text = "0.0"
             tvAvgSpeed.text = "0.0"
+        }
+
+        btnViewHistory.setOnClickListener {
+            startActivity(Intent(this, SessionHistoryActivity::class.java))
         }
 
         btnClearTracks.setOnClickListener {

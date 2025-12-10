@@ -19,5 +19,8 @@ data class TrackSession(
     val avgSpeed: Double = 0.0,
     val totalDistance: Double = 0.0,
     val duration: Long = 0,
-    val pointCount: Int = 0
+    val pointCount: Int = 0,
+    val maxSpeedLatitude: Double? = null,
+    val maxSpeedLongitude: Double? = null,
+    val maxSpeedTimestamp: Long? = null
 )

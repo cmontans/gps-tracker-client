@@ -66,4 +66,22 @@
     <string name="pref_visualizer_mode_key">visualizer_mode</string>
     <string name="visualizer_mode">Visualizer Mode (view only, don\'t publish)</string>
     <string name="visualizer_mode_active">👁️ Visualizer Mode Active</string>
+
+    <!-- Session History -->
+    <string name="view_history">📊 View History</string>
+    <string name="session_history_title">Session History</string>
+    <string name="no_sessions_yet">No sessions recorded yet</string>
+    <string name="error_no_user_id">User ID not found. Please start tracking first.</string>
+    <string name="error_loading_sessions">Error loading sessions: %1$s</string>
+
+    <!-- Session Details -->
+    <string name="max_speed_label">Max Speed:</string>
+    <string name="avg_speed_label">Average:</string>
+    <string name="distance_label">Distance:</string>
+    <string name="duration_label">Duration:</string>
+    <string name="avg_speed_format">%.1f km/h</string>
+    <string name="distance_format">%.2f km</string>
+    <string name="duration_format_hours">%dh %dm</string>
+    <string name="duration_format_minutes">%d min</string>
+    <string name="location_format">Location: %.4f, %.4f</string>
 </resources>

@@ -22,8 +22,15 @@ import com.tracker.gps.MainActivity
 import com.tracker.gps.R
 import com.tracker.gps.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
+import com.tracker.gps.shared.api.SessionApiService
+import com.tracker.gps.shared.model.TrackSession
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.net.URI
 import java.util.Locale
+import java.util.UUID
 
 class LocationTrackingService : Service() {
 
@@ -41,6 +48,16 @@ class LocationTrackingService : Service() {
     private var maxSpeed: Double = 0.0
     private var speedReadings = mutableListOf<Double>()
     private val maxSpeedReadings = 20
+
+    // Session tracking
+    private var currentSessionId: String? = null
+    private var sessionStartTime: Long = 0
+    private var maxSpeedLocation: Location? = null
+    private var totalDistance: Double = 0.0
+    private var previousLocation: Location? = null
+
+    // Coroutines
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     // Voice announcement settings
     private var textToSpeech: TextToSpeech? = null
@@ -84,12 +101,24 @@ class LocationTrackingService : Service() {
         this.groupName = groupName
         this.serverUrl = serverUrl
 
+        // Initialize new session
+        currentSessionId = UUID.randomUUID().toString()
+        sessionStartTime = System.currentTimeMillis()
+        totalDistance = 0.0
+        previousLocation = null
+        maxSpeedLocation = null
+
         startForeground(NOTIFICATION_ID, createNotification(0.0))
         startLocationUpdates()
         connectWebSocket()
+
+        Log.d(TAG, "Session started: $currentSessionId")
     }
 
     fun stopTracking() {
+        // Save session before stopping
+        saveCurrentSession()
+
         stopLocationUpdates()
         disconnectWebSocket()
         stopForeground(true)
@@ -145,10 +174,20 @@ class LocationTrackingService : Service() {
             0.0
         }
 
-        // Update max speed
+        // Update max speed and track location
         if (currentSpeed > maxSpeed) {
             maxSpeed = currentSpeed
+            maxSpeedLocation = location
         }
+
+        // Calculate total distance
+        previousLocation?.let { prevLoc ->
+            val distance = prevLoc.distanceTo(location) // Distance in meters
+            if (distance > 0 && distance < 1000) { // Ignore GPS jumps > 1km
+                totalDistance += distance
+            }
+        }
+        previousLocation = location
 
         // Update average speed
         speedReadings.add(currentSpeed)
@@ -236,6 +275,15 @@ class LocationTrackingService : Service() {
     fun resetStatistics() {
         maxSpeed = 0.0
         speedReadings.clear()
+        totalDistance = 0.0
+        previousLocation = null
+        maxSpeedLocation = null
+
+        // Start new session
+        currentSessionId = UUID.randomUUID().toString()
+        sessionStartTime = System.currentTimeMillis()
+
+        Log.d(TAG, "Statistics reset, new session started: $currentSessionId")
     }
 
     fun sendGroupHorn() {
@@ -248,6 +296,61 @@ class LocationTrackingService : Service() {
 
     fun getUserTracks(): Map<String, List<Pair<Double, Double>>> {
         return userTracks
+    }
+
+    private fun saveCurrentSession() {
+        val sessionId = currentSessionId ?: return
+        if (sessionStartTime == 0L) return
+
+        val endTime = System.currentTimeMillis()
+        val duration = endTime - sessionStartTime
+
+        // Calculate average speed from all readings
+        val avgSpeed = if (speedReadings.isNotEmpty()) {
+            speedReadings.average()
+        } else {
+            0.0
+        }
+
+        val session = TrackSession(
+            sessionId = sessionId,
+            userId = userId,
+            userName = userName,
+            groupName = groupName,
+            startTime = sessionStartTime,
+            endTime = endTime,
+            maxSpeed = maxSpeed,
+            avgSpeed = avgSpeed,
+            totalDistance = totalDistance,
+            duration = duration,
+            pointCount = speedReadings.size,
+            maxSpeedLatitude = maxSpeedLocation?.latitude,
+            maxSpeedLongitude = maxSpeedLocation?.longitude,
+            maxSpeedTimestamp = maxSpeedLocation?.time
+        )
+
+        // Save to server asynchronously
+        serviceScope.launch {
+            try {
+                // Extract HTTP base URL from WebSocket URL
+                val httpUrl = serverUrl
+                    .replace("wss://", "https://")
+                    .replace("ws://", "http://")
+
+                val apiService = SessionApiService(httpUrl)
+                val result = apiService.saveSession(session)
+
+                result.onSuccess {
+                    Log.d(TAG, "Session saved successfully: $sessionId")
+                    Log.d(TAG, "Max speed: $maxSpeed km/h, Distance: ${totalDistance / 1000} km, Duration: ${duration / 1000 / 60} min")
+                }.onFailure { error ->
+                    Log.e(TAG, "Failed to save session: ${error.message}", error)
+                    serviceListener?.onError("Failed to save session: ${error.message}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving session: ${e.message}", e)
+            }
+        }
     }
 
     private fun initializeTextToSpeech() {
