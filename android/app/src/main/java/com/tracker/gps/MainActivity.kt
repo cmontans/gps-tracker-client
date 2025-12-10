@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var etUserName: TextInputEditText
     private lateinit var etGroupName: TextInputEditText
     private lateinit var btnStartStop: Button
-    private lateinit var btnSettings: Button
+    private lateinit var btnSettings: View
     private lateinit var btnHistory: View
     private lateinit var btnToggleMap: Button
     private lateinit var btnFullscreenMap: Button
