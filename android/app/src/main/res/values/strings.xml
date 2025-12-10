@@ -63,4 +63,7 @@
     <string name="voice_announcements">Voice Speed Announcements</string>
     <string name="min_speed_threshold">Minimum Speed (km/h)</string>
     <string name="min_speed_hint">22</string>
+    <string name="pref_visualizer_mode_key">visualizer_mode</string>
+    <string name="visualizer_mode">Visualizer Mode (view only, don\'t publish)</string>
+    <string name="visualizer_mode_active">👁️ Visualizer Mode Active</string>
 </resources>
