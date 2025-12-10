@@ -7,7 +7,8 @@ import com.google.gson.reflect.TypeToken
  * Utility for serializing/deserializing data for Wearable Data Layer communication
  */
 object DataSerializer {
-    internal val gson = Gson()
+    @JvmStatic
+    val gson = Gson()
 
     fun <T> toJson(data: T): String {
         return gson.toJson(data)
