@@ -1,0 +1,23 @@
+{
+  "name": "com.gpstracker.unity",
+  "displayName": "GPS Tracker Unity Plugin",
+  "version": "1.0.0",
+  "unity": "2020.3",
+  "description": "A real-time GPS tracking visualization plugin for Unity that connects to a WebSocket-based GPS tracker server and displays group member positions in your Unity project.",
+  "keywords": [
+    "GPS",
+    "tracking",
+    "WebSocket",
+    "real-time",
+    "visualization",
+    "multiplayer"
+  ],
+  "category": "Networking",
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.0.2"
+  },
+  "author": {
+    "name": "GPS Tracker Team"
+  },
+  "license": "MIT"
+}
