@@ -39,6 +39,15 @@ A real-time GPS speed tracking application with live telemetry, group sharing, a
 - **GPS Accuracy Meter**: Real-time accuracy display in meters
 - **Live Coordinates**: Visible GPS coordinates with 6 decimal precision
 
+### KML Network Link (Google Earth Integration)
+- **Real-time KML Export**: View all active users in Google Earth, Google Maps, or any KML viewer
+- **Auto-refresh NetworkLinks**: User positions automatically update every 5 seconds (configurable)
+- **Group Filtering**: View only specific groups or all users worldwide
+- **Rich Metadata**: Each marker shows user name, speed, max speed, bearing, and timestamp
+- **Status Indicators**: Color-coded freshness indicators (🟢 fresh, 🟡 recent, 🟠 older)
+- **Zero Configuration**: Just open the URL in Google Earth - no file downloads needed
+- See [KML_NETWORK_LINK.md](KML_NETWORK_LINK.md) for detailed usage instructions
+
 ## Technologies Used
 
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3

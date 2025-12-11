@@ -392,6 +392,132 @@ app.get('/api/speed-history', async (req, res) => {
   }
 });
 
+// ============================================
+// KML NETWORK LINK ENDPOINTS
+// ============================================
+
+// Function to generate KML XML for active users
+function generateUsersKML(groupName = null) {
+  const now = Date.now();
+  let allUsers = [];
+
+  // Collect users from all groups or specific group
+  if (groupName) {
+    const groupUsers = groups.get(groupName);
+    if (groupUsers) {
+      allUsers = Array.from(groupUsers.values());
+    }
+  } else {
+    // Collect all users from all groups
+    groups.forEach((groupUsers, gName) => {
+      groupUsers.forEach(user => {
+        allUsers.push({ ...user, groupName: gName });
+      });
+    });
+  }
+
+  // Filter out stale users (older than 30 seconds)
+  const activeUsers = allUsers.filter(user => (now - user.timestamp) < 30000);
+
+  // Generate KML placemarks for each user
+  const placemarks = activeUsers.map(user => {
+    const age = Math.floor((now - user.timestamp) / 1000);
+    const ageStatus = age < 5 ? '🟢' : age < 10 ? '🟡' : '🟠';
+
+    return `
+    <Placemark>
+      <name>${ageStatus} ${user.userName}</name>
+      <description><![CDATA[
+        <b>User:</b> ${user.userName} (${user.userId})<br/>
+        <b>Group:</b> ${user.groupName || 'default'}<br/>
+        <b>Speed:</b> ${user.speed.toFixed(1)} km/h<br/>
+        <b>Max Speed:</b> ${user.maxSpeed.toFixed(1)} km/h<br/>
+        <b>Bearing:</b> ${user.bearing.toFixed(0)}°<br/>
+        <b>Last Update:</b> ${age}s ago<br/>
+        <b>Time:</b> ${new Date(user.timestamp).toISOString()}
+      ]]></description>
+      <styleUrl>#userStyle</styleUrl>
+      <Point>
+        <coordinates>${user.lon},${user.lat},0</coordinates>
+      </Point>
+    </Placemark>`;
+  }).join('\n');
+
+  const kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>GPS Tracker - Active Users${groupName ? ` (${groupName})` : ''}</name>
+    <description>Real-time positions of active GPS tracker users</description>
+
+    <!-- Define styles for user markers -->
+    <Style id="userStyle">
+      <IconStyle>
+        <color>ff00ff00</color>
+        <scale>1.2</scale>
+        <Icon>
+          <href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>
+        </Icon>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0.9</scale>
+      </LabelStyle>
+    </Style>
+
+    ${placemarks || '<Placemark><name>No active users</name><description>No users currently active</description></Placemark>'}
+  </Document>
+</kml>`;
+
+  return kml;
+}
+
+// GET endpoint for KML Network Link (root document with auto-refresh)
+app.get('/kml/network-link', (req, res) => {
+  const groupName = req.query.group;
+  const refreshInterval = parseInt(req.query.refresh) || 5; // Default 5 seconds
+
+  // Get the host from the request to construct the full URL
+  const protocol = req.secure ? 'https' : 'http';
+  const host = req.get('host');
+  const dataUrl = `${protocol}://${host}/kml/users${groupName ? `?group=${encodeURIComponent(groupName)}` : ''}`;
+
+  const kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>GPS Tracker - Live Network Link${groupName ? ` (${groupName})` : ''}</name>
+    <description>Auto-refreshing network link showing real-time GPS positions</description>
+
+    <NetworkLink>
+      <name>Active Users</name>
+      <description>Updates every ${refreshInterval} seconds</description>
+      <refreshVisibility>1</refreshVisibility>
+      <flyToView>0</flyToView>
+      <Link>
+        <href>${dataUrl}</href>
+        <refreshMode>onInterval</refreshMode>
+        <refreshInterval>${refreshInterval}</refreshInterval>
+      </Link>
+    </NetworkLink>
+  </Document>
+</kml>`;
+
+  res.set('Content-Type', 'application/vnd.google-earth.kml+xml');
+  res.send(kml);
+
+  console.log(`🗺️  KML Network Link solicitado${groupName ? ` (Grupo: ${groupName})` : ' (Todos los grupos)'}`);
+});
+
+// GET endpoint for KML user data (refreshed by NetworkLink)
+app.get('/kml/users', (req, res) => {
+  const groupName = req.query.group;
+
+  const kml = generateUsersKML(groupName);
+
+  res.set('Content-Type', 'application/vnd.google-earth.kml+xml');
+  res.send(kml);
+
+  console.log(`🗺️  KML data generado${groupName ? ` (Grupo: ${groupName})` : ' (Todos los grupos)'}`);
+});
+
 console.log(`🌐 Servidor WebSocket corriendo en ws://localhost:${PORT}`);
 console.log(`📡 Los clientes deben conectarse a: ws://localhost:${PORT}`);
 console.log(`\n💡 Endpoints disponibles:`);
@@ -403,5 +529,10 @@ console.log(`   - POST /api/speed-history - Guardar registro de velocidad máxim
 console.log(`   - GET /api/speed-history/:userId - Obtener historial de un usuario`);
 console.log(`   - GET /api/speed-history/:userId/stats - Obtener estadísticas de un usuario`);
 console.log(`   - GET /api/speed-history - Obtener todo el historial (admin)`);
+console.log(`\n🗺️  KML Network Link API:`);
+console.log(`   - GET /kml/network-link - KML con NetworkLink para auto-actualización`);
+console.log(`     Query params: ?group=groupName (opcional), ?refresh=seconds (default 5)`);
+console.log(`   - GET /kml/users - KML con datos actuales de usuarios`);
+console.log(`     Query params: ?group=groupName (opcional)`);
 console.log(`\n⚙️  Para usar desde otro dispositivo, reemplaza 'localhost' con la IP de este equipo`);
 console.log(`\n🔐 Sistema de grupos activado - Los usuarios solo verán a otros de su mismo grupo\n`);
