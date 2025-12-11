@@ -273,6 +273,9 @@ Automatically visualizes GPS tracker user positions in the world.
 | `bUseInterpolationBuffer` | `bool` | `false` | Use interpolation buffer instead of dead reckoning |
 | `InterpolationBufferTime` | `float` | 0.2 | Time delay for buffer interpolation (seconds) |
 | `MaxBufferSize` | `int32` | 10 | Maximum number of buffered positions |
+| `bUseCesiumGeoreference` | `bool` | `false` | Use Cesium for WGS84 coordinate transformation |
+| `bEnableGroundClamping` | `bool` | `false` | Clamp markers to Cesium terrain height |
+| `GroundClampingOffset` | `float` | 100.0 | Height above terrain when ground clamping enabled |
 
 #### Public Functions
 
@@ -602,5 +605,5 @@ const FLinearColor DEFAULT_MARKER_COLOR = FLinearColor::Blue;
 ---
 
 **Last Updated:** December 2025
-**Plugin Version:** 1.0.0
+**Plugin Version:** 1.3.0
 **Unreal Engine:** 5.3+

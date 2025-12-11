@@ -241,6 +241,9 @@ Actor that automatically visualizes user positions.
 | `bUseInterpolationBuffer` | bool | Use interpolation buffer instead of dead reckoning (default: false) |
 | `InterpolationBufferTime` | float | Time delay for buffer interpolation in seconds (default: 0.2) |
 | `MaxBufferSize` | int32 | Maximum buffered positions (default: 10) |
+| `bUseCesiumGeoreference` | bool | Use Cesium for WGS84 coordinate transformation (default: false) |
+| `bEnableGroundClamping` | bool | Clamp markers to Cesium terrain height (default: false) |
+| `GroundClampingOffset` | float | Height above terrain when clamping (default: 100.0) |
 
 #### Events
 
@@ -352,6 +355,68 @@ Interpolation buffer provides an alternative smoothing method that interpolates 
 - Decrease buffer time (50-100ms) for more responsive visualization
 - Use dead reckoning for live racing, interpolation buffer for replay/analysis
 
+### Cesium Integration
+
+The plugin supports optional integration with **CesiumForUnreal** for accurate global geospatial positioning and terrain integration.
+
+**How It Works:**
+1. **Georeference Transformation**: Converts GPS lat/lon to Unreal coordinates using Cesium's WGS84 georeference
+2. **Terrain Clamping**: Automatically positions markers at terrain elevation using collision traces
+3. **Global Scale**: Supports tracking across continents with accurate coordinate transformation
+4. **Automatic Fallback**: Falls back to simple Mercator projection if Cesium unavailable
+
+**Setup Instructions:**
+
+1. **Install CesiumForUnreal Plugin:**
+   - Download from Epic Marketplace or Cesium website
+   - Enable in Project → Plugins → CesiumForUnreal
+   - Restart Unreal Engine
+
+2. **Add Cesium Georeference to Level:**
+   - Place a **Cesium Georeference** actor in your level
+   - Configure origin latitude/longitude for your tracking area
+   - Add Cesium 3D Tiles for terrain (optional, required for ground clamping)
+
+3. **Enable in GPS Tracker Visualizer:**
+   - Set `bUseCesiumGeoreference = true` on your GPS Tracker Visualizer Actor
+   - Optionally enable `bEnableGroundClamping = true` for terrain placement
+   - Adjust `GroundClampingOffset` for height above terrain
+
+**Configuration Parameters:**
+- `bUseCesiumGeoreference` - Enable Cesium coordinate transformation (default: false)
+- `bEnableGroundClamping` - Clamp to terrain using traces (default: false, requires Cesium enabled)
+- `GroundClampingOffset` - Height above terrain in Unreal units (default: 100.0)
+
+**Benefits:**
+- ✅ Accurate WGS84 coordinate transformation for global tracking
+- ✅ Realistic terrain integration with Cesium 3D Tiles
+- ✅ Proper handling of Earth's curvature and projection distortion
+- ✅ Compatible with Google Maps/Earth data
+- ✅ Works seamlessly with Cesium's world-scale rendering
+
+**Use Cases:**
+- **Flight Tracking**: Display aircraft positions on global terrain with altitude
+- **Hiking/Trail Visualization**: Show routes on real-world topography
+- **Vehicle Racing**: Visualize cars on actual terrain elevation
+- **Marine Tracking**: Display ships on ocean surface with coastal terrain
+- **Global Events**: Track participants across countries with accurate positioning
+
+**Comparison: Mercator vs Cesium**
+| Feature | Mercator Projection | Cesium Georeference |
+|---------|-------------------|---------------------|
+| **Setup** | None required | Requires CesiumForUnreal plugin |
+| **Accuracy** | Good for small areas (< 100km) | Accurate globally |
+| **Terrain** | Manual Z offset only | Real terrain height via traces |
+| **Performance** | Very fast | Fast (minimal overhead) |
+| **Dependencies** | None | CesiumForUnreal plugin |
+| **Best For** | Local/regional tracking | Global tracking, terrain integration |
+
+**Troubleshooting:**
+- If Cesium requested but unavailable, plugin logs warning and falls back to Mercator
+- Ensure Cesium Georeference actor is placed in the level
+- For ground clamping, verify Cesium 3D Tiles have collision enabled
+- Check Output Log for "Found Cesium Georeference actor" confirmation message
+
 ### Message Protocol
 
 The plugin implements the GPS tracker WebSocket protocol:
@@ -446,5 +511,5 @@ Compatible with Unreal Engine 5.3+
 
 ---
 
-**Version**: 1.0.0
+**Version**: 1.3.0
 **Last Updated**: December 2025

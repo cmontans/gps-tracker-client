@@ -142,6 +142,29 @@ public:
 	int32 MaxBufferSize = 10;
 
 	/**
+	 * Use Cesium plugin for accurate geolocation and coordinate transformation
+	 * Requires CesiumForUnreal plugin to be installed and enabled
+	 * When enabled, GPS coordinates will be converted using Cesium's georeference system
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Cesium Integration")
+	bool bUseCesiumGeoreference = false;
+
+	/**
+	 * Clamp user markers to terrain height from Cesium 3D Tiles
+	 * Requires bUseCesiumGeoreference to be enabled
+	 * Markers will be positioned at the terrain elevation plus GroundClampingOffset
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Cesium Integration", meta = (EditCondition = "bUseCesiumGeoreference"))
+	bool bEnableGroundClamping = false;
+
+	/**
+	 * Additional height offset above terrain when ground clamping is enabled
+	 * Useful to prevent markers from clipping into the ground
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Cesium Integration", meta = (EditCondition = "bEnableGroundClamping"))
+	float GroundClampingOffset = 100.0f;
+
+	/**
 	 * Blueprint event called when users are updated
 	 */
 	UFUNCTION(BlueprintImplementableEvent, Category = "GPS Tracker")
@@ -191,6 +214,21 @@ protected:
 	FVector CalculateInterpolatedPosition(const FUserMarker& Marker, double RenderTime) const;
 
 	/**
+	 * Convert GPS coordinates to world position, optionally using Cesium georeference
+	 */
+	FVector ConvertGPSToWorldPosition(double Latitude, double Longitude, float& OutTerrainHeight);
+
+	/**
+	 * Get the Cesium georeference actor if available
+	 */
+	AActor* GetCesiumGeoreference();
+
+	/**
+	 * Sample terrain height at given GPS coordinates using Cesium
+	 */
+	bool SampleCesiumTerrainHeight(double Latitude, double Longitude, float& OutHeight);
+
+	/**
 	 * Blueprint event for customizing user marker appearance
 	 * Override this in Blueprint to create custom markers
 	 */
@@ -203,6 +241,10 @@ private:
 	// Reference to GPS Tracker subsystem
 	UPROPERTY()
 	UGPSTrackerSubsystem* TrackerSubsystem;
+
+	// Cached reference to Cesium Georeference actor (if available)
+	UPROPERTY()
+	AActor* CesiumGeoreferenceActor;
 
 	// Current list of users
 	TArray<FGPSUserData> CurrentUsers;

@@ -2,6 +2,59 @@
 
 All notable changes to the GPS Tracker Unreal Plugin will be documented in this file.
 
+## [1.3.0] - 2025-12-11
+
+### Added
+- **Cesium for Unreal Integration** - Optional support for accurate geospatial positioning
+  - Automatic detection of CesiumForUnreal plugin
+  - WGS84 coordinate transformation using Cesium's georeference system
+  - Accurate world-scale positioning for global GPS tracking
+  - Optional plugin dependency (works with or without Cesium)
+- **Ground Clamping System** - Terrain-aware marker positioning
+  - Automatic terrain height sampling using line traces
+  - Configurable height offset above terrain
+  - Prevents markers from clipping through 3D Tiles terrain
+  - Sphere trace fallback for complex terrain geometry
+- Cesium configuration properties in `AGPSTrackerVisualizerActor`:
+  - `bUseCesiumGeoreference` - Enable Cesium coordinate transformation (default: false)
+  - `bEnableGroundClamping` - Clamp markers to terrain height (default: false)
+  - `GroundClampingOffset` - Height above terrain in Unreal units (default: 100.0)
+- Automatic fallback to Mercator projection when Cesium unavailable
+- Compile-time feature detection with WITH_CESIUM preprocessor flag
+- Cached Cesium georeference reference for performance
+
+### Improved
+- Coordinate conversion now supports both simple Mercator and Cesium georeference
+- More accurate positioning for large geographic areas with Cesium
+- Better terrain integration for realistic marker placement
+- Warning system for missing Cesium when requested
+
+### Technical Details
+- Added `GetCesiumGeoreference()` method for automatic georeference discovery
+- Added `ConvertGPSToWorldPosition()` method with Cesium/Mercator switching
+- Added `SampleCesiumTerrainHeight()` for ground clamping with line traces
+- Modified `UpdateUserVisualization()` to use new conversion system
+- TActorIterator search for ACesiumGeoreference in level
+- glm::dvec3 coordinate transformation for WGS84 to Unreal conversion
+- Collision-based terrain height sampling with complex trace support
+
+### Use Cases
+- **Global Tracking**: Track users across continents with accurate WGS84 positioning
+- **Terrain Visualization**: Display GPS positions on real-world 3D terrain from Cesium
+- **Flight Tracking**: Clamp aircraft to terrain or apply altitude offsets
+- **Outdoor Sports**: Visualize hiking, cycling, or skiing routes on actual terrain
+- **Vehicle Racing**: Show cars on accurate terrain with elevation data
+
+### Comparison: Mercator vs Cesium
+| Feature | Mercator Projection | Cesium Georeference |
+|---------|-------------------|---------------------|
+| **Accuracy** | Approximate (small areas) | Precise (WGS84 global) |
+| **Terrain** | Manual height only | Real terrain height |
+| **Scale** | Local/regional | Global |
+| **Dependencies** | None | CesiumForUnreal plugin |
+| **Performance** | Fast | Slightly slower |
+| **Best For** | Simple projects, small areas | Large areas, terrain integration |
+
 ## [1.2.0] - 2025-12-11
 
 ### Added
@@ -154,7 +207,8 @@ All notable changes to the GPS Tracker Unreal Plugin will be documented in this 
 
 | Version | Release Date | UE Version | Status |
 |---------|--------------|------------|--------|
-| 1.2.0   | 2025-12-11  | 5.3        | Current |
+| 1.3.0   | 2025-12-11  | 5.3        | Current |
+| 1.2.0   | 2025-12-11  | 5.3        | Previous |
 | 1.1.0   | 2025-12-11  | 5.3        | Previous |
 | 1.0.0   | 2025-12-11  | 5.3        | Initial |
 

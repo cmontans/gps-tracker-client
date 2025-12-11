@@ -7,8 +7,18 @@
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "EngineUtils.h"
+#include "Kismet/GameplayStatics.h"
+
+// Conditional Cesium includes
+#if WITH_CESIUM
+#include "CesiumGeoreference.h"
+#include "CesiumGlobeAnchorComponent.h"
+#include "GlobeAwareDefaultPawn.h"
+#endif
 
 AGPSTrackerVisualizerActor::AGPSTrackerVisualizerActor()
+	: CesiumGeoreferenceActor(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -145,9 +155,9 @@ void AGPSTrackerVisualizerActor::HandleUsersUpdated(const TArray<FGPSUserData>& 
 
 void AGPSTrackerVisualizerActor::UpdateUserVisualization(const FGPSUserData& UserData)
 {
-	// Calculate world position from GPS coordinates
-	FVector WorldLocation = UserData.GetWorldPosition(CoordinateScale);
-	WorldLocation.Z += MarkerHeightOffset;
+	// Calculate world position from GPS coordinates using Cesium if available
+	float TerrainHeight = 0.0f;
+	FVector WorldLocation = ConvertGPSToWorldPosition(UserData.Latitude, UserData.Longitude, TerrainHeight);
 
 	// Check if marker already exists
 	FUserMarker* ExistingMarker = UserMarkers.Find(UserData.UserId);
@@ -602,6 +612,154 @@ FVector AGPSTrackerVisualizerActor::CalculateInterpolatedPosition(const FUserMar
 
 	// Fallback (shouldn't happen)
 	return Marker.PositionBuffer[Marker.PositionBuffer.Num() - 1].Position;
+}
+
+AActor* AGPSTrackerVisualizerActor::GetCesiumGeoreference()
+{
+#if WITH_CESIUM
+	// Return cached reference if available
+	if (CesiumGeoreferenceActor && CesiumGeoreferenceActor->IsValidLowLevel())
+	{
+		return CesiumGeoreferenceActor;
+	}
+
+	// Search for Cesium Georeference actor in the level
+	for (TActorIterator<AActor> It(GetWorld(), ACesiumGeoreference::StaticClass()); It; ++It)
+	{
+		CesiumGeoreferenceActor = *It;
+		UE_LOG(LogTemp, Log, TEXT("GPSTrackerVisualizerActor: Found Cesium Georeference actor"));
+		return CesiumGeoreferenceActor;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("GPSTrackerVisualizerActor: Cesium Georeference actor not found in level"));
+#else
+	UE_LOG(LogTemp, Warning, TEXT("GPSTrackerVisualizerActor: Cesium plugin is not available (compiled without WITH_CESIUM)"));
+#endif
+
+	return nullptr;
+}
+
+FVector AGPSTrackerVisualizerActor::ConvertGPSToWorldPosition(double Latitude, double Longitude, float& OutTerrainHeight)
+{
+	OutTerrainHeight = 0.0f;
+
+	// Use Cesium georeference if enabled and available
+	if (bUseCesiumGeoreference)
+	{
+#if WITH_CESIUM
+		AActor* GeoreferenceActor = GetCesiumGeoreference();
+		if (GeoreferenceActor)
+		{
+			ACesiumGeoreference* Georeference = Cast<ACesiumGeoreference>(GeoreferenceActor);
+			if (Georeference)
+			{
+				// Convert WGS84 coordinates to Unreal world position
+				// Cesium uses glm::dvec3 for coordinates: longitude, latitude, height
+				glm::dvec3 Coordinates(Longitude, Latitude, 0.0);
+
+				// Transform to Unreal coordinates
+				FVector UnrealPosition = Georeference->TransformLongitudeLatitudeHeightPositionToUnreal(Coordinates);
+
+				// Sample terrain height if ground clamping is enabled
+				if (bEnableGroundClamping)
+				{
+					float TerrainHeight = 0.0f;
+					if (SampleCesiumTerrainHeight(Latitude, Longitude, TerrainHeight))
+					{
+						OutTerrainHeight = TerrainHeight;
+						UnrealPosition.Z = TerrainHeight + GroundClampingOffset;
+					}
+					else
+					{
+						// Fallback to configured height offset if terrain sampling fails
+						UnrealPosition.Z = GroundClampingOffset;
+					}
+				}
+				else
+				{
+					// Apply configured height offset
+					UnrealPosition.Z += MarkerHeightOffset;
+				}
+
+				return UnrealPosition;
+			}
+		}
+
+		// Fallback warning if Cesium was requested but not available
+		static bool bHasWarned = false;
+		if (!bHasWarned)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GPSTrackerVisualizerActor: Cesium georeference requested but not available, falling back to simple Mercator projection"));
+			bHasWarned = true;
+		}
+#else
+		// Warn if Cesium is requested but not compiled
+		static bool bHasWarned = false;
+		if (!bHasWarned)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GPSTrackerVisualizerActor: Cesium georeference requested but plugin is not available (compiled without WITH_CESIUM)"));
+			bHasWarned = true;
+		}
+#endif
+	}
+
+	// Fallback: Use simple Mercator projection
+	FVector WorldPosition = FVector(
+		Longitude * CoordinateScale,
+		Latitude * CoordinateScale,
+		MarkerHeightOffset
+	);
+
+	return WorldPosition;
+}
+
+bool AGPSTrackerVisualizerActor::SampleCesiumTerrainHeight(double Latitude, double Longitude, float& OutHeight)
+{
+#if WITH_CESIUM
+	AActor* GeoreferenceActor = GetCesiumGeoreference();
+	if (!GeoreferenceActor)
+	{
+		return false;
+	}
+
+	ACesiumGeoreference* Georeference = Cast<ACesiumGeoreference>(GeoreferenceActor);
+	if (!Georeference)
+	{
+		return false;
+	}
+
+	// Convert GPS to world position at height 0
+	glm::dvec3 Coordinates(Longitude, Latitude, 0.0);
+	FVector WorldPosition = Georeference->TransformLongitudeLatitudeHeightPositionToUnreal(Coordinates);
+
+	// Perform line trace downward to find terrain
+	FHitResult HitResult;
+	FVector TraceStart = WorldPosition + FVector(0.0f, 0.0f, 10000.0f); // Start high above
+	FVector TraceEnd = WorldPosition - FVector(0.0f, 0.0f, 10000.0f);   // End far below
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.bTraceComplex = true;
+
+	// Perform line trace
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_WorldStatic, QueryParams))
+	{
+		OutHeight = HitResult.Location.Z;
+		return true;
+	}
+
+	// No terrain hit, try alternative method with sphere trace
+	if (GetWorld()->SweepSingleByChannel(HitResult, TraceStart, TraceEnd, FQuat::Identity, ECC_WorldStatic,
+		FCollisionShape::MakeSphere(50.0f), QueryParams))
+	{
+		OutHeight = HitResult.Location.Z;
+		return true;
+	}
+
+	return false;
+#else
+	return false;
+#endif
 }
 
 UStaticMesh* AGPSTrackerVisualizerActor::GetDefaultSphereMesh() const

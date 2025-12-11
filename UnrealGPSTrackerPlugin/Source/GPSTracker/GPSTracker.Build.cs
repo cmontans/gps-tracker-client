@@ -33,6 +33,29 @@ public class GPSTracker : ModuleRules
 			}
 		);
 
+		// Optional Cesium support
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.Add("UnrealEd");
+		}
+
+		// Check if CesiumForUnreal plugin is available
+		string CesiumPath = System.IO.Path.Combine(Target.ProjectFile.Directory.FullName, "Plugins", "CesiumForUnreal");
+		if (System.IO.Directory.Exists(CesiumPath))
+		{
+			PublicDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"CesiumRuntime"
+				}
+			);
+			PublicDefinitions.Add("WITH_CESIUM=1");
+		}
+		else
+		{
+			PublicDefinitions.Add("WITH_CESIUM=0");
+		}
+
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
