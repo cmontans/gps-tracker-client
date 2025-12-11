@@ -455,7 +455,7 @@ function generateUsersKML(groupName = null) {
         <color>ff00ff00</color>
         <scale>1.2</scale>
         <Icon>
-          <href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>
+          <href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href>
         </Icon>
       </IconStyle>
       <LabelStyle>
