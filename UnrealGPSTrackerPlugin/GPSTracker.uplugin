@@ -1,9 +1,9 @@
 {
 	"FileVersion": 3,
-	"Version": 2,
-	"VersionName": "1.1.0",
+	"Version": 3,
+	"VersionName": "1.2.0",
 	"FriendlyName": "GPS Tracker Integration",
-	"Description": "Real-time GPS tracking visualization plugin with dead reckoning that connects to GPS tracker server and displays group member positions with smooth interpolation",
+	"Description": "Real-time GPS tracking visualization plugin with dead reckoning and interpolation buffer that connects to GPS tracker server and displays group member positions with smooth, accurate movement",
 	"Category": "Networking",
 	"CreatedBy": "GPS Tracker Team",
 	"CreatedByURL": "",

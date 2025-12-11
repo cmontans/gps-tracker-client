@@ -119,6 +119,29 @@ public:
 	float PredictionDampingFactor = 0.8f;
 
 	/**
+	 * Use interpolation buffer instead of dead reckoning for position smoothing
+	 * Interpolation buffer interpolates between past positions (accurate but adds latency)
+	 * Dead reckoning predicts future positions (responsive but can overshoot)
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Interpolation Buffer")
+	bool bUseInterpolationBuffer = false;
+
+	/**
+	 * Time in seconds to delay rendering for interpolation buffer
+	 * Higher values = smoother but more lag (typical: 0.1-0.3 seconds)
+	 * Must be less than the time between GPS updates for smooth interpolation
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Interpolation Buffer", meta = (ClampMin = "0.05", ClampMax = "2.0", EditCondition = "bUseInterpolationBuffer"))
+	float InterpolationBufferTime = 0.2f;
+
+	/**
+	 * Maximum number of positions to store in interpolation buffer
+	 * Larger buffers handle more irregular update rates but use more memory
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Interpolation Buffer", meta = (ClampMin = "2", ClampMax = "50", EditCondition = "bUseInterpolationBuffer"))
+	int32 MaxBufferSize = 10;
+
+	/**
 	 * Blueprint event called when users are updated
 	 */
 	UFUNCTION(BlueprintImplementableEvent, Category = "GPS Tracker")
@@ -158,6 +181,16 @@ protected:
 	FVector CalculatePredictedPosition(const FUserMarker& Marker, float TimeSinceLastUpdate) const;
 
 	/**
+	 * Update interpolation buffer for a user marker
+	 */
+	void UpdateInterpolationBuffer(FUserMarker& Marker, float DeltaTime);
+
+	/**
+	 * Calculate interpolated position from buffer
+	 */
+	FVector CalculateInterpolatedPosition(const FUserMarker& Marker, double RenderTime) const;
+
+	/**
 	 * Blueprint event for customizing user marker appearance
 	 * Override this in Blueprint to create custom markers
 	 */
@@ -173,6 +206,28 @@ private:
 
 	// Current list of users
 	TArray<FGPSUserData> CurrentUsers;
+
+	// Buffered position for interpolation
+	struct FBufferedPosition
+	{
+		FVector Position;
+		FRotator Rotation;
+		double Timestamp;
+
+		FBufferedPosition()
+			: Position(FVector::ZeroVector)
+			, Rotation(FRotator::ZeroRotator)
+			, Timestamp(0.0)
+		{
+		}
+
+		FBufferedPosition(const FVector& InPosition, const FRotator& InRotation, double InTimestamp)
+			: Position(InPosition)
+			, Rotation(InRotation)
+			, Timestamp(InTimestamp)
+		{
+		}
+	};
 
 	// User marker data structure
 	struct FUserMarker
@@ -191,6 +246,10 @@ private:
 		double LastUpdateTime;            // Time of last GPS update (world time)
 		bool bHasInitialPosition;         // Whether we've received first position
 
+		// Interpolation buffer state
+		TArray<FBufferedPosition> PositionBuffer;  // Circular buffer of recent positions
+		int32 BufferWriteIndex;                     // Next index to write in buffer
+
 		FUserMarker()
 			: RootComponent(nullptr)
 			, MarkerMesh(nullptr)
@@ -201,6 +260,7 @@ private:
 			, VelocityVector(FVector::ZeroVector)
 			, LastUpdateTime(0.0)
 			, bHasInitialPosition(false)
+			, BufferWriteIndex(0)
 		{
 		}
 	};

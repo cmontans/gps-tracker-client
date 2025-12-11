@@ -63,9 +63,18 @@ void AGPSTrackerVisualizerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Update dead reckoning for all markers
-	if (bEnableDeadReckoning)
+	// Choose smoothing method
+	if (bUseInterpolationBuffer)
 	{
+		// Update interpolation buffer for all markers
+		for (auto& Pair : UserMarkers)
+		{
+			UpdateInterpolationBuffer(Pair.Value, DeltaTime);
+		}
+	}
+	else if (bEnableDeadReckoning)
+	{
+		// Update dead reckoning for all markers
 		for (auto& Pair : UserMarkers)
 		{
 			UpdateDeadReckoning(Pair.Value, DeltaTime);
@@ -145,8 +154,34 @@ void AGPSTrackerVisualizerActor::UpdateUserVisualization(const FGPSUserData& Use
 
 	if (ExistingMarker)
 	{
-		// Update dead reckoning state
-		if (bEnableDeadReckoning)
+		double CurrentTime = GetWorld()->GetTimeSeconds();
+
+		// Choose smoothing method
+		if (bUseInterpolationBuffer)
+		{
+			// Add position to interpolation buffer
+			FBufferedPosition BufferedPos(WorldLocation, UserData.GetRotation(), CurrentTime);
+
+			// Initialize buffer if needed
+			if (ExistingMarker->PositionBuffer.Num() == 0)
+			{
+				ExistingMarker->PositionBuffer.Reserve(MaxBufferSize);
+				ExistingMarker->PositionBuffer.Add(BufferedPos);
+				ExistingMarker->bHasInitialPosition = true;
+			}
+			else if (ExistingMarker->PositionBuffer.Num() < MaxBufferSize)
+			{
+				// Buffer not full yet, just add
+				ExistingMarker->PositionBuffer.Add(BufferedPos);
+			}
+			else
+			{
+				// Buffer is full, use circular write
+				ExistingMarker->PositionBuffer[ExistingMarker->BufferWriteIndex] = BufferedPos;
+				ExistingMarker->BufferWriteIndex = (ExistingMarker->BufferWriteIndex + 1) % MaxBufferSize;
+			}
+		}
+		else if (bEnableDeadReckoning)
 		{
 			// Calculate velocity vector from speed and bearing
 			// Convert km/h to Unreal units per second
@@ -173,11 +208,11 @@ void AGPSTrackerVisualizerActor::UpdateUserVisualization(const FGPSUserData& Use
 			}
 
 			// Update last update time
-			ExistingMarker->LastUpdateTime = GetWorld()->GetTimeSeconds();
+			ExistingMarker->LastUpdateTime = CurrentTime;
 		}
 		else
 		{
-			// No dead reckoning - snap to position immediately
+			// No smoothing - snap to position immediately
 			if (ExistingMarker->RootComponent)
 			{
 				ExistingMarker->RootComponent->SetWorldLocation(WorldLocation);
@@ -200,7 +235,11 @@ void AGPSTrackerVisualizerActor::UpdateUserVisualization(const FGPSUserData& Use
 		// Add to trail (use current position for smooth trails)
 		if (bDrawTrails)
 		{
-			FVector TrailPosition = bEnableDeadReckoning ? ExistingMarker->CurrentPosition : WorldLocation;
+			FVector TrailPosition = WorldLocation;
+			if (bUseInterpolationBuffer || bEnableDeadReckoning)
+			{
+				TrailPosition = ExistingMarker->CurrentPosition;
+			}
 			ExistingMarker->TrailPoints.Add(TrailPosition);
 			if (ExistingMarker->TrailPoints.Num() > MaxTrailPoints)
 			{
@@ -305,13 +344,25 @@ void AGPSTrackerVisualizerActor::CreateUserMarker_Implementation(const FGPSUserD
 
 	NewMarker.LastData = UserData;
 
-	// Initialize dead reckoning state
-	if (bEnableDeadReckoning)
+	// Initialize smoothing state
+	double CurrentTime = GetWorld()->GetTimeSeconds();
+
+	if (bUseInterpolationBuffer)
 	{
+		// Initialize interpolation buffer
+		NewMarker.PositionBuffer.Reserve(MaxBufferSize);
+		NewMarker.PositionBuffer.Add(FBufferedPosition(WorldLocation, UserData.GetRotation(), CurrentTime));
+		NewMarker.CurrentPosition = WorldLocation;
+		NewMarker.bHasInitialPosition = true;
+		NewMarker.BufferWriteIndex = 0;
+	}
+	else if (bEnableDeadReckoning)
+	{
+		// Initialize dead reckoning state
 		NewMarker.CurrentPosition = WorldLocation;
 		NewMarker.TargetPosition = WorldLocation;
 		NewMarker.bHasInitialPosition = true;
-		NewMarker.LastUpdateTime = GetWorld()->GetTimeSeconds();
+		NewMarker.LastUpdateTime = CurrentTime;
 
 		// Calculate initial velocity vector
 		double SpeedUnitsPerSecond = (UserData.Speed * 1000.0 * CoordinateScale) / 3600.0;
@@ -401,6 +452,156 @@ FVector AGPSTrackerVisualizerActor::CalculatePredictedPosition(const FUserMarker
 	}
 
 	return PredictedPosition;
+}
+
+void AGPSTrackerVisualizerActor::UpdateInterpolationBuffer(FUserMarker& Marker, float DeltaTime)
+{
+	if (!Marker.RootComponent || !Marker.bHasInitialPosition || Marker.PositionBuffer.Num() < 2)
+	{
+		// Need at least 2 positions to interpolate
+		if (Marker.bHasInitialPosition && Marker.PositionBuffer.Num() > 0)
+		{
+			// Only one position, just use it
+			Marker.CurrentPosition = Marker.PositionBuffer[0].Position;
+			Marker.RootComponent->SetWorldLocation(Marker.CurrentPosition);
+			Marker.RootComponent->SetWorldRotation(Marker.PositionBuffer[0].Rotation);
+		}
+		return;
+	}
+
+	// Calculate render time (current time minus buffer delay)
+	double CurrentTime = GetWorld()->GetTimeSeconds();
+	double RenderTime = CurrentTime - InterpolationBufferTime;
+
+	// Find the two positions to interpolate between
+	FVector InterpolatedPosition = CalculateInterpolatedPosition(Marker, RenderTime);
+	FRotator InterpolatedRotation = FRotator::ZeroRotator;
+
+	// Find the two buffered positions surrounding RenderTime
+	int32 OlderIndex = -1;
+	int32 NewerIndex = -1;
+
+	for (int32 i = 0; i < Marker.PositionBuffer.Num(); ++i)
+	{
+		if (Marker.PositionBuffer[i].Timestamp <= RenderTime)
+		{
+			if (OlderIndex == -1 || Marker.PositionBuffer[i].Timestamp > Marker.PositionBuffer[OlderIndex].Timestamp)
+			{
+				OlderIndex = i;
+			}
+		}
+		if (Marker.PositionBuffer[i].Timestamp >= RenderTime)
+		{
+			if (NewerIndex == -1 || Marker.PositionBuffer[i].Timestamp < Marker.PositionBuffer[NewerIndex].Timestamp)
+			{
+				NewerIndex = i;
+			}
+		}
+	}
+
+	// Interpolate rotation as well
+	if (OlderIndex >= 0 && NewerIndex >= 0 && OlderIndex != NewerIndex)
+	{
+		const FBufferedPosition& Older = Marker.PositionBuffer[OlderIndex];
+		const FBufferedPosition& Newer = Marker.PositionBuffer[NewerIndex];
+
+		double TimeDelta = Newer.Timestamp - Older.Timestamp;
+		if (TimeDelta > 0.0)
+		{
+			float Alpha = FMath::Clamp((RenderTime - Older.Timestamp) / TimeDelta, 0.0, 1.0);
+			InterpolatedRotation = FMath::Lerp(Older.Rotation, Newer.Rotation, Alpha);
+		}
+		else
+		{
+			InterpolatedRotation = Newer.Rotation;
+		}
+	}
+	else if (OlderIndex >= 0)
+	{
+		InterpolatedRotation = Marker.PositionBuffer[OlderIndex].Rotation;
+	}
+	else if (NewerIndex >= 0)
+	{
+		InterpolatedRotation = Marker.PositionBuffer[NewerIndex].Rotation;
+	}
+
+	// Update marker
+	Marker.CurrentPosition = InterpolatedPosition;
+	Marker.RootComponent->SetWorldLocation(Marker.CurrentPosition);
+	Marker.RootComponent->SetWorldRotation(InterpolatedRotation);
+}
+
+FVector AGPSTrackerVisualizerActor::CalculateInterpolatedPosition(const FUserMarker& Marker, double RenderTime) const
+{
+	if (Marker.PositionBuffer.Num() == 0)
+	{
+		return FVector::ZeroVector;
+	}
+
+	if (Marker.PositionBuffer.Num() == 1)
+	{
+		return Marker.PositionBuffer[0].Position;
+	}
+
+	// Find the two positions that bracket the render time
+	int32 OlderIndex = -1;
+	int32 NewerIndex = -1;
+
+	for (int32 i = 0; i < Marker.PositionBuffer.Num(); ++i)
+	{
+		if (Marker.PositionBuffer[i].Timestamp <= RenderTime)
+		{
+			if (OlderIndex == -1 || Marker.PositionBuffer[i].Timestamp > Marker.PositionBuffer[OlderIndex].Timestamp)
+			{
+				OlderIndex = i;
+			}
+		}
+		if (Marker.PositionBuffer[i].Timestamp >= RenderTime)
+		{
+			if (NewerIndex == -1 || Marker.PositionBuffer[i].Timestamp < Marker.PositionBuffer[NewerIndex].Timestamp)
+			{
+				NewerIndex = i;
+			}
+		}
+	}
+
+	// Interpolate between the two positions
+	if (OlderIndex >= 0 && NewerIndex >= 0)
+	{
+		if (OlderIndex == NewerIndex)
+		{
+			// RenderTime exactly matches a buffered position
+			return Marker.PositionBuffer[OlderIndex].Position;
+		}
+
+		const FBufferedPosition& Older = Marker.PositionBuffer[OlderIndex];
+		const FBufferedPosition& Newer = Marker.PositionBuffer[NewerIndex];
+
+		// Linear interpolation between the two positions
+		double TimeDelta = Newer.Timestamp - Older.Timestamp;
+		if (TimeDelta > 0.0)
+		{
+			float Alpha = FMath::Clamp((RenderTime - Older.Timestamp) / TimeDelta, 0.0, 1.0);
+			return FMath::Lerp(Older.Position, Newer.Position, Alpha);
+		}
+		else
+		{
+			return Newer.Position;
+		}
+	}
+	else if (OlderIndex >= 0)
+	{
+		// RenderTime is before all buffered positions, use oldest
+		return Marker.PositionBuffer[OlderIndex].Position;
+	}
+	else if (NewerIndex >= 0)
+	{
+		// RenderTime is after all buffered positions, use newest
+		return Marker.PositionBuffer[NewerIndex].Position;
+	}
+
+	// Fallback (shouldn't happen)
+	return Marker.PositionBuffer[Marker.PositionBuffer.Num() - 1].Position;
 }
 
 UStaticMesh* AGPSTrackerVisualizerActor::GetDefaultSphereMesh() const

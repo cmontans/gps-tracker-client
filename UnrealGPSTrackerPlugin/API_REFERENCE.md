@@ -270,6 +270,9 @@ Automatically visualizes GPS tracker user positions in the world.
 | `MaxExtrapolationTime` | `float` | 5.0 | Maximum seconds to extrapolate beyond last update |
 | `MinSpeedForPrediction` | `float` | 1.0 | Minimum speed (km/h) to apply prediction |
 | `PredictionDampingFactor` | `float` | 0.8 | Damping for prediction accuracy over time |
+| `bUseInterpolationBuffer` | `bool` | `false` | Use interpolation buffer instead of dead reckoning |
+| `InterpolationBufferTime` | `float` | 0.2 | Time delay for buffer interpolation (seconds) |
+| `MaxBufferSize` | `int32` | 10 | Maximum number of buffered positions |
 
 #### Public Functions
 

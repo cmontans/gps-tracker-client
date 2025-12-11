@@ -238,6 +238,9 @@ Actor that automatically visualizes user positions.
 | `MaxExtrapolationTime` | float | Max seconds to predict beyond last update (default: 5.0) |
 | `MinSpeedForPrediction` | float | Min speed (km/h) to apply prediction (default: 1.0) |
 | `PredictionDampingFactor` | float | Reduces prediction over time, 0-1 (default: 0.8) |
+| `bUseInterpolationBuffer` | bool | Use interpolation buffer instead of dead reckoning (default: false) |
+| `InterpolationBufferTime` | float | Time delay for buffer interpolation in seconds (default: 0.2) |
+| `MaxBufferSize` | int32 | Maximum buffered positions (default: 10) |
 
 #### Events
 
@@ -306,6 +309,48 @@ Dead reckoning provides smooth, continuous movement between GPS position updates
 - Decrease `MaxExtrapolationTime` if predictions overshoot actual paths
 - Increase `MinSpeedForPrediction` to disable prediction for stationary/slow users
 - Adjust `PredictionDampingFactor` to control how aggressively predictions decay
+
+### Interpolation Buffer
+
+Interpolation buffer provides an alternative smoothing method that interpolates between buffered past positions for guaranteed accuracy at the cost of slight latency.
+
+**How It Works:**
+1. **Buffering**: Stores recent GPS positions with timestamps in a circular buffer
+2. **Delayed Rendering**: Renders positions from the past (e.g., 200ms ago)
+3. **Interpolation**: Smoothly interpolates between buffered positions
+4. **Accuracy**: Always accurate since it uses actual GPS data, never predictions
+
+**Configuration Parameters:**
+- `bUseInterpolationBuffer` - Use interpolation buffer instead of dead reckoning (default: false)
+- `InterpolationBufferTime` - Time delay in seconds for rendering (0.2 default)
+- `MaxBufferSize` - Maximum positions to buffer (10 default)
+
+**Benefits:**
+- ✅ Guaranteed accuracy - uses only actual GPS data
+- ✅ Smooth movement even with jittery GPS updates
+- ✅ No overshooting - never predicts beyond known positions
+- ✅ Handles irregular update rates well
+
+**Trade-offs:**
+- ⚠️ Adds latency (positions rendered ~200ms behind real-time)
+- ⚠️ Requires sufficient GPS update frequency
+- ⚠️ Less responsive than dead reckoning
+
+**Comparison: Dead Reckoning vs Interpolation Buffer**
+
+| Feature | Dead Reckoning | Interpolation Buffer |
+|---------|----------------|---------------------|
+| **Latency** | None (real-time) | ~200ms delay |
+| **Accuracy** | Can overshoot | Always accurate |
+| **Responsiveness** | Very responsive | Slightly delayed |
+| **Smoothness** | Smooth with prediction | Smooth with buffering |
+| **Best For** | Real-time tracking, racing | Replay analysis, recording |
+
+**Tuning Tips:**
+- Use 100-200ms buffer time for good balance between smoothness and latency
+- Increase buffer size (15-20) for very irregular GPS update rates
+- Decrease buffer time (50-100ms) for more responsive visualization
+- Use dead reckoning for live racing, interpolation buffer for replay/analysis
 
 ### Message Protocol
 
