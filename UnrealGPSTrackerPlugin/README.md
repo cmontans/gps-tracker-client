@@ -10,6 +10,7 @@ A real-time GPS tracking visualization plugin for Unreal Engine 5.3 that connect
 - ✅ **Real-time WebSocket Connection** - Connects to GPS tracker server with automatic reconnection
 - ✅ **Group-based Tracking** - View all users in your group simultaneously
 - ✅ **3D Visualization** - Automatic spawning and updating of user position markers
+- ✅ **Dead Reckoning** - Smooth position prediction between GPS updates using velocity and bearing
 - ✅ **Blueprint Support** - Fully Blueprint-accessible API for easy integration
 - ✅ **Customizable Visualization** - Configurable markers, colors, trails, and labels
 - ✅ **Position Broadcasting** - Send your own position updates to the server
@@ -232,6 +233,11 @@ Actor that automatically visualizes user positions.
 | `DefaultMarkerColor` | FLinearColor | Default marker color |
 | `bDrawTrails` | bool | Draw movement trails |
 | `MaxTrailPoints` | int32 | Maximum trail points per user (default: 100) |
+| `bEnableDeadReckoning` | bool | Enable position prediction between GPS updates (default: true) |
+| `PositionSmoothingFactor` | float | Smoothing for position interpolation, 0-1 (default: 0.15) |
+| `MaxExtrapolationTime` | float | Max seconds to predict beyond last update (default: 5.0) |
+| `MinSpeedForPrediction` | float | Min speed (km/h) to apply prediction (default: 1.0) |
+| `PredictionDampingFactor` | float | Reduces prediction over time, 0-1 (default: 0.8) |
 
 #### Events
 
@@ -271,6 +277,35 @@ The plugin uses a simple Mercator projection to convert GPS coordinates to Unrea
 - **Formula**: `WorldX = Longitude * Scale`, `WorldY = Latitude * Scale`
 
 Adjust the scale based on your game's world size and GPS coordinate range.
+
+### Dead Reckoning
+
+Dead reckoning provides smooth, continuous movement between GPS position updates by predicting positions based on the last known velocity and bearing.
+
+**How It Works:**
+1. **Interpolation**: Smoothly moves markers toward GPS positions using configurable smoothing
+2. **Prediction**: Extrapolates position forward using velocity vector from speed and bearing
+3. **Damping**: Reduces prediction accuracy over time to prevent overshooting
+4. **Threshold**: Only predicts when speed exceeds minimum threshold
+
+**Configuration Parameters:**
+- `bEnableDeadReckoning` - Enable/disable dead reckoning (default: true)
+- `PositionSmoothingFactor` - Controls interpolation speed (lower = smoother, 0.15 default)
+- `MaxExtrapolationTime` - Stop predicting after this many seconds (5.0 default)
+- `MinSpeedForPrediction` - Only predict above this speed in km/h (1.0 default)
+- `PredictionDampingFactor` - Reduces extrapolation over time (0.8 default)
+
+**Benefits:**
+- ✅ Eliminates jerky movement from GPS updates (typically 1 second intervals)
+- ✅ Creates natural-looking motion paths
+- ✅ Compensates for GPS update latency
+- ✅ Prevents markers from "teleporting" between positions
+
+**Tuning Tips:**
+- Increase `PositionSmoothingFactor` for more responsive (less smooth) movement
+- Decrease `MaxExtrapolationTime` if predictions overshoot actual paths
+- Increase `MinSpeedForPrediction` to disable prediction for stationary/slow users
+- Adjust `PredictionDampingFactor` to control how aggressively predictions decay
 
 ### Message Protocol
 

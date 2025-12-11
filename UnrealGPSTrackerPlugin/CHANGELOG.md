@@ -2,6 +2,39 @@
 
 All notable changes to the GPS Tracker Unreal Plugin will be documented in this file.
 
+## [1.1.0] - 2025-12-11
+
+### Added
+- **Dead Reckoning System** - Smooth position prediction between GPS updates
+  - Position interpolation using configurable smoothing factor
+  - Velocity-based position extrapolation from speed and bearing
+  - Damping system to prevent overshooting predicted positions
+  - Configurable minimum speed threshold for prediction
+  - Maximum extrapolation time limit to prevent runaway predictions
+- Dead reckoning configuration properties in `AGPSTrackerVisualizerActor`:
+  - `bEnableDeadReckoning` - Enable/disable dead reckoning (default: true)
+  - `PositionSmoothingFactor` - Controls interpolation smoothness (default: 0.15)
+  - `MaxExtrapolationTime` - Max time to predict beyond last update (default: 5.0s)
+  - `MinSpeedForPrediction` - Min speed to apply prediction (default: 1.0 km/h)
+  - `PredictionDampingFactor` - Reduces prediction over time (default: 0.8)
+- Velocity vector calculation from GPS speed and bearing
+- Smooth trail visualization using predicted positions
+
+### Improved
+- Marker movement now smooth and continuous instead of jumping between GPS updates
+- Visual rotation now follows velocity direction when moving
+- Trail points use predicted positions for smoother path visualization
+
+### Technical Details
+- Added `FUserMarker` dead reckoning state tracking:
+  - `CurrentPosition` - Interpolated/predicted position
+  - `TargetPosition` - Last GPS position
+  - `VelocityVector` - World space velocity from speed/bearing
+  - `LastUpdateTime` - Time of last GPS update
+- `UpdateDeadReckoning()` method applies prediction every frame
+- `CalculatePredictedPosition()` computes extrapolated position
+- Automatic velocity vector calculation from GPS bearing and speed
+
 ## [1.0.0] - 2025-12-11
 
 ### Added
@@ -53,7 +86,7 @@ All notable changes to the GPS Tracker Unreal Plugin will be documented in this 
 
 ## Future Roadmap
 
-### Planned for 1.1.0
+### Planned for 1.2.0
 - Material-based trail rendering for better performance
 - Built-in UI widgets for connection management
 - Persistent marker customization per user
@@ -63,7 +96,7 @@ All notable changes to the GPS Tracker Unreal Plugin will be documented in this 
 - Session recording and playback
 - Better coordinate projection options
 
-### Planned for 1.2.0
+### Planned for 1.3.0
 - Authentication token support
 - Encrypted message payload option
 - Voice chat integration
@@ -71,7 +104,6 @@ All notable changes to the GPS Tracker Unreal Plugin will be documented in this 
 - User status indicators (online, offline, idle)
 - Historical position data visualization
 - Heatmap generation
-- Path prediction and smoothing
 
 ### Planned for 2.0.0
 - Unreal Engine 5.4+ support
@@ -89,7 +121,8 @@ All notable changes to the GPS Tracker Unreal Plugin will be documented in this 
 
 | Version | Release Date | UE Version | Status |
 |---------|--------------|------------|--------|
-| 1.0.0   | 2025-12-11  | 5.3        | Current |
+| 1.1.0   | 2025-12-11  | 5.3        | Current |
+| 1.0.0   | 2025-12-11  | 5.3        | Previous |
 
 ---
 

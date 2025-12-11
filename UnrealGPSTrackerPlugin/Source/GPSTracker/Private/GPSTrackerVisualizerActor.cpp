@@ -63,6 +63,15 @@ void AGPSTrackerVisualizerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Update dead reckoning for all markers
+	if (bEnableDeadReckoning)
+	{
+		for (auto& Pair : UserMarkers)
+		{
+			UpdateDeadReckoning(Pair.Value, DeltaTime);
+		}
+	}
+
 	// Draw trails for users
 	if (bDrawTrails)
 	{
@@ -136,11 +145,44 @@ void AGPSTrackerVisualizerActor::UpdateUserVisualization(const FGPSUserData& Use
 
 	if (ExistingMarker)
 	{
-		// Update existing marker
-		if (ExistingMarker->RootComponent)
+		// Update dead reckoning state
+		if (bEnableDeadReckoning)
 		{
-			ExistingMarker->RootComponent->SetWorldLocation(WorldLocation);
-			ExistingMarker->RootComponent->SetWorldRotation(UserData.GetRotation());
+			// Calculate velocity vector from speed and bearing
+			// Convert km/h to Unreal units per second
+			// Speed is in km/h, bearing is in degrees
+			double SpeedUnitsPerSecond = (UserData.Speed * 1000.0 * CoordinateScale) / 3600.0; // km/h to units/sec
+			float BearingRad = FMath::DegreesToRadians(UserData.Bearing);
+
+			// GPS bearing: 0 = North (Y+), 90 = East (X+)
+			// Create velocity vector in world space
+			ExistingMarker->VelocityVector = FVector(
+				SpeedUnitsPerSecond * FMath::Sin(BearingRad),  // X component (East)
+				SpeedUnitsPerSecond * FMath::Cos(BearingRad),  // Y component (North)
+				0.0f
+			);
+
+			// Set target position for interpolation
+			ExistingMarker->TargetPosition = WorldLocation;
+
+			// If this is first position, snap to it immediately
+			if (!ExistingMarker->bHasInitialPosition)
+			{
+				ExistingMarker->CurrentPosition = WorldLocation;
+				ExistingMarker->bHasInitialPosition = true;
+			}
+
+			// Update last update time
+			ExistingMarker->LastUpdateTime = GetWorld()->GetTimeSeconds();
+		}
+		else
+		{
+			// No dead reckoning - snap to position immediately
+			if (ExistingMarker->RootComponent)
+			{
+				ExistingMarker->RootComponent->SetWorldLocation(WorldLocation);
+				ExistingMarker->RootComponent->SetWorldRotation(UserData.GetRotation());
+			}
 		}
 
 		// Update text
@@ -155,10 +197,11 @@ void AGPSTrackerVisualizerActor::UpdateUserVisualization(const FGPSUserData& Use
 			ExistingMarker->SpeedText->SetText(FText::FromString(SpeedText));
 		}
 
-		// Add to trail
+		// Add to trail (use current position for smooth trails)
 		if (bDrawTrails)
 		{
-			ExistingMarker->TrailPoints.Add(WorldLocation);
+			FVector TrailPosition = bEnableDeadReckoning ? ExistingMarker->CurrentPosition : WorldLocation;
+			ExistingMarker->TrailPoints.Add(TrailPosition);
 			if (ExistingMarker->TrailPoints.Num() > MaxTrailPoints)
 			{
 				ExistingMarker->TrailPoints.RemoveAt(0);
@@ -262,8 +305,102 @@ void AGPSTrackerVisualizerActor::CreateUserMarker_Implementation(const FGPSUserD
 
 	NewMarker.LastData = UserData;
 
+	// Initialize dead reckoning state
+	if (bEnableDeadReckoning)
+	{
+		NewMarker.CurrentPosition = WorldLocation;
+		NewMarker.TargetPosition = WorldLocation;
+		NewMarker.bHasInitialPosition = true;
+		NewMarker.LastUpdateTime = GetWorld()->GetTimeSeconds();
+
+		// Calculate initial velocity vector
+		double SpeedUnitsPerSecond = (UserData.Speed * 1000.0 * CoordinateScale) / 3600.0;
+		float BearingRad = FMath::DegreesToRadians(UserData.Bearing);
+		NewMarker.VelocityVector = FVector(
+			SpeedUnitsPerSecond * FMath::Sin(BearingRad),
+			SpeedUnitsPerSecond * FMath::Cos(BearingRad),
+			0.0f
+		);
+	}
+
 	// Add to map
 	UserMarkers.Add(UserData.UserId, NewMarker);
+}
+
+void AGPSTrackerVisualizerActor::UpdateDeadReckoning(FUserMarker& Marker, float DeltaTime)
+{
+	if (!Marker.RootComponent || !Marker.bHasInitialPosition)
+	{
+		return;
+	}
+
+	double CurrentTime = GetWorld()->GetTimeSeconds();
+	float TimeSinceLastUpdate = CurrentTime - Marker.LastUpdateTime;
+
+	// Step 1: Interpolate towards target position (from last GPS update)
+	FVector InterpolatedPosition = FMath::VInterpTo(
+		Marker.CurrentPosition,
+		Marker.TargetPosition,
+		DeltaTime,
+		PositionSmoothingFactor > 0.0f ? 1.0f / PositionSmoothingFactor : 10.0f
+	);
+
+	// Step 2: Apply dead reckoning prediction if user is moving
+	FVector PredictedPosition = InterpolatedPosition;
+
+	if (Marker.LastData.Speed >= MinSpeedForPrediction && TimeSinceLastUpdate <= MaxExtrapolationTime)
+	{
+		// Calculate how far to extrapolate based on time since last update
+		float ExtrapolationFactor = FMath::Clamp(TimeSinceLastUpdate / MaxExtrapolationTime, 0.0f, 1.0f);
+
+		// Apply damping to prevent over-shooting
+		float DampedExtrapolation = ExtrapolationFactor * PredictionDampingFactor;
+
+		// Calculate predicted offset from target position
+		FVector PredictionOffset = Marker.VelocityVector * TimeSinceLastUpdate * DampedExtrapolation;
+
+		// Add prediction to interpolated position
+		PredictedPosition = InterpolatedPosition + PredictionOffset;
+	}
+
+	// Update marker position
+	Marker.CurrentPosition = PredictedPosition;
+
+	// Apply to visual component
+	if (Marker.RootComponent)
+	{
+		Marker.RootComponent->SetWorldLocation(Marker.CurrentPosition);
+
+		// Update rotation based on velocity direction (if moving)
+		if (Marker.VelocityVector.SizeSquared() > 0.01f)
+		{
+			FRotator VelocityRotation = Marker.VelocityVector.Rotation();
+			Marker.RootComponent->SetWorldRotation(VelocityRotation);
+		}
+		else
+		{
+			// Use bearing from GPS data
+			Marker.RootComponent->SetWorldRotation(Marker.LastData.GetRotation());
+		}
+	}
+}
+
+FVector AGPSTrackerVisualizerActor::CalculatePredictedPosition(const FUserMarker& Marker, float TimeSinceLastUpdate) const
+{
+	// Simple dead reckoning: position = last_position + velocity * time
+	FVector PredictedPosition = Marker.TargetPosition;
+
+	if (Marker.LastData.Speed >= MinSpeedForPrediction && TimeSinceLastUpdate <= MaxExtrapolationTime)
+	{
+		// Calculate extrapolation factor with damping
+		float ExtrapolationFactor = FMath::Clamp(TimeSinceLastUpdate / MaxExtrapolationTime, 0.0f, 1.0f);
+		float DampedExtrapolation = ExtrapolationFactor * PredictionDampingFactor;
+
+		// Add predicted movement
+		PredictedPosition += Marker.VelocityVector * TimeSinceLastUpdate * DampedExtrapolation;
+	}
+
+	return PredictedPosition;
 }
 
 UStaticMesh* AGPSTrackerVisualizerActor::GetDefaultSphereMesh() const

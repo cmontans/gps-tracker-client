@@ -265,6 +265,11 @@ Automatically visualizes GPS tracker user positions in the world.
 | `DefaultMarkerColor` | `FLinearColor` | Blue | Default marker color |
 | `bDrawTrails` | `bool` | `true` | Draw movement trails |
 | `MaxTrailPoints` | `int32` | 100 | Maximum trail points per user |
+| `bEnableDeadReckoning` | `bool` | `true` | Enable position prediction between GPS updates |
+| `PositionSmoothingFactor` | `float` | 0.15 | Interpolation smoothing (0=instant, 1=very smooth) |
+| `MaxExtrapolationTime` | `float` | 5.0 | Maximum seconds to extrapolate beyond last update |
+| `MinSpeedForPrediction` | `float` | 1.0 | Minimum speed (km/h) to apply prediction |
+| `PredictionDampingFactor` | `float` | 0.8 | Damping for prediction accuracy over time |
 
 #### Public Functions
 

@@ -85,6 +85,40 @@ public:
 	int32 MaxTrailPoints = 100;
 
 	/**
+	 * Enable dead reckoning to smooth position updates between GPS readings
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Dead Reckoning")
+	bool bEnableDeadReckoning = true;
+
+	/**
+	 * Smoothing factor for position interpolation (0 = instant snap, 1 = very smooth)
+	 * Higher values create smoother movement but more lag
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Dead Reckoning", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float PositionSmoothingFactor = 0.15f;
+
+	/**
+	 * Maximum time in seconds to extrapolate position beyond last GPS update
+	 * After this time, marker will stop at predicted position
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Dead Reckoning", meta = (ClampMin = "0.0", ClampMax = "30.0"))
+	float MaxExtrapolationTime = 5.0f;
+
+	/**
+	 * Minimum speed (km/h) required to apply dead reckoning prediction
+	 * Below this speed, marker will not extrapolate
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Dead Reckoning", meta = (ClampMin = "0.0"))
+	float MinSpeedForPrediction = 1.0f;
+
+	/**
+	 * Factor to reduce prediction accuracy over time (prevents over-shooting)
+	 * 1.0 = full speed prediction, 0.5 = predict at half speed
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GPS Tracker|Dead Reckoning", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float PredictionDampingFactor = 0.8f;
+
+	/**
 	 * Blueprint event called when users are updated
 	 */
 	UFUNCTION(BlueprintImplementableEvent, Category = "GPS Tracker")
@@ -114,6 +148,16 @@ protected:
 	void RemoveUserVisualization(const FString& UserId);
 
 	/**
+	 * Update dead reckoning prediction for a user marker
+	 */
+	void UpdateDeadReckoning(FUserMarker& Marker, float DeltaTime);
+
+	/**
+	 * Calculate predicted position using dead reckoning
+	 */
+	FVector CalculatePredictedPosition(const FUserMarker& Marker, float TimeSinceLastUpdate) const;
+
+	/**
 	 * Blueprint event for customizing user marker appearance
 	 * Override this in Blueprint to create custom markers
 	 */
@@ -140,11 +184,23 @@ private:
 		TArray<FVector> TrailPoints;
 		FGPSUserData LastData;
 
+		// Dead reckoning state
+		FVector CurrentPosition;          // Current interpolated/predicted position
+		FVector TargetPosition;           // Target position from last GPS update
+		FVector VelocityVector;           // Velocity vector in world space (units/second)
+		double LastUpdateTime;            // Time of last GPS update (world time)
+		bool bHasInitialPosition;         // Whether we've received first position
+
 		FUserMarker()
 			: RootComponent(nullptr)
 			, MarkerMesh(nullptr)
 			, NameText(nullptr)
 			, SpeedText(nullptr)
+			, CurrentPosition(FVector::ZeroVector)
+			, TargetPosition(FVector::ZeroVector)
+			, VelocityVector(FVector::ZeroVector)
+			, LastUpdateTime(0.0)
+			, bHasInitialPosition(false)
 		{
 		}
 	};
