@@ -223,6 +223,7 @@ class WearLocationService : Service() {
         ).apply {
             setMinUpdateIntervalMillis(Constants.LOCATION_MIN_UPDATE_INTERVAL)
             setMaxUpdateDelayMillis(Constants.LOCATION_MAX_UPDATE_DELAY)
+            setMinUpdateDistanceMeters(Constants.LOCATION_MIN_DISPLACEMENT)
         }.build()
 
         fusedLocationClient.requestLocationUpdates(
@@ -237,17 +238,29 @@ class WearLocationService : Service() {
     }
 
     private fun handleLocationUpdate(location: Location) {
+        // Filter out inaccurate GPS readings
+        if (location.hasAccuracy() && location.accuracy > Constants.MAX_GPS_ACCURACY) {
+            return
+        }
+
         hasGps = true
         listener?.onGpsStatusChanged(true)
 
-        currentSpeed = if (location.hasSpeed()) {
+        var rawSpeed = if (location.hasSpeed()) {
             (location.speed * Constants.MS_TO_KMH).coerceAtLeast(0.0)
         } else {
             0.0
         }
 
-        if (currentSpeed > maxSpeed) {
-            maxSpeed = currentSpeed
+        // Apply minimum speed threshold to filter out GPS noise when stationary
+        currentSpeed = if (rawSpeed < Constants.MIN_SPEED_THRESHOLD) {
+            0.0
+        } else {
+            rawSpeed
+        }
+
+        if (rawSpeed > maxSpeed) {
+            maxSpeed = rawSpeed
         }
 
         speedReadings.add(currentSpeed)

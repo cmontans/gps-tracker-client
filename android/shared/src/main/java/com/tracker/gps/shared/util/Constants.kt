@@ -23,13 +23,16 @@ object Constants {
     const val DEFAULT_VISUALIZER_MODE = false
 
     // Location
-    const val LOCATION_UPDATE_INTERVAL = 1000L // 1 second
-    const val LOCATION_MIN_UPDATE_INTERVAL = 500L
-    const val LOCATION_MAX_UPDATE_DELAY = 2000L
+    const val LOCATION_UPDATE_INTERVAL = 2000L // 2 seconds - reduced frequency for better accuracy
+    const val LOCATION_MIN_UPDATE_INTERVAL = 2000L // 2 seconds - prevents GPS noise from high-frequency updates
+    const val LOCATION_MAX_UPDATE_DELAY = 4000L
+    const val LOCATION_MIN_DISPLACEMENT = 5.0f // 5 meters - minimum distance for location update
 
     // Speed
     const val MAX_SPEED_READINGS = 20
     const val MS_TO_KMH = 3.6
+    const val MIN_SPEED_THRESHOLD = 1.5 // km/h - speeds below this are considered stationary
+    const val MAX_GPS_ACCURACY = 20.0f // meters - reject GPS readings with accuracy worse than this
 
     // Database
     const val MAX_TRACK_POINTS_PER_SESSION = 10000

@@ -24,6 +24,7 @@ import com.tracker.gps.api.SpeedHistoryApi
 import com.tracker.gps.api.SpeedHistoryRecord
 import com.tracker.gps.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
+import com.tracker.gps.shared.util.Constants
 import java.net.URI
 import java.util.Locale
 
@@ -139,10 +140,11 @@ class LocationTrackingService : Service() {
 
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            1000L // 1 second interval
+            Constants.LOCATION_UPDATE_INTERVAL
         ).apply {
-            setMinUpdateIntervalMillis(500L)
-            setMaxUpdateDelayMillis(2000L)
+            setMinUpdateIntervalMillis(Constants.LOCATION_MIN_UPDATE_INTERVAL)
+            setMaxUpdateDelayMillis(Constants.LOCATION_MAX_UPDATE_DELAY)
+            setMinUpdateDistanceMeters(Constants.LOCATION_MIN_DISPLACEMENT)
         }.build()
 
         locationCallback = object : LocationCallback() {
@@ -168,18 +170,31 @@ class LocationTrackingService : Service() {
     }
 
     private fun handleLocationUpdate(location: Location) {
+        // Filter out inaccurate GPS readings
+        if (location.hasAccuracy() && location.accuracy > Constants.MAX_GPS_ACCURACY) {
+            Log.d(TAG, "Ignoring inaccurate GPS reading: accuracy=${location.accuracy}m")
+            return
+        }
+
         lastLocation = location
 
         // Calculate speed in km/h
-        currentSpeed = if (location.hasSpeed()) {
-            (location.speed * 3.6).coerceAtLeast(0.0) // Convert m/s to km/h
+        var rawSpeed = if (location.hasSpeed()) {
+            (location.speed * Constants.MS_TO_KMH).coerceAtLeast(0.0) // Convert m/s to km/h
         } else {
             0.0
         }
 
-        // Update max speed
-        if (currentSpeed > maxSpeed) {
-            maxSpeed = currentSpeed
+        // Apply minimum speed threshold to filter out GPS noise when stationary
+        currentSpeed = if (rawSpeed < Constants.MIN_SPEED_THRESHOLD) {
+            0.0
+        } else {
+            rawSpeed
+        }
+
+        // Update max speed (use raw speed before threshold for max tracking)
+        if (rawSpeed > maxSpeed) {
+            maxSpeed = rawSpeed
         }
 
         // Update average speed
