@@ -23,9 +23,9 @@ object Constants {
     const val DEFAULT_VISUALIZER_MODE = false
 
     // Location
-    const val LOCATION_UPDATE_INTERVAL = 2000L // 2 seconds - reduced frequency for better accuracy
-    const val LOCATION_MIN_UPDATE_INTERVAL = 2000L // 2 seconds - prevents GPS noise from high-frequency updates
-    const val LOCATION_MAX_UPDATE_DELAY = 4000L
+    const val LOCATION_UPDATE_INTERVAL = 1000L // 1 second - balanced frequency with filtering
+    const val LOCATION_MIN_UPDATE_INTERVAL = 1000L // 1 second - with accuracy and speed filtering
+    const val LOCATION_MAX_UPDATE_DELAY = 2000L
     const val LOCATION_MIN_DISPLACEMENT = 5.0f // 5 meters - minimum distance for location update
 
     // Speed

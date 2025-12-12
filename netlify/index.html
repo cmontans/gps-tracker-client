@@ -1167,7 +1167,7 @@
       MAX_GPS_ACCURACY: 20.0,        // meters - reject GPS readings with accuracy worse than this
       MIN_SPEED_THRESHOLD: 1.5,      // km/h - speeds below this are considered stationary
       MAX_SPEED_READINGS: 20,        // number of readings to keep for averaging
-      LOCATION_MAX_AGE: 2000,        // ms - cache GPS readings for 2 seconds (reduces update frequency)
+      LOCATION_MAX_AGE: 1000,        // ms - cache GPS readings for 1 second (balanced frequency with filtering)
       MS_TO_KMH: 3.6                 // conversion factor
     };
 
@@ -2025,7 +2025,7 @@
       const options = {
         enableHighAccuracy: true,
         timeout: 15000,
-        maximumAge: GPS_CONFIG.LOCATION_MAX_AGE  // Allow 2s cached positions to reduce update frequency
+        maximumAge: GPS_CONFIG.LOCATION_MAX_AGE  // Allow 1s cached positions for balanced update frequency
       };
 
       let lastPosition = null;
