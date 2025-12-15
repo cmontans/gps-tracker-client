@@ -1161,7 +1161,16 @@
     // Variables para estadísticas
     let maxSpeed = 0;
     let speedReadings = [];
-    
+
+    // GPS Configuration Constants (aligned with Android app)
+    const GPS_CONFIG = {
+      MAX_GPS_ACCURACY: 20.0,        // meters - reject GPS readings with accuracy worse than this
+      MIN_SPEED_THRESHOLD: 1.5,      // km/h - speeds below this are considered stationary
+      MAX_SPEED_READINGS: 20,        // number of readings to keep for averaging
+      LOCATION_MAX_AGE: 1000,        // ms - cache GPS readings for 1 second (balanced frequency with filtering)
+      MS_TO_KMH: 3.6                 // conversion factor
+    };
+
     // Variables para el mapa
     let map = null;
     let mapFullscreen = null;
@@ -2016,40 +2025,50 @@
       const options = {
         enableHighAccuracy: true,
         timeout: 15000,
-        maximumAge: 0
+        maximumAge: GPS_CONFIG.LOCATION_MAX_AGE  // Allow 1s cached positions for balanced update frequency
       };
 
       let lastPosition = null;
 
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          const speed = position.coords.speed !== null
-            ? Math.max(0, (position.coords.speed * 3.6).toFixed(1))
-            : '0.0';
-          
-          elements.speedDisplay.textContent = speed;
+          // Filter out inaccurate GPS readings
+          const accuracy = position.coords.accuracy;
+          if (accuracy > GPS_CONFIG.MAX_GPS_ACCURACY) {
+            console.log(`Ignoring inaccurate GPS reading: accuracy=${accuracy.toFixed(1)}m`);
+            return;
+          }
+
+          // Calculate raw speed in km/h
+          const rawSpeed = position.coords.speed !== null
+            ? Math.max(0, position.coords.speed * GPS_CONFIG.MS_TO_KMH)
+            : 0.0;
+
+          // Apply minimum speed threshold to filter out GPS noise when stationary
+          const speed = rawSpeed < GPS_CONFIG.MIN_SPEED_THRESHOLD ? 0.0 : rawSpeed;
+
+          elements.speedDisplay.textContent = speed.toFixed(1);
           updateGpsStatus(true);
           elements.gpsInfo.classList.remove('hidden');
-          
-          // Actualizar velocidad máxima
-          const speedNum = parseFloat(speed);
-          if (speedNum > maxSpeed) {
-            maxSpeed = speedNum;
+
+          // Actualizar velocidad máxima (use raw speed before threshold for max tracking)
+          if (rawSpeed > maxSpeed) {
+            maxSpeed = rawSpeed;
             elements.maxSpeed.textContent = maxSpeed.toFixed(1);
           }
-          
+
           // Actualizar promedio
-          speedReadings.push(speedNum);
-          if (speedReadings.length > 20) speedReadings.shift(); // Mantener últimos 20
+          speedReadings.push(speed);
+          if (speedReadings.length > GPS_CONFIG.MAX_SPEED_READINGS) speedReadings.shift();
           const avgSpeed = (speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length).toFixed(1);
           elements.avgSpeed.textContent = avgSpeed;
 
           // Voice announcement
-          announceSpeed(speedNum);
+          announceSpeed(speed);
 
           // Calcular dirección/rumbo
           let bearing = 0;
-          if (lastPosition && position.coords.speed > 1) { // Solo si hay movimiento
+          if (lastPosition && rawSpeed > 1) { // Solo si hay movimiento real
             bearing = calculateBearing(
               lastPosition.coords.latitude,
               lastPosition.coords.longitude,
@@ -2057,9 +2076,8 @@
               position.coords.longitude
             );
           }
-          
-          const accuracy = Math.round(position.coords.accuracy);
-          elements.accuracy.textContent = accuracy;
+
+          elements.accuracy.textContent = Math.round(accuracy);
           elements.coords.textContent = `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
 
           // Send to WebSocket (only if not in visualizer mode)
@@ -2069,7 +2087,7 @@
               userId,
               userName: userName || 'Usuario',
               groupName: groupName || 'default',
-              speed: speedNum,
+              speed: speed,
               maxSpeed,
               lat: position.coords.latitude,
               lon: position.coords.longitude,
