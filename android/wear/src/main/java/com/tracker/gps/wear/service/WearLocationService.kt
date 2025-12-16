@@ -238,8 +238,9 @@ class WearLocationService : Service() {
     }
 
     private fun handleLocationUpdate(location: Location) {
-        // Filter out inaccurate GPS readings
-        if (location.hasAccuracy() && location.accuracy > Constants.MAX_GPS_ACCURACY) {
+        // Filter out inaccurate GPS readings (>= to be stricter)
+        if (location.hasAccuracy() && location.accuracy >= Constants.MAX_GPS_ACCURACY) {
+            android.util.Log.w("WearLocationService", "❌ REJECTED GPS reading: accuracy=${location.accuracy}m")
             return
         }
 

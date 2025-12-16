@@ -1161,6 +1161,8 @@
     // Variables para estadísticas
     let maxSpeed = 0;
     let speedReadings = [];
+    let rejectedReadingsCount = 0;
+    let acceptedReadingsCount = 0;
 
     // GPS Configuration Constants (aligned with Android app)
     const GPS_CONFIG = {
@@ -2034,10 +2036,15 @@
         (position) => {
           // Filter out inaccurate GPS readings
           const accuracy = position.coords.accuracy;
-          if (accuracy > GPS_CONFIG.MAX_GPS_ACCURACY) {
-            console.log(`Ignoring inaccurate GPS reading: accuracy=${accuracy.toFixed(1)}m`);
+          if (accuracy >= GPS_CONFIG.MAX_GPS_ACCURACY) {
+            rejectedReadingsCount++;
+            console.warn(`❌ REJECTED GPS reading #${rejectedReadingsCount}: accuracy=${accuracy.toFixed(1)}m (threshold: ${GPS_CONFIG.MAX_GPS_ACCURACY}m)`);
             return;
           }
+
+          // Reading accepted
+          acceptedReadingsCount++;
+          console.log(`✓ Accepted GPS reading #${acceptedReadingsCount}: accuracy=${accuracy.toFixed(1)}m`);
 
           // Calculate raw speed in km/h
           const rawSpeed = position.coords.speed !== null

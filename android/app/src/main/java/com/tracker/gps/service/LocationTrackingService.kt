@@ -170,11 +170,13 @@ class LocationTrackingService : Service() {
     }
 
     private fun handleLocationUpdate(location: Location) {
-        // Filter out inaccurate GPS readings
-        if (location.hasAccuracy() && location.accuracy > Constants.MAX_GPS_ACCURACY) {
-            Log.d(TAG, "Ignoring inaccurate GPS reading: accuracy=${location.accuracy}m")
+        // Filter out inaccurate GPS readings (>= to be stricter)
+        if (location.hasAccuracy() && location.accuracy >= Constants.MAX_GPS_ACCURACY) {
+            Log.w(TAG, "❌ REJECTED GPS reading: accuracy=${location.accuracy}m (threshold: ${Constants.MAX_GPS_ACCURACY}m)")
             return
         }
+
+        Log.d(TAG, "✓ Accepted GPS reading: accuracy=${location.accuracy}m")
 
         lastLocation = location
 
