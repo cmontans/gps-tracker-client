@@ -68,6 +68,12 @@
               📊
             </button>
             <button
+              id="waypoints-button"
+              class="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white px-3 py-2 rounded-lg text-xl transition-colors"
+            >
+              📍
+            </button>
+            <button
               id="settings-button"
               class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xl transition-colors"
             >
@@ -210,6 +216,123 @@
                 </div>
                 <div id="history-records-list" class="space-y-2">
                   <!-- Records will be inserted here dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Waypoints Modal -->
+      <div id="waypoints-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-colors">
+          <div class="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">📍 Waypoints</h2>
+            <button id="close-waypoints" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl leading-none">
+              ✕
+            </button>
+          </div>
+
+          <div class="p-4 space-y-4">
+            <!-- Add Waypoint Button -->
+            <div class="flex gap-2">
+              <button
+                id="add-waypoint-button"
+                class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                ➕ Add Waypoint
+              </button>
+              <button
+                id="add-waypoint-map-button"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                🗺️ Add on Map
+              </button>
+            </div>
+
+            <!-- Waypoint Form (hidden by default) -->
+            <div id="waypoint-form" class="hidden bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3" id="waypoint-form-title">Create Waypoint</h3>
+              <input type="hidden" id="waypoint-form-id">
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                  <input
+                    id="waypoint-name"
+                    type="text"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm transition-colors"
+                    placeholder="Enter waypoint name..."
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                  <textarea
+                    id="waypoint-description"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm transition-colors"
+                    rows="2"
+                    placeholder="Optional description..."
+                  ></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitude</label>
+                    <input
+                      id="waypoint-latitude"
+                      type="number"
+                      step="0.000001"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm transition-colors"
+                      placeholder="0.000000"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitude</label>
+                    <input
+                      id="waypoint-longitude"
+                      type="number"
+                      step="0.000001"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm transition-colors"
+                      placeholder="0.000000"
+                    />
+                  </div>
+                </div>
+                <div class="flex justify-center">
+                  <button
+                    id="use-current-position-button"
+                    type="button"
+                    class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    📍 Use Current Position
+                  </button>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    id="save-waypoint-button"
+                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    💾 Save
+                  </button>
+                  <button
+                    id="cancel-waypoint-button"
+                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Waypoints List -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Group Waypoints</h3>
+              <div id="waypoints-list-container" class="space-y-2 max-h-96 overflow-y-auto">
+                <div id="waypoints-loading" class="text-center text-gray-500 dark:text-gray-400 py-8">
+                  Loading...
+                </div>
+                <div id="waypoints-empty" class="hidden text-center text-gray-500 dark:text-gray-400 py-8">
+                  No waypoints yet. Create one to get started!
+                </div>
+                <div id="waypoints-list" class="space-y-2">
+                  <!-- Waypoints will be inserted here dynamically -->
                 </div>
               </div>
             </div>
@@ -1229,6 +1352,24 @@
       historyLoading: document.getElementById('history-loading'),
       historyEmpty: document.getElementById('history-empty'),
       historyRecordsList: document.getElementById('history-records-list'),
+      waypointsButton: document.getElementById('waypoints-button'),
+      waypointsModal: document.getElementById('waypoints-modal'),
+      closeWaypoints: document.getElementById('close-waypoints'),
+      addWaypointButton: document.getElementById('add-waypoint-button'),
+      addWaypointMapButton: document.getElementById('add-waypoint-map-button'),
+      waypointForm: document.getElementById('waypoint-form'),
+      waypointFormId: document.getElementById('waypoint-form-id'),
+      waypointFormTitle: document.getElementById('waypoint-form-title'),
+      waypointName: document.getElementById('waypoint-name'),
+      waypointDescription: document.getElementById('waypoint-description'),
+      waypointLatitude: document.getElementById('waypoint-latitude'),
+      waypointLongitude: document.getElementById('waypoint-longitude'),
+      useCurrentPositionButton: document.getElementById('use-current-position-button'),
+      saveWaypointButton: document.getElementById('save-waypoint-button'),
+      cancelWaypointButton: document.getElementById('cancel-waypoint-button'),
+      waypointsLoading: document.getElementById('waypoints-loading'),
+      waypointsEmpty: document.getElementById('waypoints-empty'),
+      waypointsList: document.getElementById('waypoints-list'),
       languageSelect: document.getElementById('language-select'),
       languageLabel: document.getElementById('language-label'),
       autoCenterToggle: document.getElementById('auto-center-toggle'),
@@ -1361,6 +1502,379 @@
         elements.historyModal.classList.add('hidden');
       }
     });
+
+    // ============================================
+    // WAYPOINTS FUNCTIONALITY
+    // ============================================
+
+    let waypoints = [];
+    let waypointMarkers = {};
+    let isAddingWaypointOnMap = false;
+    let mapClickHandler = null;
+
+    // Waypoints modal
+    elements.waypointsButton.addEventListener('click', () => {
+      elements.waypointsModal.classList.remove('hidden');
+      loadWaypoints();
+    });
+
+    elements.closeWaypoints.addEventListener('click', () => {
+      elements.waypointsModal.classList.add('hidden');
+      cancelAddWaypointOnMap();
+    });
+
+    elements.waypointsModal.addEventListener('click', (e) => {
+      if (e.target === elements.waypointsModal) {
+        elements.waypointsModal.classList.add('hidden');
+        cancelAddWaypointOnMap();
+      }
+    });
+
+    // Show waypoint form
+    elements.addWaypointButton.addEventListener('click', () => {
+      showWaypointForm();
+      // Set current user location if available
+      const currentUser = users.find(u => u.userId === userId);
+      if (currentUser) {
+        elements.waypointLatitude.value = currentUser.lat;
+        elements.waypointLongitude.value = currentUser.lon;
+      }
+    });
+
+    // Add waypoint on map
+    elements.addWaypointMapButton.addEventListener('click', () => {
+      elements.waypointsModal.classList.add('hidden');
+      startAddWaypointOnMap();
+    });
+
+    // Save waypoint
+    elements.saveWaypointButton.addEventListener('click', () => {
+      saveWaypoint();
+    });
+
+    // Cancel waypoint form
+    elements.cancelWaypointButton.addEventListener('click', () => {
+      hideWaypointForm();
+    });
+
+    // Use current GPS position for waypoint
+    elements.useCurrentPositionButton.addEventListener('click', () => {
+      const currentUser = users.find(u => u.userId === userId);
+      if (currentUser && currentUser.lat && currentUser.lon) {
+        elements.waypointLatitude.value = currentUser.lat;
+        elements.waypointLongitude.value = currentUser.lon;
+        showSuccess('Position updated to current GPS location');
+        console.log(`📍 Waypoint position set to current location: ${currentUser.lat}, ${currentUser.lon}`);
+      } else {
+        showError('GPS position not available. Please wait for GPS lock or start tracking.');
+      }
+    });
+
+    // Load waypoints for the current group
+    async function loadWaypoints() {
+      try {
+        elements.waypointsLoading.classList.remove('hidden');
+        elements.waypointsEmpty.classList.add('hidden');
+        elements.waypointsList.innerHTML = '';
+
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const response = await fetch(`${httpUrl}/api/waypoints/${groupName}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to load waypoints');
+        }
+
+        const data = await response.json();
+        waypoints = data.waypoints || [];
+
+        elements.waypointsLoading.classList.add('hidden');
+
+        if (waypoints.length === 0) {
+          elements.waypointsEmpty.classList.remove('hidden');
+        } else {
+          renderWaypointsList();
+        }
+
+        // Update map markers
+        updateWaypointMarkers();
+      } catch (error) {
+        console.error('❌ Error loading waypoints:', error);
+        elements.waypointsLoading.classList.add('hidden');
+        showError('Failed to load waypoints');
+      }
+    }
+
+    // Render waypoints list
+    function renderWaypointsList() {
+      elements.waypointsList.innerHTML = waypoints.map(waypoint => `
+        <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h4 class="font-semibold text-gray-800 dark:text-white">${waypoint.name}</h4>
+              ${waypoint.description ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${waypoint.description}</p>` : ''}
+              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                📍 ${parseFloat(waypoint.latitude).toFixed(6)}, ${parseFloat(waypoint.longitude).toFixed(6)}
+              </p>
+            </div>
+            <div class="flex gap-2 ml-2">
+              <button
+                onclick="repositionWaypoint(${waypoint.id})"
+                class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium"
+                title="Reposition to current location"
+              >
+                📍
+              </button>
+              <button
+                onclick="editWaypoint(${waypoint.id})"
+                class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
+              >
+                ✏️
+              </button>
+              <button
+                onclick="deleteWaypoint(${waypoint.id})"
+                class="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Show waypoint form
+    function showWaypointForm(waypoint = null) {
+      elements.waypointForm.classList.remove('hidden');
+      elements.waypointFormId.value = waypoint ? waypoint.id : '';
+      elements.waypointFormTitle.textContent = waypoint ? 'Edit Waypoint' : 'Create Waypoint';
+      elements.waypointName.value = waypoint ? waypoint.name : '';
+      elements.waypointDescription.value = waypoint ? waypoint.description || '' : '';
+      elements.waypointLatitude.value = waypoint ? waypoint.latitude : '';
+      elements.waypointLongitude.value = waypoint ? waypoint.longitude : '';
+    }
+
+    // Hide waypoint form
+    function hideWaypointForm() {
+      elements.waypointForm.classList.add('hidden');
+      elements.waypointFormId.value = '';
+      elements.waypointName.value = '';
+      elements.waypointDescription.value = '';
+      elements.waypointLatitude.value = '';
+      elements.waypointLongitude.value = '';
+    }
+
+    // Save waypoint (create or update)
+    async function saveWaypoint() {
+      try {
+        const waypointId = elements.waypointFormId.value;
+        const name = elements.waypointName.value.trim();
+        const description = elements.waypointDescription.value.trim();
+        const latitude = parseFloat(elements.waypointLatitude.value);
+        const longitude = parseFloat(elements.waypointLongitude.value);
+
+        if (!name || isNaN(latitude) || isNaN(longitude)) {
+          showError('Please fill in all required fields');
+          return;
+        }
+
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const isEdit = waypointId !== '';
+
+        const response = await fetch(
+          isEdit ? `${httpUrl}/api/waypoints/${waypointId}` : `${httpUrl}/api/waypoints`,
+          {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              groupName,
+              name,
+              description,
+              latitude,
+              longitude,
+              createdBy: userId
+            })
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to save waypoint');
+        }
+
+        showSuccess(isEdit ? 'Waypoint updated!' : 'Waypoint created!');
+        hideWaypointForm();
+        loadWaypoints();
+      } catch (error) {
+        console.error('❌ Error saving waypoint:', error);
+        showError('Failed to save waypoint');
+      }
+    }
+
+    // Edit waypoint (global function for onclick)
+    window.editWaypoint = function(waypointId) {
+      const waypoint = waypoints.find(w => w.id === waypointId);
+      if (waypoint) {
+        showWaypointForm(waypoint);
+      }
+    };
+
+    // Delete waypoint (global function for onclick)
+    window.deleteWaypoint = async function(waypointId) {
+      if (!confirm('Are you sure you want to delete this waypoint?')) {
+        return;
+      }
+
+      try {
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const response = await fetch(`${httpUrl}/api/waypoints/${waypointId}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete waypoint');
+        }
+
+        showSuccess('Waypoint deleted!');
+        loadWaypoints();
+      } catch (error) {
+        console.error('❌ Error deleting waypoint:', error);
+        showError('Failed to delete waypoint');
+      }
+    };
+
+    // Reposition waypoint to current GPS location (global function for onclick)
+    window.repositionWaypoint = async function(waypointId) {
+      const currentUser = users.find(u => u.userId === userId);
+      if (!currentUser || !currentUser.lat || !currentUser.lon) {
+        showError('GPS position not available. Please wait for GPS lock or start tracking.');
+        return;
+      }
+
+      const waypoint = waypoints.find(w => w.id === waypointId);
+      if (!waypoint) {
+        showError('Waypoint not found');
+        return;
+      }
+
+      if (!confirm(`Reposition "${waypoint.name}" to your current location?`)) {
+        return;
+      }
+
+      try {
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const response = await fetch(`${httpUrl}/api/waypoints/${waypointId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: waypoint.name,
+            description: waypoint.description,
+            latitude: currentUser.lat,
+            longitude: currentUser.lon
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to reposition waypoint');
+        }
+
+        showSuccess(`Waypoint "${waypoint.name}" repositioned to current location!`);
+        console.log(`📍 Waypoint repositioned: ${waypoint.name} to ${currentUser.lat}, ${currentUser.lon}`);
+        loadWaypoints();
+      } catch (error) {
+        console.error('❌ Error repositioning waypoint:', error);
+        showError('Failed to reposition waypoint');
+      }
+    };
+
+    // Start adding waypoint on map
+    function startAddWaypointOnMap() {
+      isAddingWaypointOnMap = true;
+      showSuccess('Click on the map to add a waypoint');
+
+      const activeMap = isFullscreen ? mapFullscreen : map;
+      if (!activeMap) {
+        showError('Please open the map first');
+        return;
+      }
+
+      // Create map click handler
+      mapClickHandler = function(e) {
+        const lat = e.latlng.lat;
+        const lon = e.latlng.lng;
+
+        // Show waypoint form with coordinates
+        elements.waypointsModal.classList.remove('hidden');
+        showWaypointForm();
+        elements.waypointLatitude.value = lat;
+        elements.waypointLongitude.value = lon;
+
+        // Remove map click handler
+        cancelAddWaypointOnMap();
+      };
+
+      activeMap.on('click', mapClickHandler);
+    }
+
+    // Cancel adding waypoint on map
+    function cancelAddWaypointOnMap() {
+      if (isAddingWaypointOnMap) {
+        isAddingWaypointOnMap = false;
+        const activeMap = isFullscreen ? mapFullscreen : map;
+        if (activeMap && mapClickHandler) {
+          activeMap.off('click', mapClickHandler);
+          mapClickHandler = null;
+        }
+      }
+    }
+
+    // Update waypoint markers on map
+    function updateWaypointMarkers() {
+      const activeMap = isFullscreen ? mapFullscreen : map;
+      if (!activeMap) return;
+
+      // Remove old waypoint markers
+      Object.values(waypointMarkers).forEach(marker => {
+        if (marker && activeMap.hasLayer(marker)) {
+          activeMap.removeLayer(marker);
+        }
+      });
+      waypointMarkers = {};
+
+      // Add new waypoint markers
+      waypoints.forEach(waypoint => {
+        try {
+          const icon = L.divIcon({
+            className: 'waypoint-marker',
+            html: `<div style="text-align: center;">
+              <div style="font-size: 24px;">📍</div>
+              <div style="background: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                ${waypoint.name}
+              </div>
+            </div>`,
+            iconSize: [60, 40],
+            iconAnchor: [30, 40]
+          });
+
+          const marker = L.marker([waypoint.latitude, waypoint.longitude], { icon: icon })
+            .addTo(activeMap);
+
+          marker.bindPopup(`
+            <div style="text-align: center; min-width: 150px;">
+              <strong style="font-size: 14px;">${waypoint.name}</strong><br>
+              ${waypoint.description ? `<p style="font-size: 12px; color: #666; margin: 4px 0;">${waypoint.description}</p>` : ''}
+              <span style="font-size: 11px; color: #888;">📍 ${parseFloat(waypoint.latitude).toFixed(6)}, ${parseFloat(waypoint.longitude).toFixed(6)}</span>
+            </div>
+          `);
+
+          waypointMarkers[waypoint.id] = marker;
+        } catch (error) {
+          console.error('❌ Error creating waypoint marker:', error);
+        }
+      });
+    }
+
+    // ============================================
+    // END WAYPOINTS FUNCTIONALITY
+    // ============================================
 
     // Resetear estadísticas
     elements.resetStatsButton.addEventListener('click', () => {
@@ -1699,7 +2213,7 @@
     elements.toggleMapButton.addEventListener('click', () => {
       mapVisible = true;
       elements.mapContainer.classList.remove('hidden');
-      
+
       // Inicializar mapa con posición del primer usuario disponible
       const firstUser = users.length > 0 ? users[0] : null;
       if (firstUser) {
@@ -1708,10 +2222,13 @@
       } else if (users.length === 0) {
         initMap(40.4168, -3.7038); // Madrid por defecto
       }
-      
-      // Ajustar tamaño del mapa
+
+      // Ajustar tamaño del mapa y actualizar waypoints
       setTimeout(() => {
-        if (map) map.invalidateSize();
+        if (map) {
+          map.invalidateSize();
+          updateWaypointMarkers();
+        }
       }, 100);
     });
 
@@ -1725,19 +2242,23 @@
       isFullscreen = true;
       elements.mapContainer.classList.add('hidden'); // Ocultar mapa normal
       elements.mapFullscreen.classList.remove('hidden');
-      
+
       const firstUser = users.length > 0 ? users[0] : null;
       if (firstUser) {
         initMap(firstUser.lat, firstUser.lon, 'map-fullscreen-container');
         setTimeout(() => {
           updateMap();
+          updateWaypointMarkers();
         }, 200);
       } else {
         initMap(40.4168, -3.7038, 'map-fullscreen-container');
       }
-      
+
       setTimeout(() => {
-        if (mapFullscreen) mapFullscreen.invalidateSize();
+        if (mapFullscreen) {
+          mapFullscreen.invalidateSize();
+          updateWaypointMarkers();
+        }
       }, 100);
     });
 
@@ -1766,6 +2287,7 @@
         if (map) {
           map.invalidateSize();
           updateMap();
+          updateWaypointMarkers();
         }
       }, 100);
     });
