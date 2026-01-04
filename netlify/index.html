@@ -295,6 +295,15 @@
                     />
                   </div>
                 </div>
+                <div class="flex justify-center">
+                  <button
+                    id="use-current-position-button"
+                    type="button"
+                    class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    📍 Use Current Position
+                  </button>
+                </div>
                 <div class="flex gap-2">
                   <button
                     id="save-waypoint-button"
@@ -1355,6 +1364,7 @@
       waypointDescription: document.getElementById('waypoint-description'),
       waypointLatitude: document.getElementById('waypoint-latitude'),
       waypointLongitude: document.getElementById('waypoint-longitude'),
+      useCurrentPositionButton: document.getElementById('use-current-position-button'),
       saveWaypointButton: document.getElementById('save-waypoint-button'),
       cancelWaypointButton: document.getElementById('cancel-waypoint-button'),
       waypointsLoading: document.getElementById('waypoints-loading'),
@@ -1547,6 +1557,19 @@
       hideWaypointForm();
     });
 
+    // Use current GPS position for waypoint
+    elements.useCurrentPositionButton.addEventListener('click', () => {
+      const currentUser = users.find(u => u.userId === userId);
+      if (currentUser && currentUser.lat && currentUser.lon) {
+        elements.waypointLatitude.value = currentUser.lat;
+        elements.waypointLongitude.value = currentUser.lon;
+        showSuccess('Position updated to current GPS location');
+        console.log(`📍 Waypoint position set to current location: ${currentUser.lat}, ${currentUser.lon}`);
+      } else {
+        showError('GPS position not available. Please wait for GPS lock or start tracking.');
+      }
+    });
+
     // Load waypoints for the current group
     async function loadWaypoints() {
       try {
@@ -1594,6 +1617,13 @@
               </p>
             </div>
             <div class="flex gap-2 ml-2">
+              <button
+                onclick="repositionWaypoint(${waypoint.id})"
+                class="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium"
+                title="Reposition to current location"
+              >
+                📍
+              </button>
               <button
                 onclick="editWaypoint(${waypoint.id})"
                 class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium"
@@ -1708,6 +1738,50 @@
       } catch (error) {
         console.error('❌ Error deleting waypoint:', error);
         showError('Failed to delete waypoint');
+      }
+    };
+
+    // Reposition waypoint to current GPS location (global function for onclick)
+    window.repositionWaypoint = async function(waypointId) {
+      const currentUser = users.find(u => u.userId === userId);
+      if (!currentUser || !currentUser.lat || !currentUser.lon) {
+        showError('GPS position not available. Please wait for GPS lock or start tracking.');
+        return;
+      }
+
+      const waypoint = waypoints.find(w => w.id === waypointId);
+      if (!waypoint) {
+        showError('Waypoint not found');
+        return;
+      }
+
+      if (!confirm(`Reposition "${waypoint.name}" to your current location?`)) {
+        return;
+      }
+
+      try {
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const response = await fetch(`${httpUrl}/api/waypoints/${waypointId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: waypoint.name,
+            description: waypoint.description,
+            latitude: currentUser.lat,
+            longitude: currentUser.lon
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to reposition waypoint');
+        }
+
+        showSuccess(`Waypoint "${waypoint.name}" repositioned to current location!`);
+        console.log(`📍 Waypoint repositioned: ${waypoint.name} to ${currentUser.lat}, ${currentUser.lon}`);
+        loadWaypoints();
+      } catch (error) {
+        console.error('❌ Error repositioning waypoint:', error);
+        showError('Failed to reposition waypoint');
       }
     };
 
