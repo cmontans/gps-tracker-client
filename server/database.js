@@ -53,6 +53,27 @@ async function initializeDatabase() {
       ON speed_history(date DESC)
     `);
 
+    // Create waypoints table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS waypoints (
+        id SERIAL PRIMARY KEY,
+        group_name VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        latitude DECIMAL(10, 8) NOT NULL,
+        longitude DECIMAL(11, 8) NOT NULL,
+        created_by VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create index for faster queries by group_name
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_waypoints_group_name
+      ON waypoints(group_name)
+    `);
+
     await client.query('COMMIT');
     console.log('✅ Esquema de base de datos inicializado correctamente');
   } catch (error) {
@@ -143,11 +164,107 @@ async function getSpeedStatistics(userId) {
   }
 }
 
+// ============================================
+// WAYPOINTS CRUD OPERATIONS
+// ============================================
+
+// Create a new waypoint
+async function createWaypoint(data) {
+  const { groupName, name, description, latitude, longitude, createdBy } = data;
+
+  const query = `
+    INSERT INTO waypoints
+    (group_name, name, description, latitude, longitude, created_by)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *
+  `;
+
+  const values = [groupName, name, description || null, latitude, longitude, createdBy || null];
+
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (error) {
+    console.error('❌ Error creating waypoint:', error);
+    throw error;
+  }
+}
+
+// Get all waypoints for a specific group
+async function getWaypointsByGroup(groupName) {
+  const query = `
+    SELECT * FROM waypoints
+    WHERE group_name = $1
+    ORDER BY created_at DESC
+  `;
+
+  try {
+    const result = await pool.query(query, [groupName]);
+    return result.rows;
+  } catch (error) {
+    console.error('❌ Error getting waypoints:', error);
+    throw error;
+  }
+}
+
+// Update a waypoint
+async function updateWaypoint(id, data) {
+  const { name, description, latitude, longitude } = data;
+
+  const query = `
+    UPDATE waypoints
+    SET name = $1,
+        description = $2,
+        latitude = $3,
+        longitude = $4,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = $5
+    RETURNING *
+  `;
+
+  const values = [name, description || null, latitude, longitude, id];
+
+  try {
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      throw new Error('Waypoint not found');
+    }
+    return result.rows[0];
+  } catch (error) {
+    console.error('❌ Error updating waypoint:', error);
+    throw error;
+  }
+}
+
+// Delete a waypoint
+async function deleteWaypoint(id) {
+  const query = `
+    DELETE FROM waypoints
+    WHERE id = $1
+    RETURNING *
+  `;
+
+  try {
+    const result = await pool.query(query, [id]);
+    if (result.rows.length === 0) {
+      throw new Error('Waypoint not found');
+    }
+    return result.rows[0];
+  } catch (error) {
+    console.error('❌ Error deleting waypoint:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   pool,
   initializeDatabase,
   insertSpeedHistory,
   getSpeedHistory,
   getAllSpeedHistory,
-  getSpeedStatistics
+  getSpeedStatistics,
+  createWaypoint,
+  getWaypointsByGroup,
+  updateWaypoint,
+  deleteWaypoint
 };

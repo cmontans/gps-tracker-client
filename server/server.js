@@ -393,6 +393,135 @@ app.get('/api/speed-history', async (req, res) => {
 });
 
 // ============================================
+// WAYPOINTS API ENDPOINTS
+// ============================================
+
+// POST endpoint to create a new waypoint
+app.post('/api/waypoints', async (req, res) => {
+  try {
+    const { groupName, name, description, latitude, longitude, createdBy } = req.body;
+
+    // Validate required fields
+    if (!groupName || !name || latitude === undefined || longitude === undefined) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['groupName', 'name', 'latitude', 'longitude']
+      });
+    }
+
+    const waypoint = await db.createWaypoint({
+      groupName,
+      name,
+      description,
+      latitude,
+      longitude,
+      createdBy
+    });
+
+    console.log(`📍 Waypoint created: ${name} for group ${groupName}`);
+
+    res.status(201).json({
+      success: true,
+      waypoint
+    });
+  } catch (error) {
+    console.error('❌ Error creating waypoint:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+// GET endpoint to retrieve all waypoints for a group
+app.get('/api/waypoints/:groupName', async (req, res) => {
+  try {
+    const { groupName } = req.params;
+    const waypoints = await db.getWaypointsByGroup(groupName);
+
+    res.json({
+      success: true,
+      groupName,
+      count: waypoints.length,
+      waypoints
+    });
+  } catch (error) {
+    console.error('❌ Error getting waypoints:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+// PUT endpoint to update a waypoint
+app.put('/api/waypoints/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, latitude, longitude } = req.body;
+
+    // Validate required fields
+    if (!name || latitude === undefined || longitude === undefined) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['name', 'latitude', 'longitude']
+      });
+    }
+
+    const waypoint = await db.updateWaypoint(id, {
+      name,
+      description,
+      latitude,
+      longitude
+    });
+
+    console.log(`📝 Waypoint updated: ${name} (ID: ${id})`);
+
+    res.json({
+      success: true,
+      waypoint
+    });
+  } catch (error) {
+    console.error('❌ Error updating waypoint:', error);
+    if (error.message === 'Waypoint not found') {
+      return res.status(404).json({
+        error: 'Waypoint not found'
+      });
+    }
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+// DELETE endpoint to delete a waypoint
+app.delete('/api/waypoints/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const waypoint = await db.deleteWaypoint(id);
+
+    console.log(`🗑️ Waypoint deleted: ${waypoint.name} (ID: ${id})`);
+
+    res.json({
+      success: true,
+      waypoint
+    });
+  } catch (error) {
+    console.error('❌ Error deleting waypoint:', error);
+    if (error.message === 'Waypoint not found') {
+      return res.status(404).json({
+        error: 'Waypoint not found'
+      });
+    }
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
+    });
+  }
+});
+
+// ============================================
 // KML NETWORK LINK ENDPOINTS
 // ============================================
 
@@ -529,6 +658,11 @@ console.log(`   - POST /api/speed-history - Guardar registro de velocidad máxim
 console.log(`   - GET /api/speed-history/:userId - Obtener historial de un usuario`);
 console.log(`   - GET /api/speed-history/:userId/stats - Obtener estadísticas de un usuario`);
 console.log(`   - GET /api/speed-history - Obtener todo el historial (admin)`);
+console.log(`\n📍 Waypoints API:`);
+console.log(`   - POST /api/waypoints - Crear un waypoint`);
+console.log(`   - GET /api/waypoints/:groupName - Obtener todos los waypoints de un grupo`);
+console.log(`   - PUT /api/waypoints/:id - Actualizar un waypoint`);
+console.log(`   - DELETE /api/waypoints/:id - Eliminar un waypoint`);
 console.log(`\n🗺️  KML Network Link API:`);
 console.log(`   - GET /kml/network-link - KML con NetworkLink para auto-actualización`);
 console.log(`     Query params: ?group=groupName (opcional), ?refresh=seconds (default 5)`);
