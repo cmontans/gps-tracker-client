@@ -1,0 +1,30 @@
+# Git files
+.git
+.gitignore
+
+# Node modules (will be installed during build)
+**/node_modules
+**/npm-debug.log
+
+# Environment files (use Koyeb secrets instead)
+**/.env
+**/.env.*
+
+# Other directories not needed in server container
+android/
+netlify/
+
+# Documentation
+*.md
+!server/*.md
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
