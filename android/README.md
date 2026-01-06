@@ -115,7 +115,7 @@ A native Android application for real-time GPS speed tracking with live telemetr
 - **Users List**: View all active users with their current speed
 
 ### Settings
-- **Server URL**: Configure WebSocket server endpoint (default: wss://gps-tracker-server-production-5900.up.railway.app)
+- **Server URL**: Configure WebSocket server endpoint (default: wss://fatal-robinette-cmontans-2b748130.koyeb.app)
 - **User ID**: View your unique identifier (auto-generated)
 
 ### Controls
@@ -308,7 +308,7 @@ The app uses the same protocol as the web client:
 ## Server Compatibility
 
 This app is fully compatible with the GPS Tracker Server:
-- Default server: `wss://gps-tracker-server-production-5900.up.railway.app`
+- Default server: `wss://fatal-robinette-cmontans-2b748130.koyeb.app`
 - Custom servers supported via Settings
 - Same protocol as web client
 - Group isolation works across all clients

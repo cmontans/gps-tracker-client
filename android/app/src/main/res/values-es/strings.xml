@@ -38,7 +38,7 @@
     <!-- Settings -->
     <string name="server_url">URL del Servidor</string>
     <string name="user_id">ID de Usuario</string>
-    <string name="default_server_url">wss://gps-tracker-server-production-5900.up.railway.app</string>
+    <string name="default_server_url">wss://fatal-robinette-cmontans-2b748130.koyeb.app</string>
 
     <!-- Messages -->
     <string name="enter_name">Por favor ingresa tu nombre</string>

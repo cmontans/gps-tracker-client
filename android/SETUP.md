@@ -102,7 +102,7 @@ REM APK will be in app\build\outputs\apk\release\
 
 ## Default Server
 
-The app connects to: `wss://gps-tracker-server-production-5900.up.railway.app`
+The app connects to: `wss://fatal-robinette-cmontans-2b748130.koyeb.app`
 
 To use a different server:
 1. Open Settings in the app
