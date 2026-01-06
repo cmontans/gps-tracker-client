@@ -3,9 +3,10 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Create connection pool
+// Always use SSL for cloud databases (Koyeb, Railway, etc.)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
 // Test connection
