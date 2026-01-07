@@ -16,7 +16,7 @@ object Constants {
     const val PREF_VISUALIZER_MODE = "visualizer_mode"
 
     // Default Values
-    const val DEFAULT_SERVER_URL = "wss://gps-tracker-server-production-5900.up.railway.app"
+    const val DEFAULT_SERVER_URL = "wss://fatal-robinette-cmontans-2b748130.koyeb.app"
     const val DEFAULT_MIN_SPEED = 22.0
     const val DEFAULT_AUTO_CENTER = true
     const val DEFAULT_VOICE_ENABLED = false

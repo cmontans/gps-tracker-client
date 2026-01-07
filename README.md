@@ -163,7 +163,7 @@ Click "🔄 Resetear Estadísticas" to reset max speed and average speed to zero
 ## Configuration
 
 ### Server Connection
-Default WebSocket server: `wss://gps-tracker-server-production-5900.up.railway.app`
+Default WebSocket server: `wss://fatal-robinette-cmontans-2b748130.koyeb.app`
 
 To use a custom server, click the settings button and enter your WebSocket URL.
 
