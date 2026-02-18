@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.tracker.gps.api.SpeedHistoryRecordDb
 
@@ -12,8 +13,26 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() 
     private var records = listOf<SpeedHistoryRecordDb>()
 
     fun updateRecords(newRecords: List<SpeedHistoryRecordDb>) {
+        val diffResult = DiffUtil.calculateDiff(HistoryDiffCallback(records, newRecords))
         records = newRecords
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    private class HistoryDiffCallback(
+        private val oldList: List<SpeedHistoryRecordDb>,
+        private val newList: List<SpeedHistoryRecordDb>
+    ) : DiffUtil.Callback() {
+
+        override fun getOldListSize() = oldList.size
+        override fun getNewListSize() = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].id == newList[newItemPosition].id
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition] == newList[newItemPosition]
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {

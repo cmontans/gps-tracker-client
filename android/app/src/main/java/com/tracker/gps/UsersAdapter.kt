@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.tracker.gps.model.UserData
 
@@ -31,7 +32,27 @@ class UsersAdapter : RecyclerView.Adapter<UsersAdapter.UserViewHolder>() {
     override fun getItemCount() = users.size
 
     fun updateUsers(newUsers: List<UserData>) {
+        val diffResult = DiffUtil.calculateDiff(UsersDiffCallback(users, newUsers))
         users = newUsers
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    private class UsersDiffCallback(
+        private val oldList: List<UserData>,
+        private val newList: List<UserData>
+    ) : DiffUtil.Callback() {
+
+        override fun getOldListSize() = oldList.size
+        override fun getNewListSize() = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].userId == newList[newItemPosition].userId
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val old = oldList[oldItemPosition]
+            val new = newList[newItemPosition]
+            return old.userName == new.userName && old.speed == new.speed
+        }
     }
 }

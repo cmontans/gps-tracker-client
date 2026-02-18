@@ -6,7 +6,10 @@ require('dotenv').config();
 // Always use SSL for cloud databases (Koyeb, Railway, etc.)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+  max: 10,                  // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // Close idle clients after 30 s
+  connectionTimeoutMillis: 5000 // Fail fast if no connection available within 5 s
 });
 
 // Test connection
@@ -52,6 +55,12 @@ async function initializeDatabase() {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_speed_history_date
       ON speed_history(date DESC)
+    `);
+
+    // Composite index for the common query pattern (user_id + date)
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_speed_history_user_date
+      ON speed_history(user_id, date DESC)
     `);
 
     // Create waypoints table

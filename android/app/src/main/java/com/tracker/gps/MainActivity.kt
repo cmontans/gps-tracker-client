@@ -438,7 +438,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "GPSTracker::WakeLock"
         )
-        wakeLock?.acquire(10*60*60*1000L) // 10 hours max
+        wakeLock?.acquire(2*60*60*1000L) // 2 hours max; user should restart session if longer
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 

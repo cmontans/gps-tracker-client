@@ -30,7 +30,48 @@ const groups = new Map(); // Map<groupName, Map<userId, userData>>
 
 // Rate limiting para bocina grupal (userId -> último timestamp)
 const hornRateLimit = new Map(); // Map<userId, timestamp>
-const HORN_COOLDOWN = 5000; // 5 segundos de cooldown entre bocinas
+
+// ============================================
+// CONSTANTS
+// ============================================
+const HORN_COOLDOWN = 5000;          // 5 s cooldown between horns
+const INACTIVE_USER_TIMEOUT = 10000; // 10 s without update → remove user
+const CLEANUP_INTERVAL = 5000;       // Run cleanup every 5 s
+const HORN_RATELIMIT_CLEANUP_INTERVAL = 60000; // Clean up horn rate limit map every 60 s
+const KML_STALE_THRESHOLD = 30000;   // 30 s → user considered stale in KML
+const MAX_QUERY_LIMIT = 500;         // Maximum records per paginated query
+const MAX_NAME_LENGTH = 64;          // Maximum length for names / group names
+const MAX_USER_ID_LENGTH = 128;      // Maximum length for user IDs
+const VALID_COORD_LAT = [-90, 90];
+const VALID_COORD_LON = [-180, 180];
+
+// ============================================
+// HELPERS
+// ============================================
+
+// Escape characters that are special in XML/HTML contexts
+function escapeXml(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Validate that a value is a finite number within [min, max]
+function isValidNumber(val, min, max) {
+  const n = Number(val);
+  return Number.isFinite(n) && n >= min && n <= max;
+}
+
+// Clamp and parse the `limit` query param to a safe range
+function parseLimit(raw, defaultVal = 100) {
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n) || n <= 0) return defaultVal;
+  return Math.min(n, MAX_QUERY_LIMIT);
+}
 
 // Función para broadcast a un grupo específico
 function broadcastToGroup(groupName, data) {
@@ -57,26 +98,38 @@ function sendUsersListToGroup(groupName) {
 // Limpiar usuarios inactivos (más de 10 segundos sin actualizar)
 setInterval(() => {
   const now = Date.now();
-  let hasChanges = false;
-  
+
   groups.forEach((groupUsers, groupName) => {
+    // Track changes per-group so only affected groups get a broadcast
+    let groupHasChanges = false;
+
     groupUsers.forEach((user, userId) => {
-      if (now - user.timestamp > 10000) {
+      if (now - user.timestamp > INACTIVE_USER_TIMEOUT) {
         groupUsers.delete(userId);
-        hasChanges = true;
+        groupHasChanges = true;
         console.log(`❌ Usuario inactivo eliminado: ${userId} (Grupo: ${groupName})`);
       }
     });
-    
+
     // Eliminar grupo si está vacío
     if (groupUsers.size === 0) {
       groups.delete(groupName);
       console.log(`🗑️ Grupo vacío eliminado: ${groupName}`);
-    } else if (hasChanges) {
+    } else if (groupHasChanges) {
       sendUsersListToGroup(groupName);
     }
   });
-}, 5000);
+}, CLEANUP_INTERVAL);
+
+// Limpiar entradas antiguas del mapa de rate-limiting de bocina
+setInterval(() => {
+  const now = Date.now();
+  hornRateLimit.forEach((timestamp, userId) => {
+    if (now - timestamp > HORN_COOLDOWN * 2) {
+      hornRateLimit.delete(userId);
+    }
+  });
+}, HORN_RATELIMIT_CLEANUP_INTERVAL);
 
 // Manejar conexiones WebSocket
 wss.on('connection', (ws, req) => {
@@ -87,77 +140,107 @@ wss.on('connection', (ws, req) => {
       const data = JSON.parse(message);
       
       switch (data.type) {
-        case 'register':
-          const groupName = data.groupName || 'default';
-          ws.userId = data.userId;
-          ws.userName = data.userName || 'Usuario';
+        case 'register': {
+          const groupName = (data.groupName || 'default').toString().slice(0, MAX_NAME_LENGTH);
+          const userId = (data.userId || '').toString().slice(0, MAX_USER_ID_LENGTH);
+          const userName = (data.userName || 'Usuario').toString().slice(0, MAX_NAME_LENGTH);
+
+          if (!userId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'userId requerido' }));
+            break;
+          }
+
+          ws.userId = userId;
+          ws.userName = userName;
           ws.groupName = groupName;
-          
-          console.log(`📝 Usuario registrado: ${data.userName || data.userId} (Grupo: ${groupName})`);
-          
+
+          console.log(`📝 Usuario registrado: ${userName} (${userId}) (Grupo: ${groupName})`);
+
           // Crear grupo si no existe
           if (!groups.has(groupName)) {
             groups.set(groupName, new Map());
             console.log(`✨ Nuevo grupo creado: ${groupName}`);
           }
-          
+
           sendUsersListToGroup(groupName);
           break;
+        }
 
-        case 'join':
+        case 'join': {
           // Modo visualizador - solo escuchar, no registrar como usuario
-          const viewerGroup = data.groupName || 'default';
+          const viewerGroup = (data.groupName || 'default').toString().slice(0, MAX_NAME_LENGTH);
           ws.groupName = viewerGroup;
           ws.viewerMode = true;
-          
+
           console.log(`👁️ Visualizador conectado al grupo: ${viewerGroup}`);
-          
+
           // Enviar lista actual de usuarios
           sendUsersListToGroup(viewerGroup);
           break;
-          
-        case 'speed':
-          const group = data.groupName || 'default';
-          
+        }
+
+        case 'speed': {
+          const group = (data.groupName || 'default').toString().slice(0, MAX_NAME_LENGTH);
+          const speedUserId = (data.userId || '').toString().slice(0, MAX_USER_ID_LENGTH);
+          const speedUserName = (data.userName || 'Usuario').toString().slice(0, MAX_NAME_LENGTH);
+
+          // Validate coordinates and speed values
+          if (!speedUserId ||
+              !isValidNumber(data.lat, VALID_COORD_LAT[0], VALID_COORD_LAT[1]) ||
+              !isValidNumber(data.lon, VALID_COORD_LON[0], VALID_COORD_LON[1]) ||
+              !isValidNumber(data.speed, 0, 999)) {
+            ws.send(JSON.stringify({ type: 'error', message: 'Datos de velocidad inválidos' }));
+            break;
+          }
+
           // Asegurar que el grupo existe
           if (!groups.has(group)) {
             groups.set(group, new Map());
           }
-          
+
           const groupUsers = groups.get(group);
-          const currentUser = groupUsers.get(data.userId);
-          const newMaxSpeed = currentUser 
-            ? Math.max(currentUser.maxSpeed || 0, data.maxSpeed || data.speed)
-            : data.maxSpeed || data.speed;
-          
+          const currentUser = groupUsers.get(speedUserId);
+          const incomingMaxSpeed = isValidNumber(data.maxSpeed, 0, 999) ? data.maxSpeed : data.speed;
+          const newMaxSpeed = currentUser
+            ? Math.max(currentUser.maxSpeed || 0, incomingMaxSpeed)
+            : incomingMaxSpeed;
+          const bearing = isValidNumber(data.bearing, 0, 360) ? data.bearing : 0;
+          const timestamp = Number.isFinite(Number(data.timestamp)) ? data.timestamp : Date.now();
+
           // Actualizar datos del usuario en su grupo
-          groupUsers.set(data.userId, {
-            userId: data.userId,
-            userName: data.userName || 'Usuario',
-            speed: data.speed,
+          groupUsers.set(speedUserId, {
+            userId: speedUserId,
+            userName: speedUserName,
+            speed: Number(data.speed),
             maxSpeed: newMaxSpeed,
-            lat: data.lat,
-            lon: data.lon,
-            bearing: data.bearing || 0,
-            timestamp: data.timestamp
+            lat: Number(data.lat),
+            lon: Number(data.lon),
+            bearing,
+            timestamp
           });
-          
-          console.log(`📊 [${group}] ${data.userName || data.userId}: ${data.speed} km/h | Rumbo: ${data.bearing}° | Max: ${newMaxSpeed} km/h`);
-          
+
+          console.log(`📊 [${group}] ${speedUserName}: ${data.speed} km/h | Rumbo: ${bearing}° | Max: ${newMaxSpeed} km/h`);
+
           // Enviar lista actualizada solo a usuarios del mismo grupo
           sendUsersListToGroup(group);
           break;
+        }
 
         case 'ping':
           // Responder al keep-alive ping
           ws.send(JSON.stringify({ type: 'pong' }));
           break;
 
-        case 'group-horn':
-          const hornGroup = data.groupName || 'default';
-          const hornUserId = data.userId;
-          const hornUserName = data.userName || 'Usuario';
+        case 'group-horn': {
+          const hornGroup = (data.groupName || 'default').toString().slice(0, MAX_NAME_LENGTH);
+          const hornUserId = (data.userId || '').toString().slice(0, MAX_USER_ID_LENGTH);
+          const hornUserName = (data.userName || 'Usuario').toString().slice(0, MAX_NAME_LENGTH);
           const now = Date.now();
+
+          if (!hornUserId) {
+            ws.send(JSON.stringify({ type: 'error', message: 'userId requerido para bocina' }));
+            break;
+          }
 
           // Validar que el grupo existe
           if (!groups.has(hornGroup)) {
@@ -192,6 +275,7 @@ wss.on('connection', (ws, req) => {
             timestamp: data.timestamp || now
           });
           break;
+        }
 
         default:
           console.log('⚠️ Tipo de mensaje desconocido:', data.type);
@@ -330,8 +414,8 @@ app.post('/api/speed-history', async (req, res) => {
 app.get('/api/speed-history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const limit = parseInt(req.query.limit) || 100;
-    const offset = parseInt(req.query.offset) || 0;
+    const limit = parseLimit(req.query.limit, 100);
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
 
     const history = await db.getSpeedHistory(userId, limit, offset);
 
@@ -373,8 +457,8 @@ app.get('/api/speed-history/:userId/stats', async (req, res) => {
 // GET endpoint to retrieve all speed history (admin)
 app.get('/api/speed-history', async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 100;
-    const offset = parseInt(req.query.offset) || 0;
+    const limit = parseLimit(req.query.limit, 100);
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
 
     const history = await db.getAllSpeedHistory(limit, offset);
 
@@ -545,17 +629,22 @@ function generateUsersKML(groupName = null) {
     });
   }
 
-  // Filter out stale users (older than 30 seconds)
-  const activeUsers = allUsers.filter(user => (now - user.timestamp) < 30000);
+  // Filter out stale users (older than KML_STALE_THRESHOLD)
+  const activeUsers = allUsers.filter(user => (now - user.timestamp) < KML_STALE_THRESHOLD);
 
   // Generate KML placemarks for each user
   const placemarks = activeUsers.map(user => {
     const age = Math.floor((now - user.timestamp) / 1000);
     const ageStatus = age < 5 ? '🟢' : age < 10 ? '🟡' : '🟠';
 
+    // Escape user-provided strings used in XML element content
+    const safeName = escapeXml(user.userName);
+    const safeUserId = escapeXml(user.userId);
+    const safeGroupName = escapeXml(user.groupName || 'default');
+
     return `
     <Placemark>
-      <name>${ageStatus} ${user.userName}</name>
+      <name>${ageStatus} ${safeName}</name>
       <description><![CDATA[
         <b>User:</b> ${user.userName} (${user.userId})<br/>
         <b>Group:</b> ${user.groupName || 'default'}<br/>
@@ -565,6 +654,10 @@ function generateUsersKML(groupName = null) {
         <b>Last Update:</b> ${age}s ago<br/>
         <b>Time:</b> ${new Date(user.timestamp).toISOString()}
       ]]></description>
+      <ExtendedData>
+        <Data name="userId"><value>${safeUserId}</value></Data>
+        <Data name="groupName"><value>${safeGroupName}</value></Data>
+      </ExtendedData>
       <styleUrl>#userStyle</styleUrl>
       <Point>
         <coordinates>${user.lon},${user.lat},0</coordinates>
@@ -575,7 +668,7 @@ function generateUsersKML(groupName = null) {
   const kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>GPS Tracker - Active Users${groupName ? ` (${groupName})` : ''}</name>
+    <name>GPS Tracker - Active Users${groupName ? ` (${escapeXml(groupName)})` : ''}</name>
     <description>Real-time positions of active GPS tracker users</description>
 
     <!-- Define styles for user markers -->
@@ -601,8 +694,8 @@ function generateUsersKML(groupName = null) {
 
 // GET endpoint for KML Network Link (root document with auto-refresh)
 app.get('/kml/network-link', (req, res) => {
-  const groupName = req.query.group;
-  const refreshInterval = parseInt(req.query.refresh) || 5; // Default 5 seconds
+  const groupName = req.query.group ? req.query.group.toString().slice(0, MAX_NAME_LENGTH) : null;
+  const refreshInterval = Math.max(2, Math.min(60, parseInt(req.query.refresh, 10) || 5)); // 2–60 s
 
   // Get the host from the request to construct the full URL
   const protocol = req.secure ? 'https' : 'http';

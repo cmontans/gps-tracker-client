@@ -27,6 +27,7 @@ import com.tracker.gps.websocket.GPSWebSocketClient
 import com.tracker.gps.shared.util.Constants
 import java.net.URI
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 class LocationTrackingService : Service() {
 
@@ -52,7 +53,9 @@ class LocationTrackingService : Service() {
     private val announcementCooldownMs = 3000L // 3 seconds between announcements
 
     private var lastLocation: Location? = null
-    private val userTracks = mutableMapOf<String, MutableList<Pair<Double, Double>>>()
+    // ConcurrentHashMap avoids ConcurrentModificationException: userTracks is written from the
+    // WebSocket callback thread and read from the UI thread (via getUserTracks()).
+    private val userTracks = ConcurrentHashMap<String, MutableList<Pair<Double, Double>>>()
 
     var serviceListener: ServiceListener? = null
 
@@ -223,7 +226,7 @@ class LocationTrackingService : Service() {
         checkAndAnnounceSpeed(currentSpeed)
 
         // Send to WebSocket (only if not in visualizer mode)
-        val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE)
         val visualizerMode = prefs.getBoolean(getString(R.string.pref_visualizer_mode_key), false)
 
         if (!visualizerMode) {
@@ -311,7 +314,7 @@ class LocationTrackingService : Service() {
     }
 
     private fun checkAndAnnounceSpeed(speed: Double) {
-        val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE)
         val voiceEnabled = prefs.getBoolean(getString(R.string.pref_voice_enabled_key), false)
         val minSpeed = prefs.getFloat(getString(R.string.pref_voice_min_speed_key), 22f).toDouble()
 
