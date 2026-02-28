@@ -1594,7 +1594,7 @@
         elements.waypointsEmpty.classList.add('hidden');
         elements.waypointsList.innerHTML = '';
 
-        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '');
         const response = await fetch(`${httpUrl}/api/waypoints/${groupName}`);
 
         if (!response.ok) {
@@ -1694,7 +1694,7 @@
           return;
         }
 
-        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '');
         const isEdit = waypointId !== '';
 
         const response = await fetch(
@@ -1741,7 +1741,7 @@
       }
 
       try {
-        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '');
         const response = await fetch(`${httpUrl}/api/waypoints/${waypointId}`, {
           method: 'DELETE'
         });
@@ -1777,7 +1777,7 @@
       }
 
       try {
-        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '');
         const response = await fetch(`${httpUrl}/api/waypoints/${waypointId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -2674,7 +2674,7 @@
     async function submitSpeedHistory() {
       if (maxSpeed > 0 && lastPosition) {
         try {
-          const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+          const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '');
           const response = await fetch(`${httpUrl}/api/speed-history`, {
             method: 'POST',
             headers: {
@@ -2709,7 +2709,7 @@
         elements.historyEmpty.classList.add('hidden');
         elements.historyRecordsList.innerHTML = '';
 
-        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://').replace(/\/$/, '');
 
         // Load statistics
         const statsResponse = await fetch(`${httpUrl}/api/speed-history/${userId}/stats`);
