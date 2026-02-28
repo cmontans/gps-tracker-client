@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width="120" height="40">
+  <rect width="120" height="40" rx="6" fill="#1a1a2e"/>
+  <text x="10" y="16" font-family="Arial,sans-serif" font-size="10" font-weight="bold" fill="#e94560">COOL</text>
+  <text x="10" y="30" font-family="Arial,sans-serif" font-size="10" font-weight="bold" fill="#ffffff">HOT</text>
+  <rect x="50" y="8" width="2" height="24" fill="#e94560" opacity="0.5"/>
+  <text x="57" y="26" font-family="Arial,sans-serif" font-size="8" fill="#aaaaaa">support</text>
+</svg>
