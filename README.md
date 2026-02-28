@@ -213,8 +213,21 @@ Set Auto-Lock to "Never" in Settings → Display & Brightness
 ### Project Structure
 ```
 gps-tracker-client/
-├── index.html          # Main application file (contains HTML, CSS, JS)
-└── README.md          # This file
+├── Dockerfile                  # Docker config for Koyeb server deployment
+├── README.md                   # This file
+├── KOYEB_DEPLOYMENT.md         # Koyeb deployment guide (server + database)
+├── KML_NETWORK_LINK.md         # Google Earth integration guide
+├── server/                     # Node.js WebSocket + REST server
+│   ├── server.js               # Main server (WebSocket, REST API, KML)
+│   ├── database.js             # PostgreSQL connection and schema
+│   ├── package.json
+│   └── .env.example            # Environment variable template
+├── netlify/                    # Web application (deployed to Netlify or CDN)
+│   └── index.html              # Main PWA (HTML, CSS, JavaScript)
+└── android/                    # Native Android application (Kotlin)
+    ├── README.md
+    ├── SETUP.md
+    └── app/
 ```
 
 ### Key Functions
@@ -296,9 +309,19 @@ cd android
 
 ## Server
 
-This client requires a compatible WebSocket server. See the server repository for setup instructions.
+This client requires a compatible WebSocket server. The server code is included in the `server/` directory of this repository.
 
 Both the web app and Android app use the same WebSocket protocol and can interact with each other in real-time.
+
+### Deploy the Server
+
+See **[KOYEB_DEPLOYMENT.md](KOYEB_DEPLOYMENT.md)** for a step-by-step guide to deploying the server on [Koyeb](https://www.koyeb.com), including:
+
+- Setting up a PostgreSQL database (managed or external)
+- Deploying via GitHub or Docker image
+- Configuring environment variables
+- Verifying the deployment
+- Full API and WebSocket protocol reference
 
 ## Support
 
