@@ -256,8 +256,9 @@ Expected response:
 ```json
 {
   "status": "ok",
-  "users": 0,
-  "groups": 0
+  "totalUsers": 0,
+  "totalGroups": 0,
+  "timestamp": 1709123456789
 }
 ```
 
@@ -485,6 +486,17 @@ Common causes:
 - Choose a Koyeb region geographically close to your users
 - The server sends keep-alive pings every 25 seconds; clients auto-reconnect with exponential backoff (up to 10 attempts, max 30s delay)
 - Upgrade to a larger Koyeb instance if you have many concurrent users
+
+### "Error loading history" in the web app
+
+If the speed history panel shows **"Error loading history: Failed to load history"**, the most common cause is a trailing slash in the saved server URL. The web app constructs API paths by appending `/api/...` to the server URL — if the URL ends with `/`, the result is a double slash (`//api/...`) that Express doesn't route.
+
+**Fix**: In the app Settings (⚙️), make sure the server URL has **no trailing slash**:
+```
+✅ wss://gps-tracker-server-xxxxx.koyeb.app
+❌ wss://gps-tracker-server-xxxxx.koyeb.app/
+```
+Clear the saved value, re-enter the URL without the trailing slash, and reload.
 
 ### "Cold start" delays (free tier)
 
