@@ -74,6 +74,13 @@
               📍
             </button>
             <button
+              id="instructions-toggle"
+              class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xl transition-colors"
+              title="Mostrar/ocultar instrucciones"
+            >
+              ℹ️
+            </button>
+            <button
               id="settings-button"
               class="bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xl transition-colors"
             >
@@ -545,6 +552,7 @@
       </div>
 
       <!-- Instrucciones -->
+      <div id="instructions-section">
       <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-200 mb-4 transition-colors">
         <p class="font-semibold mb-2">💡 Pasos para usar:</p>
         <ol class="list-decimal list-inside space-y-1">
@@ -590,6 +598,7 @@
           <li>Ajustes → Privacidad → Ubicación → Safari → "Mientras se usa"</li>
         </ol>
       </div>
+      </div><!-- /instructions-section -->
     </div>
 
     <!-- Footer: Support by Cool Hot -->
@@ -2813,6 +2822,18 @@
         stopTracking();
       }
     });
+
+    // Instructions toggle
+    (function() {
+      const btn = document.getElementById('instructions-toggle');
+      const section = document.getElementById('instructions-section');
+      let visible = true;
+      btn.addEventListener('click', () => {
+        visible = !visible;
+        section.style.display = visible ? '' : 'none';
+        btn.style.opacity = visible ? '1' : '0.5';
+      });
+    })();
 
     console.log('✓ 3WB Tracker listo');
     console.log('📱 iOS:', isIOS, '| Standalone:', isStandalone);
