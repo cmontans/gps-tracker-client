@@ -15,6 +15,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { FitWriter } from 'https://cdn.jsdelivr.net/npm/@markw65/fit-file-writer@1.1.2/+esm';
+    window.FitWriter = FitWriter;
+  </script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -370,6 +374,12 @@
               📢 Bocina Grupal
             </button>
           </div>
+          <div class="mt-4">
+            <button id="download-track-button"
+              class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+              📥 Descargar Tracking (FIT)
+            </button>
+          </div>
         </div>
 
         <!-- Mensajes -->
@@ -595,6 +605,8 @@
         coordinates: 'Coordenadas:',
         meters: 'metros',
         stopTracking: '⏹️ Detener seguimiento',
+        downloadTrack: '📥 Descargar Tracking (FIT)',
+        noTrackData: '⚠️ No hay datos de trayecto para descargar',
 
         // Users Section
         users: 'Usuarios',
@@ -708,6 +720,8 @@
         coordinates: 'Coordinates:',
         meters: 'meters',
         stopTracking: '⏹️ Stop tracking',
+        downloadTrack: '📥 Download Track (FIT)',
+        noTrackData: '⚠️ No tracking data to download',
 
         // Users Section
         users: 'Users',
@@ -821,6 +835,8 @@
         coordinates: 'Coordonnées:',
         meters: 'mètres',
         stopTracking: '⏹️ Arrêter le suivi',
+        downloadTrack: '📥 Télécharger Track (FIT)',
+        noTrackData: '⚠️ Aucune donnée de trajet à télécharger',
 
         // Users Section
         users: 'Utilisateurs',
@@ -934,6 +950,8 @@
         coordinates: 'Koordinaten:',
         meters: 'Meter',
         stopTracking: '⏹️ Tracking stoppen',
+        downloadTrack: '📥 Track herunterladen (FIT)',
+        noTrackData: '⚠️ Keine Tracking-Daten zum Herunterladen',
 
         // Users Section
         users: 'Benutzer',
@@ -1072,6 +1090,7 @@
       document.getElementById('max-500m-label').textContent = t('max500m');
       document.getElementById('reset-stats-button').innerHTML = t('resetStats');
       document.getElementById('group-horn-button').innerHTML = t('groupHorn');
+      document.getElementById('download-track-button').innerHTML = t('downloadTrack');
       document.getElementById('stop-button').innerHTML = t('stopTracking');
 
       // GPS Info
@@ -1277,6 +1296,10 @@
     // Variables para el mapa
     let map = null;
     let mapFullscreen = null;
+    // Buffer for the full session track (for FIT export)
+    let sessionTrack = [];
+
+    // Buffer for the map tracks (visual only)
     let userMarkers = {};
     let userTracks = {};
     let trackPolylines = {};
@@ -1310,6 +1333,7 @@
       stopButton: document.getElementById('stop-button'),
       resetStatsButton: document.getElementById('reset-stats-button'),
       groupHornButton: document.getElementById('group-horn-button'),
+      downloadTrackButton: document.getElementById('download-track-button'),
       userCount: document.getElementById('user-count'),
       usersList: document.getElementById('users-list'),
       accuracy: document.getElementById('accuracy'),
@@ -1552,6 +1576,7 @@
       speedReadings = [];
       buffer10s = [];
       buffer500m = [];
+      sessionTrack = [];
       localStorage.setItem('max10s', 0);
       localStorage.setItem('max500m', 0);
       elements.maxSpeed.textContent = '0.0';
@@ -1682,6 +1707,115 @@
       showSuccess(t('hornActivated'));
       console.log('📢 Señal de bocina enviada al grupo:', groupName || 'default');
     });
+
+    // Función para descargar el track en formato FIT
+    async function downloadFitTrack() {
+      if (sessionTrack.length < 2) {
+        showError(t('noTrackData'));
+        return;
+      }
+
+      console.log('📦 Preparando exportación FIT con', sessionTrack.length, 'puntos');
+
+      try {
+        if (!window.FitWriter) {
+          showError("La biblioteca FIT no se ha cargado. Reintenta en unos segundos.");
+          return;
+        }
+
+        const fw = new window.FitWriter();
+
+        // 1. FILE ID (Activity)
+        fw.writeMessage('file_id', {
+          type: 4, // activity
+          manufacturer: 1, // garmin
+          product: 0,
+          serial_number: Math.floor(Math.random() * 1000000),
+          time_created: new Date(sessionTrack[0].timestamp)
+        });
+
+        // 2. DEVICE INFO
+        fw.writeMessage('device_info', {
+          device_index: 0,
+          device_type: 1,
+          manufacturer: 1,
+          product: 0,
+          serial_number: 12345,
+          timestamp: new Date(sessionTrack[0].timestamp)
+        });
+
+        // 3. RECORDS
+        sessionTrack.forEach(p => {
+          fw.writeMessage('record', {
+            timestamp: new Date(p.timestamp),
+            position_lat: p.lat,
+            position_long: p.lon,
+            enhanced_speed: (p.speed || 0) / 3.6 // km/h a m/s
+          });
+        });
+
+        // 4. LAP (Summary for the session)
+        const totalTime = (sessionTrack[sessionTrack.length - 1].timestamp - sessionTrack[0].timestamp) / 1000;
+        const avgSpeedMs = (sessionTrack.reduce((sum, p) => sum + (p.speed || 0), 0) / sessionTrack.length) / 3.6;
+
+        fw.writeMessage('lap', {
+          timestamp: new Date(sessionTrack[sessionTrack.length - 1].timestamp),
+          start_time: new Date(sessionTrack[0].timestamp),
+          total_elapsed_time: totalTime,
+          total_timer_time: totalTime,
+          avg_speed: avgSpeedMs,
+          message_index: 0
+        });
+
+        // 5. SESSION
+        fw.writeMessage('session', {
+          timestamp: new Date(sessionTrack[sessionTrack.length - 1].timestamp),
+          start_time: new Date(sessionTrack[0].timestamp),
+          total_elapsed_time: totalTime,
+          total_timer_time: totalTime,
+          avg_speed: avgSpeedMs,
+          sport: 0, // Generic
+          sub_sport: 0,
+          first_lap_index: 0,
+          num_laps: 1,
+          message_index: 0
+        });
+
+        // 6. ACTIVITY
+        fw.writeMessage('activity', {
+          timestamp: new Date(sessionTrack[sessionTrack.length - 1].timestamp),
+          total_timer_time: totalTime,
+          num_sessions: 1,
+          type: 0, // activity
+          event: 26, // activity
+          event_type: 1 // start
+        });
+
+        // 7. FINISH
+        const data = fw.finish();
+
+        const blob = new Blob([data], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const dateStr = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '_');
+        const fileName = `${userName.replace(/\s+/g, '_') || '3wb'}_track_${dateStr}.fit`;
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showSuccess('¡Track FIT descargado!');
+        console.log('✅ Track FIT generado exitosamente:', fileName);
+      } catch (err) {
+        console.error('❌ FIT Export Error:', err);
+        showError('Error en exportación: ' + err.message);
+      }
+    }
+
+    elements.downloadTrackButton.addEventListener('click', downloadFitTrack);
 
 
 
@@ -2271,6 +2405,14 @@
           elements.speedDisplay.textContent = speed.toFixed(1);
           updateGpsStatus(true);
           elements.gpsInfo.classList.remove('hidden');
+
+          // Store point for FIT export
+          sessionTrack.push({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+            speed: speed,
+            timestamp: Date.now()
+          });
 
           // Actualizar velocidad máxima (use raw speed before threshold for max tracking)
           if (rawSpeed > maxSpeed) {
