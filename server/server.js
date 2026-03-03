@@ -46,7 +46,7 @@ function broadcastToGroup(groupName, data) {
 function sendUsersListToGroup(groupName) {
   const groupUsers = groups.get(groupName);
   if (!groupUsers) return;
-  
+
   const usersList = Array.from(groupUsers.values());
   broadcastToGroup(groupName, {
     type: 'users',
@@ -58,7 +58,7 @@ function sendUsersListToGroup(groupName) {
 setInterval(() => {
   const now = Date.now();
   let hasChanges = false;
-  
+
   groups.forEach((groupUsers, groupName) => {
     groupUsers.forEach((user, userId) => {
       if (now - user.timestamp > 10000) {
@@ -67,7 +67,7 @@ setInterval(() => {
         console.log(`❌ Usuario inactivo eliminado: ${userId} (Grupo: ${groupName})`);
       }
     });
-    
+
     // Eliminar grupo si está vacío
     if (groupUsers.size === 0) {
       groups.delete(groupName);
@@ -81,26 +81,26 @@ setInterval(() => {
 // Manejar conexiones WebSocket
 wss.on('connection', (ws, req) => {
   console.log('✅ Nueva conexión WebSocket desde:', req.socket.remoteAddress);
-  
+
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
-      
+
       switch (data.type) {
         case 'register':
           const groupName = data.groupName || 'default';
           ws.userId = data.userId;
           ws.userName = data.userName || 'Usuario';
           ws.groupName = groupName;
-          
+
           console.log(`📝 Usuario registrado: ${data.userName || data.userId} (Grupo: ${groupName})`);
-          
+
           // Crear grupo si no existe
           if (!groups.has(groupName)) {
             groups.set(groupName, new Map());
             console.log(`✨ Nuevo grupo creado: ${groupName}`);
           }
-          
+
           sendUsersListToGroup(groupName);
           break;
 
@@ -109,27 +109,27 @@ wss.on('connection', (ws, req) => {
           const viewerGroup = data.groupName || 'default';
           ws.groupName = viewerGroup;
           ws.viewerMode = true;
-          
+
           console.log(`👁️ Visualizador conectado al grupo: ${viewerGroup}`);
-          
+
           // Enviar lista actual de usuarios
           sendUsersListToGroup(viewerGroup);
           break;
-          
+
         case 'speed':
           const group = data.groupName || 'default';
-          
+
           // Asegurar que el grupo existe
           if (!groups.has(group)) {
             groups.set(group, new Map());
           }
-          
+
           const groupUsers = groups.get(group);
           const currentUser = groupUsers.get(data.userId);
-          const newMaxSpeed = currentUser 
+          const newMaxSpeed = currentUser
             ? Math.max(currentUser.maxSpeed || 0, data.maxSpeed || data.speed)
             : data.maxSpeed || data.speed;
-          
+
           // Actualizar datos del usuario en su grupo
           groupUsers.set(data.userId, {
             userId: data.userId,
@@ -141,9 +141,9 @@ wss.on('connection', (ws, req) => {
             bearing: data.bearing || 0,
             timestamp: data.timestamp
           });
-          
+
           console.log(`📊 [${group}] ${data.userName || data.userId}: ${data.speed} km/h | Rumbo: ${data.bearing}° | Max: ${newMaxSpeed} km/h`);
-          
+
           // Enviar lista actualizada solo a usuarios del mismo grupo
           sendUsersListToGroup(group);
           break;
@@ -200,7 +200,7 @@ wss.on('connection', (ws, req) => {
       console.error('❌ Error procesando mensaje:', error);
     }
   });
-  
+
   ws.on('close', () => {
     if (ws.groupName && !ws.viewerMode && ws.userId) {
       console.log(`👋 Usuario desconectado: ${ws.userId} (Grupo: ${ws.groupName})`);
@@ -224,7 +224,7 @@ wss.on('connection', (ws, req) => {
       console.log(`👋 Visualizador desconectado del grupo: ${ws.groupName}`);
     }
   });
-  
+
   ws.on('error', (error) => {
     console.error('❌ Error en WebSocket:', error);
   });
@@ -236,7 +236,7 @@ app.get('/health', (req, res) => {
   groups.forEach(groupUsers => {
     totalUsers += groupUsers.size;
   });
-  
+
   res.json({
     status: 'ok',
     totalUsers: totalUsers,
@@ -254,7 +254,7 @@ app.get('/groups', (req, res) => {
       users: Array.from(groupUsers.values())
     };
   });
-  
+
   res.json({
     groups: groupsInfo,
     totalGroups: groups.size
@@ -284,7 +284,7 @@ app.get('/groups/:groupName', (req, res) => {
 // POST endpoint to save a speed history record
 app.post('/api/speed-history', async (req, res) => {
   try {
-    const { userId, userName, groupName, maxSpeed, latitude, longitude, timestamp } = req.body;
+    const { userId, userName, groupName, maxSpeed, maxSpeed10s, maxSpeed500m, latitude, longitude, timestamp } = req.body;
 
     // Validate required fields
     if (!userId || maxSpeed === undefined || !latitude || !longitude || !timestamp) {
@@ -304,6 +304,8 @@ app.post('/api/speed-history', async (req, res) => {
       userName: userName || 'Usuario',
       groupName: groupName || 'default',
       maxSpeed,
+      maxSpeed10s,
+      maxSpeed500m,
       latitude,
       longitude,
       date,

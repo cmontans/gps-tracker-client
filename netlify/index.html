@@ -2416,6 +2416,8 @@
               userName: userName || 'Usuario',
               groupName: groupName || 'default',
               maxSpeed,
+              maxSpeed10s: max10s,
+              maxSpeed500m: max500m,
               latitude: lastPosition.coords.latitude,
               longitude: lastPosition.coords.longitude,
               timestamp: Date.now()
@@ -2451,7 +2453,21 @@
           elements.historyHighestSpeed.textContent = parseFloat(stats.highest_speed || 0).toFixed(1);
           elements.historyAverageMax.textContent = parseFloat(stats.average_max_speed || 0).toFixed(1);
 
-          // Update local session/all-time maxes as well
+          // Update local session/all-time maxes with server values if they are higher
+          const serverMax10s = parseFloat(stats.highest_speed_10s || 0);
+          const serverMax500m = parseFloat(stats.highest_speed_500m || 0);
+
+          if (serverMax10s > max10s) {
+            max10s = serverMax10s;
+            localStorage.setItem('max10s', max10s);
+            elements.max10s.textContent = max10s.toFixed(1);
+          }
+          if (serverMax500m > max500m) {
+            max500m = serverMax500m;
+            localStorage.setItem('max500m', max500m);
+            elements.max500m.textContent = max500m.toFixed(1);
+          }
+
           elements.historyMax10s.textContent = max10s.toFixed(1);
           elements.historyMax500m.textContent = max500m.toFixed(1);
         }
@@ -2479,7 +2495,11 @@
                   <div>${record.time}</div>
                   <div>${parseFloat(record.latitude).toFixed(4)}, ${parseFloat(record.longitude).toFixed(4)}</div>
                 </div>
-                ${record.group_name && record.group_name !== 'default' ? `<div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Group: ${record.group_name}</div>` : ''}
+                <div class="flex gap-2 mt-1">
+                  ${record.max_speed_10s ? `<div class="text-[10px] bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">10s: ${parseFloat(record.max_speed_10s).toFixed(1)}</div>` : ''}
+                  ${record.max_speed_500m ? `<div class="text-[10px] bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">500m: ${parseFloat(record.max_speed_500m).toFixed(1)}</div>` : ''}
+                </div>
+                ${record.group_name && record.group_name !== 'default' ? `<div class="text-[10px] text-gray-500 dark:text-gray-500 mt-1">Group: ${record.group_name}</div>` : ''}
               `;
               elements.historyRecordsList.appendChild(recordElement);
             });

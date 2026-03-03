@@ -33,6 +33,8 @@ async function initializeDatabase() {
         user_name VARCHAR(255),
         group_name VARCHAR(255),
         max_speed DECIMAL(10, 2) NOT NULL,
+        max_speed_10s DECIMAL(10, 2),
+        max_speed_500m DECIMAL(10, 2),
         latitude DECIMAL(10, 8) NOT NULL,
         longitude DECIMAL(11, 8) NOT NULL,
         date DATE NOT NULL,
@@ -88,16 +90,16 @@ async function initializeDatabase() {
 
 // Insert a new speed history record
 async function insertSpeedHistory(data) {
-  const { userId, userName, groupName, maxSpeed, latitude, longitude, date, time, timestamp } = data;
+  const { userId, userName, groupName, maxSpeed, maxSpeed10s, maxSpeed500m, latitude, longitude, date, time, timestamp } = data;
 
   const query = `
     INSERT INTO speed_history
-    (user_id, user_name, group_name, max_speed, latitude, longitude, date, time, timestamp)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    (user_id, user_name, group_name, max_speed, max_speed_10s, max_speed_500m, latitude, longitude, date, time, timestamp)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *
   `;
 
-  const values = [userId, userName, groupName, maxSpeed, latitude, longitude, date, time, timestamp];
+  const values = [userId, userName, groupName, maxSpeed, maxSpeed10s || null, maxSpeed500m || null, latitude, longitude, date, time, timestamp];
 
   try {
     const result = await pool.query(query, values);
@@ -149,6 +151,8 @@ async function getSpeedStatistics(userId) {
     SELECT
       COUNT(*) as total_records,
       MAX(max_speed) as highest_speed,
+      MAX(max_speed_10s) as highest_speed_10s,
+      MAX(max_speed_500m) as highest_speed_500m,
       AVG(max_speed) as average_max_speed,
       MIN(date) as first_record_date,
       MAX(date) as last_record_date
