@@ -14,7 +14,13 @@
     <string name="current_speed">Current Speed</string>
     <string name="max_speed">Max Speed</string>
     <string name="avg_speed">Average Speed</string>
+    <string name="avg_10s">Avg (10s)</string>
+    <string name="max_10s">Max (10s)</string>
+    <string name="avg_500m">Avg (500m)</string>
+    <string name="max_500m">Max (500m)</string>
     <string name="kmh">km/h</string>
+    <string name="download_track">📥 Download FIT Track</string>
+    <string name="no_track_data">No track data available</string>
 
     <!-- Status -->
     <string name="status_disconnected">Disconnected</string>
@@ -32,6 +38,13 @@
     <!-- Group -->
     <string name="group_horn">📢 Group Horn</string>
     <string name="users_in_group">Users in Group</string>
+    <string name="waypoints">📍 Waypoints</string>
+    <string name="add_waypoint">Add Waypoint</string>
+    <string name="no_waypoints">No waypoints found in this group</string>
+    <string name="delete">Delete</string>
+    <string name="go_to">Go To</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 
     <!-- Actions -->
     <string name="reset_stats">🔄 Reset Statistics</string>

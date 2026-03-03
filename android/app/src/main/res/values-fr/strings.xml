@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">3WB Speed Tracker</string>
+
+    <!-- Main Screen -->
+    <string name="your_name">Votre Nom</string>
+    <string name="group_name">Nom du Groupe</string>
+    <string name="start_tracking">▶️ Démarrer le Suivi</string>
+    <string name="stop_tracking">⏹️ Arrêter le Suivi</string>
+    <string name="settings">⚙️ Paramètres</string>
+    <string name="history">📊 Historique</string>
+
+    <!-- Speed Statistics -->
+    <string name="current_speed">Vitesse Actuelle</string>
+    <string name="max_speed">Vitesse Maximale</string>
+    <string name="avg_speed">Vitesse Moyenne</string>
+    <string name="avg_10s">Moy (10s)</string>
+    <string name="max_10s">Max (10s)</string>
+    <string name="avg_500m">Moy (500m)</string>
+    <string name="max_500m">Max (500m)</string>
+    <string name="kmh">km/h</string>
+    <string name="download_track">📥 Télécharger le Parcours (FIT)</string>
+    <string name="no_track_data">Aucune donnée de parcours disponible</string>
+
+    <!-- Status -->
+    <string name="status_disconnected">Déconnecté</string>
+    <string name="status_connecting">Connexion...</string>
+    <string name="status_connected">Connecté</string>
+    <string name="gps_searching">Recherche GPS...</string>
+    <string name="gps_active">GPS Actif</string>
+
+    <!-- Map -->
+    <string name="view_map">🗺️ Voir la Carte</string>
+    <string name="hide_map">Masquer la Carte</string>
+    <string name="fullscreen_map">⛶ Plein Écran</string>
+    <string name="clear_tracks">Effacer les Traces</string>
+
+    <!-- Group -->
+    <string name="group_horn">📢 Klaxon de Groupe</string>
+    <string name="users_in_group">Utilisateurs dans le Groupe</string>
+
+    <!-- Actions -->
+    <string name="reset_stats">🔄 Réinitialiser les Statistiques</string>
+
+    <!-- Settings -->
+    <string name="server_url">URL du Serveur</string>
+    <string name="user_id">ID Utilisateur</string>
+    <string name="default_server_url">wss://gps-tracker-server-production-5900.up.railway.app</string>
+
+    <!-- Messages -->
+    <string name="enter_name">Veuillez entrer votre nom</string>
+    <string name="enter_group">Veuillez entrer un nom de groupe</string>
+    <string name="location_permission_required">L\'autorisation de localisation est requise pour le suivi GPS</string>
+    <string name="notification_permission_required">L\'autorisation de notification est requise pour Android 13+</string>
+    <string name="tracking_active">Suivi GPS Actif</string>
+    <string name="tracking_notification_text">Vitesse: %1$.1f km/h</string>
+
+    <!-- Errors -->
+    <string name="gps_error">Erreur GPS: %1$s</string>
+    <string name="connection_error">Erreur de connexion</string>
+
+    <!-- Preferences -->
+    <string name="pref_server_url_key">server_url</string>
+    <string name="pref_user_id_key">user_id</string>
+    <string name="pref_dark_mode_key">dark_mode</string>
+    <string name="pref_auto_center_key">auto_center</string>
+    <string name="auto_center_map">Centrer automatiquement la carte sur ma position</string>
+    <string name="pref_voice_enabled_key">voice_enabled</string>
+    <string name="pref_voice_min_speed_key">voice_min_speed</string>
+    <string name="voice_announcements">Annonces vocales de vitesse</string>
+    <string name="min_speed_threshold">Seuil de vitesse minimale (km/h)</string>
+    <string name="min_speed_hint">22</string>
+    <string name="pref_visualizer_mode_key">visualizer_mode</string>
+    <string name="visualizer_mode">Mode Visualiseur (voir uniquement, ne pas publier)</string>
+    <string name="visualizer_mode_active">👁️ Mode Visualiseur Actif</string>
+
+    <!-- History Screen -->
+    <string name="speed_history">Historique de Vitesse</string>
+    <string name="statistics">Statistiques</string>
+    <string name="total_records">Total des Records</string>
+    <string name="highest_speed">Vitesse la plus élevée</string>
+    <string name="average_max">Moyenne</string>
+    <string name="history_records">Enregistrements d\'Historique</string>
+    <string name="no_history_records">Pas encore d\'enregistrements d\'historique</string>
+    <string name="loading">Chargement...</string>
+    <string name="error_user_id_not_found">ID Utilisateur non trouvé. Veuillez d\'abord démarrer le suivi.</string>
+</resources>

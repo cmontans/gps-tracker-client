@@ -13,7 +13,13 @@
     <string name="current_speed">Velocidad Actual</string>
     <string name="max_speed">Velocidad Máxima</string>
     <string name="avg_speed">Velocidad Promedio</string>
+    <string name="avg_10s">Prom (10s)</string>
+    <string name="max_10s">Máx (10s)</string>
+    <string name="avg_500m">Prom (500m)</string>
+    <string name="max_500m">Máx (500m)</string>
     <string name="kmh">km/h</string>
+    <string name="download_track">📥 Descargar Tracking (FIT)</string>
+    <string name="no_track_data">No hay datos de ruta disponibles</string>
 
     <!-- Status -->
     <string name="status_disconnected">Desconectado</string>

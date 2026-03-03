@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module">
-    import { FitWriter } from 'https://cdn.jsdelivr.net/npm/@markw65/fit-file-writer@1.1.2/+esm';
+    import { FitWriter } from 'https://cdn.jsdelivr.net/npm/@markw65/fit-file-writer@0.1.7/+esm';
     window.FitWriter = FitWriter;
   </script>
   <script>
@@ -607,6 +607,7 @@
         stopTracking: '⏹️ Detener seguimiento',
         downloadTrack: '📥 Descargar Tracking (FIT)',
         noTrackData: '⚠️ No hay datos de trayecto para descargar',
+        fitLibraryNotLoaded: '⚠️ La biblioteca FIT no se ha cargado. Reintenta en unos segundos.',
 
         // Users Section
         users: 'Usuarios',
@@ -736,6 +737,7 @@
         stopTracking: '⏹️ Stop tracking',
         downloadTrack: '📥 Download Track (FIT)',
         noTrackData: '⚠️ No tracking data to download',
+        fitLibraryNotLoaded: '⚠️ FIT library not loaded. Retry in a few seconds.',
 
         // Users Section
         users: 'Users',
@@ -865,6 +867,7 @@
         stopTracking: '⏹️ Arrêter le suivi',
         downloadTrack: '📥 Télécharger Track (FIT)',
         noTrackData: '⚠️ Aucune donnée de trajet à télécharger',
+        fitLibraryNotLoaded: '⚠️ Bibliothèque FIT non chargée. Réessayez dans quelques secondes.',
 
         // Users Section
         users: 'Utilisateurs',
@@ -994,6 +997,7 @@
         stopTracking: '⏹️ Tracking stoppen',
         downloadTrack: '📥 Track herunterladen (FIT)',
         noTrackData: '⚠️ Keine Tracking-Daten zum Herunterladen',
+        fitLibraryNotLoaded: '⚠️ FIT-Bibliothek nicht geladen. Versuchen Sie es in wenigen Sekunden erneut.',
 
         // Users Section
         users: 'Benutzer',
@@ -1811,7 +1815,7 @@
 
       try {
         if (!window.FitWriter) {
-          showError("La biblioteca FIT no se ha cargado. Reintenta en unos segundos.");
+          showError(t('fitLibraryNotLoaded'));
           return;
         }
 

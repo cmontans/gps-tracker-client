@@ -13,6 +13,8 @@ data class SpeedHistoryRecord(
     @SerializedName("userName") val userName: String,
     @SerializedName("groupName") val groupName: String,
     @SerializedName("maxSpeed") val maxSpeed: Double,
+    @SerializedName("maxSpeed10s") val maxSpeed10s: Double? = null,
+    @SerializedName("maxSpeed500m") val maxSpeed500m: Double? = null,
     @SerializedName("latitude") val latitude: Double,
     @SerializedName("longitude") val longitude: Double,
     @SerializedName("timestamp") val timestamp: Long
@@ -31,6 +33,8 @@ data class SpeedHistoryRecordDb(
     @SerializedName("user_name") val userName: String?,
     @SerializedName("group_name") val groupName: String?,
     @SerializedName("max_speed") val maxSpeed: String,
+    @SerializedName("max_speed_10s") val maxSpeed10s: String?,
+    @SerializedName("max_speed_500m") val maxSpeed500m: String?,
     @SerializedName("latitude") val latitude: String,
     @SerializedName("longitude") val longitude: String,
     @SerializedName("date") val date: String,

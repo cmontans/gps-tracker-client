@@ -44,14 +44,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var btnStartStop: Button
     private lateinit var btnSettings: View
     private lateinit var btnHistory: View
+    private lateinit var btnWaypoints: View
     private lateinit var btnToggleMap: Button
     private lateinit var btnFullscreenMap: Button
     private lateinit var btnGroupHorn: Button
     private lateinit var btnResetStats: Button
     private lateinit var btnClearTracks: Button
+    private lateinit var btnDownloadTrack: Button
     private lateinit var tvCurrentSpeed: TextView
     private lateinit var tvMaxSpeed: TextView
     private lateinit var tvAvgSpeed: TextView
+    private lateinit var tvAvg10s: TextView
+    private lateinit var tvMax10s: TextView
+    private lateinit var tvAvg500m: TextView
+    private lateinit var tvMax500m: TextView
     private lateinit var tvConnectionStatus: TextView
     private lateinit var tvGpsStatus: TextView
     private lateinit var tvVisualizerMode: TextView
@@ -89,11 +95,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             serviceBound = true
 
             trackingService?.serviceListener = object : LocationTrackingService.ServiceListener {
-                override fun onSpeedUpdate(current: Double, max: Double, avg: Double) {
+                override fun onSpeedUpdate(current: Double, max: Double, avg: Double, avg10s: Double, max10s: Double, avg500m: Double, max500m: Double) {
                     runOnUiThread {
                         tvCurrentSpeed.text = String.format("%.1f", current)
                         tvMaxSpeed.text = String.format("%.1f", max)
                         tvAvgSpeed.text = String.format("%.1f", avg)
+                        tvAvg10s.text = String.format("%.1f", avg10s)
+                        tvMax10s.text = String.format("%.1f", max10s)
+                        tvAvg500m.text = String.format("%.1f", avg500m)
+                        tvMax500m.text = String.format("%.1f", max500m)
+                        
+                        // Enable download button if we have points
+                        val track = trackingService?.getSessionTrack()
+                        btnDownloadTrack.isEnabled = track != null && track.size >= 2
                     }
                 }
 
@@ -139,6 +153,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         override fun onServiceDisconnected(name: ComponentName?) {
             trackingService = null
             serviceBound = false
+        }
+    }
+
+    private val createFitFileLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/fit")
+    ) { uri ->
+        uri?.let {
+            saveFitTrackToFile(it)
         }
     }
 
@@ -199,14 +221,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnStartStop = findViewById(R.id.btnStartStop)
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
+        btnWaypoints = findViewById(R.id.btnWaypoints)
         btnToggleMap = findViewById(R.id.btnToggleMap)
         btnFullscreenMap = findViewById(R.id.btnFullscreenMap)
         btnGroupHorn = findViewById(R.id.btnGroupHorn)
         btnResetStats = findViewById(R.id.btnResetStats)
         btnClearTracks = findViewById(R.id.btnClearTracks)
+        btnDownloadTrack = findViewById(R.id.btnDownloadTrack)
         tvCurrentSpeed = findViewById(R.id.tvCurrentSpeed)
         tvMaxSpeed = findViewById(R.id.tvMaxSpeed)
         tvAvgSpeed = findViewById(R.id.tvAvgSpeed)
+        tvAvg10s = findViewById(R.id.tvAvg10s)
+        tvMax10s = findViewById(R.id.tvMax10s)
+        tvAvg500m = findViewById(R.id.tvAvg500m)
+        tvMax500m = findViewById(R.id.tvMax500m)
         tvConnectionStatus = findViewById(R.id.tvConnectionStatus)
         tvGpsStatus = findViewById(R.id.tvGpsStatus)
         tvVisualizerMode = findViewById(R.id.tvVisualizerMode)
@@ -287,6 +315,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
 
+        btnWaypoints.setOnClickListener {
+            startActivity(Intent(this, WaypointsActivity::class.java))
+        }
+
         btnToggleMap.setOnClickListener {
             isMapVisible = !isMapVisible
             cardMap.visibility = if (isMapVisible) View.VISIBLE else View.GONE
@@ -304,8 +336,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         btnResetStats.setOnClickListener {
             trackingService?.resetStatistics()
+            tvCurrentSpeed.text = "0.0"
             tvMaxSpeed.text = "0.0"
             tvAvgSpeed.text = "0.0"
+            tvAvg10s.text = "0.0"
+            tvMax10s.text = "0.0"
+            tvAvg500m.text = "0.0"
+            tvMax500m.text = "0.0"
+            btnDownloadTrack.isEnabled = false
+            Toast.makeText(this, R.string.reset_stats, Toast.LENGTH_SHORT).show()
+        }
+
+        btnDownloadTrack.setOnClickListener {
+            val fileName = "track_${System.currentTimeMillis()}.fit"
+            createFitFileLauncher.launch(fileName)
         }
 
         btnClearTracks.setOnClickListener {
@@ -555,5 +599,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         releaseWakeLock()
         soundPool.release()
+    }
+
+    private fun saveFitTrackToFile(uri: android.net.Uri) {
+        val track = trackingService?.getSessionTrack() ?: return
+        if (track.size < 2) {
+            Toast.makeText(this, R.string.no_track_data, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            contentResolver.openOutputStream(uri)?.use { outputStream ->
+                val fitWriter = com.tracker.gps.util.FitFileWriter()
+                val userName = etUserName.text.toString().ifBlank { "User" }
+                fitWriter.writeFitFile(outputStream, track, userName)
+                Toast.makeText(this, "FIT track saved successfully", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error saving FIT file", e)
+            Toast.makeText(this, "Error saving FIT file: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 }

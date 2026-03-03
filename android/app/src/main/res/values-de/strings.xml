@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">3WB Speed Tracker</string>
+
+    <!-- Main Screen -->
+    <string name="your_name">Dein Name</string>
+    <string name="group_name">Gruppenname</string>
+    <string name="start_tracking">▶️ Tracking Starten</string>
+    <string name="stop_tracking">⏹️ Tracking Stoppen</string>
+    <string name="settings">⚙️ Einstellungen</string>
+    <string name="history">📊 Verlauf</string>
+
+    <!-- Speed Statistics -->
+    <string name="current_speed">Aktuelle Geschwindigkeit</string>
+    <string name="max_speed">Höchstgeschwindigkeit</string>
+    <string name="avg_speed">Durchschnittsgeschwindigkeit</string>
+    <string name="avg_10s">Durchschn (10s)</string>
+    <string name="max_10s">Max (10s)</string>
+    <string name="avg_500m">Durchschn (500m)</string>
+    <string name="max_500m">Max (500m)</string>
+    <string name="kmh">km/h</string>
+    <string name="download_track">📥 Track herunterladen (FIT)</string>
+    <string name="no_track_data">Keine Trackdaten verfügbar</string>
+
+    <!-- Status -->
+    <string name="status_disconnected">Getrennt</string>
+    <string name="status_connecting">Verbinden...</string>
+    <string name="status_connected">Verbunden</string>
+    <string name="gps_searching">Suche GPS...</string>
+    <string name="gps_active">GPS Aktiv</string>
+
+    <!-- Map -->
+    <string name="view_map">🗺️ Karte anzeigen</string>
+    <string name="hide_map">Karte ausblenden</string>
+    <string name="fullscreen_map">⛶ Vollbild</string>
+    <string name="clear_tracks">Spuren löschen</string>
+
+    <!-- Group -->
+    <string name="group_horn">📢 Gruppenhorn</string>
+    <string name="users_in_group">Mitglieder in der Gruppe</string>
+
+    <!-- Actions -->
+    <string name="reset_stats">🔄 Statistiken zurücksetzen</string>
+
+    <!-- Settings -->
+    <string name="server_url">Server-URL</string>
+    <string name="user_id">Benutzer-ID</string>
+    <string name="default_server_url">wss://gps-tracker-server-production-5900.up.railway.app</string>
+
+    <!-- Messages -->
+    <string name="enter_name">Bitte gib deinen Namen ein</string>
+    <string name="enter_group">Bitte gib einen Gruppennamen ein</string>
+    <string name="location_permission_required">Standortberechtigung ist für das GPS-Tracking erforderlich</string>
+    <string name="notification_permission_required">Benachrichtigungsberechtigung ist für Android 13+ erforderlich</string>
+    <string name="tracking_active">GPS-Tracking Aktiv</string>
+    <string name="tracking_notification_text">Geschwindigkeit: %1$.1f km/h</string>
+
+    <!-- Errors -->
+    <string name="gps_error">GPS-Fehler: %1$s</string>
+    <string name="connection_error">Verbindungsfehler</string>
+
+    <!-- Preferences -->
+    <string name="pref_server_url_key">server_url</string>
+    <string name="pref_user_id_key">user_id</string>
+    <string name="pref_dark_mode_key">dark_mode</string>
+    <string name="pref_auto_center_key">auto_center</string>
+    <string name="auto_center_map">Karte automatisch auf meinen Standort zentrieren</string>
+    <string name="pref_voice_enabled_key">voice_enabled</string>
+    <string name="pref_voice_min_speed_key">voice_min_speed</string>
+    <string name="voice_announcements">Sprachansagen zur Geschwindigkeit</string>
+    <string name="min_speed_threshold">Mindestgeschwindigkeitsschwelle (km/h)</string>
+    <string name="min_speed_hint">22</string>
+    <string name="pref_visualizer_mode_key">visualizer_mode</string>
+    <string name="visualizer_mode">Visualisierungsmodus (nur ansehen, nicht veröffentlichen)</string>
+    <string name="visualizer_mode_active">👁️ Visualisierungsmodus Aktiv</string>
+
+    <!-- History Screen -->
+    <string name="speed_history">Geschwindigkeitsverlauf</string>
+    <string name="statistics">Statistiken</string>
+    <string name="total_records">Gesamte Datensätze</string>
+    <string name="highest_speed">Höchste Geschwindigkeit</string>
+    <string name="average_max">Durchschnitt</string>
+    <string name="history_records">Verlaufsaufzeichnungen</string>
+    <string name="no_history_records">Noch keine Verlaufsaufzeichnungen vorhanden</string>
+    <string name="loading">Laden...</string>
+    <string name="error_user_id_not_found">Benutzer-ID nicht gefunden. Bitte starte zuerst das Tracking.</string>
+</resources>

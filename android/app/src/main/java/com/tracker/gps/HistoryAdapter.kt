@@ -34,6 +34,9 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() 
         private val tvMaxSpeed: TextView = itemView.findViewById(R.id.tvMaxSpeed)
         private val tvLocation: TextView = itemView.findViewById(R.id.tvLocation)
         private val tvGroupName: TextView = itemView.findViewById(R.id.tvGroupName)
+        private val layoutWindowedSpeeds: View = itemView.findViewById(R.id.layoutWindowedSpeeds)
+        private val tvMax10sHistory: TextView = itemView.findViewById(R.id.tvMax10s)
+        private val tvMax500mHistory: TextView = itemView.findViewById(R.id.tvMax500m)
 
         fun bind(record: SpeedHistoryRecordDb) {
             tvDate.text = record.date
@@ -48,6 +51,14 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder>() 
                 tvGroupName.text = "Group: ${record.groupName}"
             } else {
                 tvGroupName.visibility = View.GONE
+            }
+
+            if (!record.maxSpeed10s.isNullOrEmpty() || !record.maxSpeed500m.isNullOrEmpty()) {
+                layoutWindowedSpeeds.visibility = View.VISIBLE
+                tvMax10sHistory.text = "10s: ${record.maxSpeed10s ?: "0.0"} km/h"
+                tvMax500mHistory.text = "500m: ${record.maxSpeed500m ?: "0.0"} km/h"
+            } else {
+                layoutWindowedSpeeds.visibility = View.GONE
             }
         }
     }

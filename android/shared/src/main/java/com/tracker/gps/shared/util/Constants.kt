@@ -33,6 +33,8 @@ object Constants {
     const val MS_TO_KMH = 3.6
     const val MIN_SPEED_THRESHOLD = 1.5 // km/h - speeds below this are considered stationary
     const val MAX_GPS_ACCURACY = 10.0f // meters - reject GPS readings with accuracy worse than this
+    const val AVG_SPEED_TIME_WINDOW = 10000L // 10 seconds
+    const val AVG_SPEED_DISTANCE_WINDOW = 500.0 // 500 meters
 
     // Database
     const val MAX_TRACK_POINTS_PER_SESSION = 10000

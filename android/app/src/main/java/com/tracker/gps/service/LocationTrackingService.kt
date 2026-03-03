@@ -45,6 +45,18 @@ class LocationTrackingService : Service() {
     private var speedReadings = mutableListOf<Double>()
     private val maxSpeedReadings = 20
 
+    // 10s and 500m Speed tracking
+    private var avg10s: Double = 0.0
+    private var max10s: Double = 0.0
+    private var avg500m: Double = 0.0
+    private var max500m: Double = 0.0
+    private val speedHistory10s = mutableListOf<Pair<Long, Double>>()
+    private val speedHistory500m = mutableListOf<Triple<Long, Double, Double>>() // timestamp, speed, cumulativeDistance
+    private var totalDistance: Double = 0.0
+
+    // FIT track recording
+    private val sessionTrack = mutableListOf<Pair<Location, Long>>()
+
     // Voice announcement settings
     private var textToSpeech: TextToSpeech? = null
     private var lastAnnouncedSpeed: Int = -1
@@ -57,7 +69,7 @@ class LocationTrackingService : Service() {
     var serviceListener: ServiceListener? = null
 
     interface ServiceListener {
-        fun onSpeedUpdate(current: Double, max: Double, avg: Double)
+        fun onSpeedUpdate(current: Double, max: Double, avg: Double, avg10s: Double, max10s: Double, avg500m: Double, max500m: Double)
         fun onLocationUpdate(location: Location)
         fun onUsersUpdate(users: List<UserData>)
         fun onConnectionStatusChanged(connected: Boolean)
@@ -112,6 +124,8 @@ class LocationTrackingService : Service() {
                 userName = userName,
                 groupName = groupName,
                 maxSpeed = maxSpeed,
+                maxSpeed10s = max10s,
+                maxSpeed500m = max500m,
                 latitude = location.latitude,
                 longitude = location.longitude,
                 timestamp = System.currentTimeMillis()
@@ -210,13 +224,44 @@ class LocationTrackingService : Service() {
             0.0
         }
 
+        // Calculate 10s average
+        val now = System.currentTimeMillis()
+        speedHistory10s.add(Pair(now, currentSpeed))
+        while (speedHistory10s.isNotEmpty() && now - speedHistory10s[0].first > Constants.AVG_SPEED_TIME_WINDOW) {
+            speedHistory10s.removeAt(0)
+        }
+        avg10s = if (speedHistory10s.isNotEmpty()) speedHistory10s.map { it.second }.average() else 0.0
+        if (avg10s > max10s) max10s = avg10s
+
+        // Calculate 500m average
+        lastLocation?.let { last ->
+            val dist = last.distanceTo(location).toDouble()
+            totalDistance += dist
+            speedHistory500m.add(Triple(now, currentSpeed, totalDistance))
+            
+            while (speedHistory500m.size > 1 && totalDistance - speedHistory500m[0].third > Constants.AVG_SPEED_DISTANCE_WINDOW) {
+                speedHistory500m.removeAt(0)
+            }
+            
+            if (speedHistory500m.size > 1) {
+                val windowDist = speedHistory500m.last().third - speedHistory500m.first().third
+                if (windowDist > 50.0) { // Only calculate if we have at least 50m of data
+                    avg500m = speedHistory500m.map { it.second }.average()
+                    if (avg500m > max500m) max500m = avg500m
+                }
+            }
+        }
+
+        // Record for FIT track
+        sessionTrack.add(Pair(location, now))
+
         // Update notification
         val notification = createNotification(currentSpeed)
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.notify(NOTIFICATION_ID, notification)
 
         // Notify listeners
-        serviceListener?.onSpeedUpdate(currentSpeed, maxSpeed, avgSpeed)
+        serviceListener?.onSpeedUpdate(currentSpeed, maxSpeed, avgSpeed, avg10s, max10s, avg500m, max500m)
         serviceListener?.onLocationUpdate(location)
 
         // Voice announcement
@@ -285,7 +330,17 @@ class LocationTrackingService : Service() {
     fun resetStatistics() {
         maxSpeed = 0.0
         speedReadings.clear()
+        max10s = 0.0
+        avg10s = 0.0
+        max500m = 0.0
+        avg500m = 0.0
+        speedHistory10s.clear()
+        speedHistory500m.clear()
+        sessionTrack.clear()
+        totalDistance = 0.0
     }
+
+    fun getSessionTrack(): List<Pair<Location, Long>> = sessionTrack
 
     fun sendGroupHorn() {
         webSocketClient?.sendGroupHorn(userId)
