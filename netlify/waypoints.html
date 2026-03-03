@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📍 Waypoints Manager - 3WB</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { primary: '#4F46E5', secondary: '#10B981' } } }
+        }
+    </script>
+    <style>
+        body {
+            overscroll-behavior: contain;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .dark .glass {
+            background: rgba(31, 41, 55, 0.7);
+        }
+
+        /* Animated marker fade */
+        .waypoint-marker {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors min-h-screen font-sans">
+    <div class="max-w-6xl mx-auto p-4 sm:p-6">
+        <!-- Header -->
+        <header
+            class="flex items-center justify-between mb-8 glass p-5 rounded-2xl shadow-xl transition-all border border-white/20">
+            <div class="flex items-center gap-5">
+                <a href="index.html"
+                    class="bg-white/50 dark:bg-gray-700/50 hover:bg-white dark:hover:bg-gray-600 p-3 rounded-xl transition-all shadow-sm active:scale-95">
+                    <span class="text-2xl">⬅️</span>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">📍 Gestión de Waypoints</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Grupo: <span id="current-group"
+                            class="font-bold text-primary dark:text-indigo-400">---</span></p>
+                </div>
+            </div>
+            <button id="dark-mode-toggle"
+                class="bg-white/50 dark:bg-gray-700/50 p-3 rounded-xl text-2xl shadow-sm hover:scale-110 transition-transform">🌙</button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: Form and List (Lg: 5 columns) -->
+            <div class="lg:col-span-5 space-y-8">
+
+                <!-- Add Waypoint Card -->
+                <div class="glass p-6 rounded-2xl shadow-xl border border-white/20 relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-2 h-full bg-secondary"></div>
+                    <h2 id="form-title"
+                        class="text-xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                        <span class="text-secondary">✨</span> Crear Nuevo Waypoint
+                    </h2>
+                    <form id="waypoint-form" class="space-y-5">
+                        <input type="hidden" id="waypoint-id">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Nombre
+                                del Punto</label>
+                            <input id="waypoint-name" type="text" required
+                                class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:text-white focus:border-primary focus:ring-0 transition-all outline-none"
+                                placeholder="Ej: Meta, Curva 1, Entrada...">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Descripción
+                                (Opcional)</label>
+                            <textarea id="waypoint-description"
+                                class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:text-white focus:border-primary focus:ring-0 transition-all outline-none"
+                                rows="2" placeholder="Detalles del punto..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Latitud</label>
+                                <input id="waypoint-latitude" type="number" step="0.000001" required
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:text-white focus:border-primary focus:ring-0 transition-all outline-none"
+                                    placeholder="0.000000">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Longitud</label>
+                                <input id="waypoint-longitude" type="number" step="0.000001" required
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 dark:bg-gray-800/50 dark:text-white focus:border-primary focus:ring-0 transition-all outline-none"
+                                    placeholder="0.000000">
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                            <button type="submit" id="save-btn"
+                                class="flex-[2] bg-secondary hover:brightness-110 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-secondary/20 active:scale-95 flex items-center justify-center gap-2">
+                                <span class="text-xl">💾</span> <span id="save-btn-text">Guardar Punto</span>
+                            </button>
+                            <button type="button" id="current-pos-btn"
+                                class="flex-1 bg-primary hover:brightness-110 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2">
+                                <span class="text-xl">📍</span> Mi GPS
+                            </button>
+                            <button type="button" id="cancel-btn"
+                                class="hidden flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg active:scale-95">✕</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- List Card -->
+                <div class="glass p-6 rounded-2xl shadow-xl border border-white/20">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 dark:text-white">📋 Waypoints Guardados</h2>
+                        <span id="wp-count"
+                            class="bg-primary/10 text-primary dark:text-indigo-400 px-3 py-1 rounded-full text-xs font-bold">0</span>
+                    </div>
+                    <div id="waypoints-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="text-center py-10">
+                            <div
+                                class="animate-spin inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full mb-4">
+                            </div>
+                            <p class="text-gray-500">Cargando puntos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Map (Lg: 7 columns) -->
+            <div class="lg:col-span-7">
+                <div
+                    class="glass p-3 rounded-2xl shadow-2xl border border-white/20 sticky top-6 h-[500px] lg:h-[800px] flex flex-col">
+                    <div id="map" class="flex-1 rounded-xl z-0"></div>
+                    <div
+                        class="mt-4 p-4 flex items-center gap-3 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                        <span class="text-2xl">🖱️</span>
+                        <div>
+                            <p class="text-sm font-semibold text-blue-800 dark:text-blue-300">Modo Interactivo</p>
+                            <p class="text-xs text-blue-600 dark:text-blue-400">Haz click en cualquier parte del mapa
+                                para obtener sus coordenadas exactas de forma instantánea.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 translate-y-24 transition-all duration-500 z-[9999] px-8 py-4 rounded-2xl shadow-2xl text-white font-bold flex items-center gap-3 glass-heavy border border-white/10">
+        <span id="toast-icon"></span>
+        <span id="toast-msg"></span>
+    </div>
+
+    <style>
+        .glass-heavy {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4F46E5;
+            border-radius: 10px;
+        }
+    </style>
+
+    <script>
+        // Configuration & State
+        let userId = localStorage.getItem('userId');
+        let groupName = localStorage.getItem('groupName') || 'default';
+        let serverUrl = localStorage.getItem('serverUrl') || 'wss://urban-ricca-cmontans-34613e13.koyeb.app/';
+        let httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        let waypoints = [];
+        let map = null;
+        let markers = {};
+        let isEditing = false;
+
+        // UI Elements
+        const elements = {
+            groupLabel: document.getElementById('current-group'),
+            list: document.getElementById('waypoints-list'),
+            form: document.getElementById('waypoint-form'),
+            idInput: document.getElementById('waypoint-id'),
+            nameInput: document.getElementById('waypoint-name'),
+            descInput: document.getElementById('waypoint-description'),
+            latInput: document.getElementById('waypoint-latitude'),
+            lonInput: document.getElementById('waypoint-longitude'),
+            saveBtn: document.getElementById('save-btn'),
+            saveBtnText: document.getElementById('save-btn-text'),
+            cancelBtn: document.getElementById('cancel-btn'),
+            formTitle: document.getElementById('form-title'),
+            wpCount: document.getElementById('wp-count'),
+            toast: document.getElementById('toast'),
+            toastMsg: document.getElementById('toast-msg'),
+            toastIcon: document.getElementById('toast-icon'),
+            currentPosBtn: document.getElementById('current-pos-btn'),
+            darkModeToggle: document.getElementById('dark-mode-toggle')
+        };
+
+        // Initialize
+        function init() {
+            elements.groupLabel.textContent = groupName;
+            initDarkMode();
+            initMap();
+            loadWaypoints();
+        }
+
+        function initDarkMode() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                updateDarkModeIcon(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateDarkModeIcon(false);
+            }
+        }
+
+        function updateDarkModeIcon(isDark) {
+            elements.darkModeToggle.textContent = isDark ? '☀️' : '🌙';
+        }
+
+        elements.darkModeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateDarkModeIcon(isDark);
+            // Update map tile layer if needed (some tile providers have dark versions)
+        });
+
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([40.4168, -3.7038], 14);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            map.on('click', (e) => {
+                elements.latInput.value = e.latlng.lat.toFixed(6);
+                elements.lonInput.value = e.latlng.lng.toFixed(6);
+                showToast('📍 Coordenadas capturadas del mapa', 'bg-primary/95');
+
+                const temp = L.circleMarker(e.latlng, { radius: 12, color: '#4F46E5', fillOpacity: 0.5 }).addTo(map);
+                setTimeout(() => temp.remove(), 1000);
+            });
+        }
+
+        async function loadWaypoints() {
+            try {
+                const response = await fetch(`${httpUrl}/api/waypoints/${groupName}`);
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                waypoints = data.waypoints || [];
+                elements.wpCount.textContent = waypoints.length;
+                renderList();
+                updateMarkers();
+            } catch (err) {
+                showToast('❌ Error de conexión con el servidor', 'bg-red-600');
+                elements.list.innerHTML = '<p class="text-center text-red-500 py-10 font-bold">Error de sincronización</p>';
+            }
+        }
+
+        function renderList() {
+            if (waypoints.length === 0) {
+                elements.list.innerHTML = `
+          <div class="text-center py-10 px-4">
+            <span class="text-5xl block mb-4">🏜️</span>
+            <p class="text-gray-500 font-medium">No hay puntos registrados en este grupo.</p>
+          </div>
+        `;
+                return;
+            }
+
+            elements.list.innerHTML = waypoints.map(wp => `
+        <div class="bg-white/40 dark:bg-gray-800/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl hover:bg-white dark:hover:bg-gray-800 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div class="flex justify-between items-center">
+            <div class="flex-1 min-w-0 pr-4">
+              <h3 class="font-bold text-gray-800 dark:text-white truncate">${wp.name}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${wp.description || '<i>Sin descripción</i>'}</p>
+              <div class="flex items-center gap-3 mt-3">
+                <span class="text-[10px] bg-indigo-100 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 px-2 py-1 rounded-lg font-mono tracking-tight cursor-pointer hover:bg-primary hover:text-white transition-colors" onclick="focusOn(${wp.latitude}, ${wp.longitude})">
+                  ${wp.latitude}, ${wp.longitude}
+                </span>
+                <span class="text-[10px] text-gray-400">${new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button onclick="editWP(${wp.id})" class="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl hover:scale-110 active:scale-95 transition-all shadow-sm" title="Editar">✏️</button>
+              <button onclick="deleteWP(${wp.id})" class="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:scale-110 active:scale-95 transition-all shadow-sm" title="Eliminar">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+        }
+
+        function updateMarkers() {
+            Object.values(markers).forEach(m => map.removeLayer(m));
+            markers = {};
+
+            const bounds = [];
+            waypoints.forEach(wp => {
+                const customIcon = L.divIcon({
+                    className: 'custom-wp-icon',
+                    html: '<div class="bg-primary w-4 h-4 rounded-full border-2 border-white shadow-lg shadow-primary/50"></div>',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+
+                const marker = L.marker([wp.latitude, wp.longitude], { icon: customIcon })
+                    .bindPopup(`
+            <div class="p-2">
+              <h4 class="font-bold text-lg">${wp.name}</h4>
+              <p class="text-sm text-gray-600">${wp.description || ''}</p>
+              <div class="mt-2 pt-2 border-t flex gap-4">
+                <span class="text-xs font-mono text-primary">${wp.latitude}, ${wp.longitude}</span>
+              </div>
+            </div>
+          `)
+                    .addTo(map);
+                markers[wp.id] = marker;
+                bounds.push([wp.latitude, wp.longitude]);
+            });
+
+            if (bounds.length > 0 && !isEditing) map.fitBounds(bounds, { padding: [80, 80] });
+        }
+
+        window.focusOn = (lat, lon) => {
+            map.setView([lat, lon], 17, { animate: true, duration: 1 });
+        };
+
+        elements.form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const saveBtn = elements.saveBtn;
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.5';
+
+            const wp = {
+                groupName,
+                name: elements.nameInput.value,
+                description: elements.descInput.value,
+                latitude: parseFloat(elements.latInput.value),
+                longitude: parseFloat(elements.lonInput.value),
+                createdBy: userId
+            };
+
+            const id = elements.idInput.value;
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${httpUrl}/api/waypoints/${id}` : `${httpUrl}/api/waypoints`;
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(wp)
+                });
+
+                if (!response.ok) throw new Error();
+
+                showToast(id ? '✅ Cambios guardados con éxito' : '🚀 Punto creado correctamente', 'bg-secondary/95');
+                resetForm();
+                loadWaypoints();
+            } catch (err) {
+                showToast('❌ Error crítico al guardar', 'bg-red-600');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.style.opacity = '1';
+            }
+        });
+
+        window.editWP = (id) => {
+            const wp = waypoints.find(w => w.id === id);
+            if (!wp) return;
+
+            isEditing = true;
+            elements.idInput.value = wp.id;
+            elements.nameInput.value = wp.name;
+            elements.descInput.value = wp.description || '';
+            elements.latInput.value = wp.latitude;
+            elements.lonInput.value = wp.longitude;
+
+            elements.formTitle.innerHTML = '<span class="text-blue-500">✏️</span> Editando Waypoint';
+            elements.saveBtnText.textContent = 'Actualizar Punto';
+            elements.cancelBtn.classList.remove('hidden');
+
+            map.setView([wp.latitude, wp.longitude], 17, { animate: true });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deleteWP = async (id) => {
+            if (!confirm('¿Estás seguro de que deseas eliminar este punto permanentemente?')) return;
+            try {
+                const response = await fetch(`${httpUrl}/api/waypoints/${id}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error();
+                showToast('🗑️ Punto eliminado satisfactoriamente', 'bg-gray-800/95');
+                loadWaypoints();
+                if (elements.idInput.value == id) resetForm();
+            } catch (err) {
+                showToast('❌ Error al intentar eliminar', 'bg-red-600');
+            }
+        };
+
+        elements.cancelBtn.addEventListener('click', resetForm);
+
+        function resetForm() {
+            isEditing = false;
+            elements.form.reset();
+            elements.idInput.value = '';
+            elements.formTitle.innerHTML = '<span class="text-secondary">✨</span> Crear Nuevo Waypoint';
+            elements.saveBtnText.textContent = 'Guardar Punto';
+            elements.cancelBtn.classList.add('hidden');
+        }
+
+        elements.currentPosBtn.addEventListener('click', () => {
+            if (!navigator.geolocation) return showToast('❌ Error: GPS no disponible', 'bg-red-600');
+
+            const btn = elements.currentPosBtn;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span class="animate-spin text-xl">⌛</span>';
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    elements.latInput.value = pos.coords.latitude.toFixed(6);
+                    elements.lonInput.value = pos.coords.longitude.toFixed(6);
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                    showToast('🛰️ Ubicación obtenida vía GPS', 'bg-blue-600/95');
+                    map.setView([pos.coords.latitude, pos.coords.longitude], 17, { animate: true });
+                },
+                () => {
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                    showToast('❌ Error: Señal GPS insuficiente', 'bg-red-600');
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        });
+
+        function showToast(msg, colorClass) {
+            elements.toastMsg.textContent = msg;
+            elements.toast.className = `fixed bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl shadow-2xl text-white font-bold flex items-center gap-3 glass-heavy border border-white/10 z-[9999] transition-all duration-500 scale-100 opacity-100 ${colorClass}`;
+            elements.toast.classList.remove('translate-y-24', 'opacity-0', 'scale-90');
+
+            setTimeout(() => {
+                elements.toast.classList.add('translate-y-24', 'opacity-0', 'scale-90');
+            }, 3000);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
