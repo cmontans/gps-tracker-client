@@ -1585,6 +1585,11 @@
       elements.avg10s.textContent = '0.0';
       elements.max500m.textContent = '0.0';
       elements.avg500m.textContent = '0.0';
+
+      // Disable download button
+      elements.downloadTrackButton.classList.add('opacity-50', 'cursor-not-allowed');
+      elements.downloadTrackButton.disabled = true;
+
       showSuccess(t('statsReset'));
       console.log('🔄 Estadísticas reseteadas');
     });
@@ -2370,6 +2375,11 @@
       elements.statusSection.style.display = 'block';
       elements.configSection.classList.add('hidden');
       elements.configSection.style.display = 'none';
+
+      // Reset visibility of elements inside status section
+      elements.stopButton.classList.remove('hidden');
+      elements.gpsInfo.classList.remove('hidden'); // Ensure GPS info is visible when tracking starts
+
       connectWebSocket();
 
       const options = {
@@ -2413,6 +2423,12 @@
             speed: speed,
             timestamp: Date.now()
           });
+
+          // Enable download button when we have data
+          if (sessionTrack.length >= 2) {
+            elements.downloadTrackButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            elements.downloadTrackButton.disabled = false;
+          }
 
           // Actualizar velocidad máxima (use raw speed before threshold for max tracking)
           if (rawSpeed > maxSpeed) {
@@ -2681,14 +2697,24 @@
       reconnectAttempts = 0;
       updateGpsStatus(false);
       updateConnectionStatus(false);
-      elements.speedDisplay.textContent = '0.0';
-      elements.gpsInfo.style.display = 'none';
 
-      // Cambiar visibilidad
+      // Hide live-only info but keep status section visible if there is data
+      elements.speedDisplay.textContent = '0.0';
+      elements.gpsInfo.classList.add('hidden');
+
+      // Show config to allow starting again
       elements.configSection.classList.remove('hidden');
       elements.configSection.style.display = 'block';
-      elements.statusSection.classList.add('hidden');
-      elements.statusSection.style.display = 'none';
+
+      // If we have track data, don't hide the entire status section so user can download/see final stats
+      if (sessionTrack.length < 2) {
+        elements.statusSection.classList.add('hidden');
+        elements.statusSection.style.display = 'none';
+      } else {
+        // Just hide the stop button since we already stopped
+        elements.stopButton.classList.add('hidden');
+        console.log('🏁 Track data available - Status section remains visible for download');
+      }
 
       // Restaurar botón iniciar a su estilo original
       elements.trackButton.textContent = t('startTracking');
