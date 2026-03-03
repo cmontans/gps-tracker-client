@@ -102,7 +102,7 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 URL del Servidor WebSocket
               </label>
-              <input id="server-url" type="text" value="wss://urban-ricca-cmontans-34613e13.koyeb.app/"
+              <input id="server-url" type="text" value="wss://urban-ricca-cmontans-34613e13.koyeb.app"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-colors"
                 placeholder="wss://tu-servidor.koyeb.app" />
             </div>
@@ -204,6 +204,18 @@
                 <div class="text-center">
                   <p class="text-xs text-gray-600 dark:text-gray-400">Average Max</p>
                   <p id="history-average-max" class="text-2xl font-bold text-green-600 dark:text-green-400">0.0</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">km/h</p>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4 mt-4 border-t border-indigo-100 dark:border-gray-500 pt-3">
+                <div class="text-center">
+                  <p class="text-xs text-gray-600 dark:text-gray-400">Max 10s (Local)</p>
+                  <p id="history-max-10s" class="text-xl font-bold text-purple-600 dark:text-purple-400">0.0</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400">km/h</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-xs text-gray-600 dark:text-gray-400">Max 500m (Local)</p>
+                  <p id="history-max-500m" class="text-xl font-bold text-indigo-600 dark:text-indigo-400">0.0</p>
                   <p class="text-xs text-gray-600 dark:text-gray-400">km/h</p>
                 </div>
               </div>
@@ -310,6 +322,41 @@
               </div>
               <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-200">0.0</div>
               <div class="text-xs sm:text-sm text-blue-600 dark:text-blue-300">km/h</div>
+            </div>
+          </div>
+
+          <!-- New Stats: 10s and 500m -->
+          <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-2">
+            <div
+              class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-3 sm:p-4 transition-colors">
+              <div id="avg-10s-label" class="text-xs text-purple-600 dark:text-purple-300 font-semibold mb-1">⏱️ PROM.
+                10s</div>
+              <div id="avg-10s" class="text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-200">0.0</div>
+              <div class="text-xs text-purple-600 dark:text-purple-300">km/h</div>
+            </div>
+            <div
+              class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-3 sm:p-4 transition-colors">
+              <div id="max-10s-label" class="text-xs text-purple-600 dark:text-purple-300 font-semibold mb-1">⏱️ MÁX.
+                10s</div>
+              <div id="max-10s" class="text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-200">0.0</div>
+              <div class="text-xs text-purple-600 dark:text-purple-300">km/h</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-2">
+            <div
+              class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 rounded-lg p-3 sm:p-4 transition-colors">
+              <div id="avg-500m-label" class="text-xs text-indigo-600 dark:text-indigo-300 font-semibold mb-1">📏 PROM.
+                500m</div>
+              <div id="avg-500m" class="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-200">0.0</div>
+              <div class="text-xs text-indigo-600 dark:text-indigo-300">km/h</div>
+            </div>
+            <div
+              class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 rounded-lg p-3 sm:p-4 transition-colors">
+              <div id="max-500m-label" class="text-xs text-indigo-600 dark:text-indigo-300 font-semibold mb-1">📏 MÁX.
+                500m</div>
+              <div id="max-500m" class="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-200">0.0</div>
+              <div class="text-xs text-indigo-600 dark:text-indigo-300">km/h</div>
             </div>
           </div>
 
@@ -538,6 +585,10 @@
         currentSpeed: 'Velocidad Actual',
         maxSession: '🏆 MÁXIMA SESIÓN',
         average: '📊 PROMEDIO',
+        avg500m: '📏 PROM. 500m',
+        avg10s: '⏱️ PROM. 10s',
+        max500m: '📏 MÁX. 500m',
+        max10s: '⏱️ MÁX. 10s',
         resetStats: '🔄 Resetear Estadísticas',
         groupHorn: '📢 Bocina Grupal',
         gpsAccuracy: 'Precisión GPS:',
@@ -647,6 +698,10 @@
         currentSpeed: 'Current Speed',
         maxSession: '🏆 SESSION MAX',
         average: '📊 AVERAGE',
+        avg500m: '📏 500m AVG',
+        avg10s: '⏱️ 10s AVG',
+        max500m: '📏 500m MAX',
+        max10s: '⏱️ 10s MAX',
         resetStats: '🔄 Reset Statistics',
         groupHorn: '📢 Group Horn',
         gpsAccuracy: 'GPS Accuracy:',
@@ -756,6 +811,10 @@
         currentSpeed: 'Vitesse Actuelle',
         maxSession: '🏆 MAX SESSION',
         average: '📊 MOYENNE',
+        avg500m: '📏 MOY. 500m',
+        avg10s: '⏱️ MOY. 10s',
+        max500m: '📏 MAX. 500m',
+        max10s: '⏱️ MAX. 10s',
         resetStats: '🔄 Réinitialiser les Statistiques',
         groupHorn: '📢 Klaxon de Groupe',
         gpsAccuracy: 'Précision GPS:',
@@ -865,6 +924,10 @@
         currentSpeed: 'Aktuelle Geschwindigkeit',
         maxSession: '🏆 SESSION MAX',
         average: '📊 DURCHSCHNITT',
+        avg500m: '📏 500m SCHNITT',
+        avg10s: '⏱️ 10s SCHNITT',
+        max500m: '📏 500m MAX',
+        max10s: '⏱️ 10s MAX',
         resetStats: '🔄 Statistiken Zurücksetzen',
         groupHorn: '📢 Gruppen-Hupe',
         gpsAccuracy: 'GPS-Genauigkeit:',
@@ -1003,6 +1066,10 @@
       document.getElementById('current-speed-label').textContent = t('currentSpeed');
       document.getElementById('max-session-label').textContent = t('maxSession');
       document.getElementById('average-label').textContent = t('average');
+      document.getElementById('avg-10s-label').textContent = t('avg10s');
+      document.getElementById('max-10s-label').textContent = t('max10s');
+      document.getElementById('avg-500m-label').textContent = t('avg500m');
+      document.getElementById('max-500m-label').textContent = t('max500m');
       document.getElementById('reset-stats-button').innerHTML = t('resetStats');
       document.getElementById('group-horn-button').innerHTML = t('groupHorn');
       document.getElementById('stop-button').innerHTML = t('stopTracking');
@@ -1168,7 +1235,7 @@
 
     let userName = localStorage.getItem('userName') || '';
     let groupName = localStorage.getItem('groupName') || '';
-    let serverUrl = localStorage.getItem('serverUrl') || 'wss://urban-ricca-cmontans-34613e13.koyeb.app/';
+    let serverUrl = localStorage.getItem('serverUrl') || 'wss://urban-ricca-cmontans-34613e13.koyeb.app';
     let voiceEnabled = localStorage.getItem('voiceEnabled') === 'true';
     let visualizerMode = localStorage.getItem('visualizerMode') === 'true';
     let minSpeedThreshold = parseFloat(localStorage.getItem('minSpeedThreshold')) || 22;
@@ -1188,6 +1255,15 @@
     let speedReadings = [];
     let rejectedReadingsCount = 0;
     let acceptedReadingsCount = 0;
+
+    // Persist session peaks
+    let max10s = parseFloat(localStorage.getItem('max10s')) || 0;
+    let max500m = parseFloat(localStorage.getItem('max500m')) || 0;
+
+    // Buffers for new metrics
+    let buffer10s = []; // {speed, timestamp}
+    let buffer500m = []; // {lat, lon, speed, timestamp}
+    let lastPoint = null;
 
     // GPS Configuration Constants (aligned with Android app)
     const GPS_CONFIG = {
@@ -1223,6 +1299,10 @@
       speedDisplay: document.getElementById('speed-display'),
       maxSpeed: document.getElementById('max-speed'),
       avgSpeed: document.getElementById('avg-speed'),
+      avg10s: document.getElementById('avg-10s'),
+      max10s: document.getElementById('max-10s'),
+      avg500m: document.getElementById('avg-500m'),
+      max500m: document.getElementById('max-500m'),
       errorBox: document.getElementById('error-box'),
       successBox: document.getElementById('success-box'),
       gpsInfo: document.getElementById('gps-info'),
@@ -1262,7 +1342,9 @@
       visualizerModeToggle: document.getElementById('visualizer-mode-toggle'),
       visualizerModeIndicator: document.getElementById('visualizer-mode-indicator'),
       visualizerModeText: document.getElementById('visualizer-mode-text'),
-      minSpeedInput: document.getElementById('min-speed-input')
+      minSpeedInput: document.getElementById('min-speed-input'),
+      historyMax10s: document.getElementById('history-max-10s'),
+      historyMax500m: document.getElementById('history-max-500m')
     };
 
     // Inicializar
@@ -1271,6 +1353,8 @@
     elements.groupName.value = groupName;
     elements.serverUrl.value = serverUrl;
     elements.languageSelect.value = currentLanguage;
+    elements.max10s.textContent = max10s.toFixed(1);
+    elements.max500m.textContent = max500m.toFixed(1);
 
     // Load auto-center preference (default: true)
     const autoCenterEnabled = localStorage.getItem('autoCenterMap') !== 'false';
@@ -1463,9 +1547,19 @@
     // Resetear estadísticas
     elements.resetStatsButton.addEventListener('click', () => {
       maxSpeed = 0;
+      max10s = 0;
+      max500m = 0;
       speedReadings = [];
+      buffer10s = [];
+      buffer500m = [];
+      localStorage.setItem('max10s', 0);
+      localStorage.setItem('max500m', 0);
       elements.maxSpeed.textContent = '0.0';
       elements.avgSpeed.textContent = '0.0';
+      elements.max10s.textContent = '0.0';
+      elements.avg10s.textContent = '0.0';
+      elements.max500m.textContent = '0.0';
+      elements.avg500m.textContent = '0.0';
       showSuccess(t('statsReset'));
       console.log('🔄 Estadísticas reseteadas');
     });
@@ -1621,6 +1715,18 @@
         Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
       const bearing = Math.atan2(y, x) * 180 / Math.PI;
       return (bearing + 360) % 360;
+    }
+
+    // Calcular distancia entre dos puntos en metros (Haversine)
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
     }
 
     // Crear icono de flecha para dirección con velocidad y nombre visible
@@ -2178,6 +2284,62 @@
           const avgSpeed = (speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length).toFixed(1);
           elements.avgSpeed.textContent = avgSpeed;
 
+          // --- 10s Average ---
+          const now = Date.now();
+          buffer10s.push({ speed, timestamp: now });
+          // Remove readings older than 10 seconds
+          buffer10s = buffer10s.filter(r => now - r.timestamp <= 10000);
+          if (buffer10s.length > 0) {
+            const currentAvg10s = buffer10s.reduce((sum, r) => sum + r.speed, 0) / buffer10s.length;
+            elements.avg10s.textContent = currentAvg10s.toFixed(1);
+            if (currentAvg10s > max10s) {
+              max10s = currentAvg10s;
+              elements.max10s.textContent = max10s.toFixed(1);
+              localStorage.setItem('max10s', max10s);
+            }
+          }
+
+          // --- 500m Average ---
+          buffer500m.push({ lat: position.coords.latitude, lon: position.coords.longitude, speed, timestamp: now });
+          if (buffer500m.length > 1) {
+            let totalDist = 0;
+            let startIndex = buffer500m.length - 1;
+
+            // Calculate distance backwards
+            for (let i = buffer500m.length - 1; i > 0; i--) {
+              totalDist += getDistance(
+                buffer500m[i - 1].lat, buffer500m[i - 1].lon,
+                buffer500m[i].lat, buffer500m[i].lon
+              );
+              startIndex = i - 1;
+              if (totalDist >= 500) break;
+            }
+
+            // Remove points no longer needed for a 500m calculation (leave a buffer for future movement)
+            if (totalDist > 1000 && startIndex > 0) {
+              buffer500m.splice(0, startIndex);
+              // reset startIndex since we spliced
+              startIndex = 0;
+            }
+
+            if (totalDist > 0) {
+              // Average speed in the current 500m window
+              const relevantPoints = buffer500m.slice(startIndex);
+              const currentAvg500m = relevantPoints.reduce((sum, r) => sum + r.speed, 0) / relevantPoints.length;
+
+              // Only display once we have at least partial movement, but maybe only valid if totalDist is close to 500?
+              // Let's show it as it builds up, but maybe indicate it's partial.
+              elements.avg500m.textContent = currentAvg500m.toFixed(1);
+
+              // Only update max500m if we have actually covered ~500m (or at least 450m to be safe)
+              if (totalDist >= 450 && currentAvg500m > max500m) {
+                max500m = currentAvg500m;
+                elements.max500m.textContent = max500m.toFixed(1);
+                localStorage.setItem('max500m', max500m);
+              }
+            }
+          }
+
           // Voice announcement
           announceSpeed(speed);
 
@@ -2288,6 +2450,10 @@
           elements.historyTotalRecords.textContent = stats.total_records || '0';
           elements.historyHighestSpeed.textContent = parseFloat(stats.highest_speed || 0).toFixed(1);
           elements.historyAverageMax.textContent = parseFloat(stats.average_max_speed || 0).toFixed(1);
+
+          // Update local session/all-time maxes as well
+          elements.historyMax10s.textContent = max10s.toFixed(1);
+          elements.historyMax500m.textContent = max500m.toFixed(1);
         }
 
         // Load history records
