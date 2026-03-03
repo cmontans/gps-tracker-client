@@ -1821,13 +1821,22 @@
 
         const fw = new window.FitWriter();
 
+        // Helper to convert to Garmin/FIT timestamp (seconds since 1989-12-31)
+        const toFitTime = (d) => {
+          const timestamp = d instanceof Date ? d.getTime() : Number(d);
+          return Math.floor((timestamp - 631065600000) / 1000);
+        };
+
+        // Helper to convert to semicircles
+        const toSemicircles = (deg) => Math.round(deg * (2147483648 / 180));
+
         // 1. FILE ID (Activity)
         fw.writeMessage('file_id', {
           type: 4, // activity
           manufacturer: 1, // garmin
           product: 0,
           serial_number: Math.floor(Math.random() * 1000000),
-          time_created: new Date(sessionTrack[0].timestamp)
+          time_created: toFitTime(sessionTrack[0].timestamp)
         });
 
         // 2. DEVICE INFO
@@ -1837,17 +1846,18 @@
           manufacturer: 1,
           product: 0,
           serial_number: 12345,
-          timestamp: new Date(sessionTrack[0].timestamp)
+          timestamp: toFitTime(sessionTrack[0].timestamp)
         });
 
         // 3. RECORDS
-        sessionTrack.forEach(p => {
+        sessionTrack.forEach((p, index) => {
           fw.writeMessage('record', {
-            timestamp: new Date(p.timestamp),
-            position_lat: p.lat,
-            position_long: p.lon,
-            enhanced_speed: (p.speed || 0) / 3.6 // km/h a m/s
-          });
+            timestamp: toFitTime(p.timestamp),
+            position_lat: toSemicircles(p.lat),
+            position_long: toSemicircles(p.lon),
+            speed: (p.speed || 0) / 3.6,
+            enhanced_speed: (p.speed || 0) / 3.6
+          }, null, index === sessionTrack.length - 1);
         });
 
         // 4. LAP (Summary for the session)
@@ -1855,8 +1865,8 @@
         const avgSpeedMs = (sessionTrack.reduce((sum, p) => sum + (p.speed || 0), 0) / sessionTrack.length) / 3.6;
 
         fw.writeMessage('lap', {
-          timestamp: new Date(sessionTrack[sessionTrack.length - 1].timestamp),
-          start_time: new Date(sessionTrack[0].timestamp),
+          timestamp: toFitTime(sessionTrack[sessionTrack.length - 1].timestamp),
+          start_time: toFitTime(sessionTrack[0].timestamp),
           total_elapsed_time: totalTime,
           total_timer_time: totalTime,
           avg_speed: avgSpeedMs,
@@ -1865,8 +1875,8 @@
 
         // 5. SESSION
         fw.writeMessage('session', {
-          timestamp: new Date(sessionTrack[sessionTrack.length - 1].timestamp),
-          start_time: new Date(sessionTrack[0].timestamp),
+          timestamp: toFitTime(sessionTrack[sessionTrack.length - 1].timestamp),
+          start_time: toFitTime(sessionTrack[0].timestamp),
           total_elapsed_time: totalTime,
           total_timer_time: totalTime,
           avg_speed: avgSpeedMs,
@@ -1879,12 +1889,12 @@
 
         // 6. ACTIVITY
         fw.writeMessage('activity', {
-          timestamp: new Date(sessionTrack[sessionTrack.length - 1].timestamp),
+          timestamp: toFitTime(sessionTrack[sessionTrack.length - 1].timestamp),
           total_timer_time: totalTime,
           num_sessions: 1,
-          type: 0, // activity
-          event: 26, // activity
-          event_type: 1 // start
+          type: 0,
+          event: 26,
+          event_type: 1
         });
 
         // 7. FINISH
