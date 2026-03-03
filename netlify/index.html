@@ -672,7 +672,21 @@
         timeout: '⏱️ Tiempo agotado. Verifica que el GPS esté activado.',
         gpsError: '❌ Error GPS: ',
         iosWakeLockError: 'iOS: Configura "Bloqueo automático: Nunca" en Ajustes',
-        iosScreenError: 'En iOS: Ve a Ajustes → Pantalla → Bloqueo automático → "Nunca"'
+        iosScreenError: 'En iOS: Ve a Ajustes → Pantalla → Bloqueo automático → "Nunca"',
+
+        // History Modal & Footer
+        speedHistoryTitle: '📊 Historial de Velocidad',
+        historyStatsTitle: 'Estadísticas',
+        historyTotalRecords: 'Total Registros',
+        historyHighestSpeed: 'Velocidad Máxima',
+        historyAverageMax: 'Promedio de Máximas',
+        historyMax10sLabel: 'Máx 10s (Local)',
+        historyMax500mLabel: 'Máx 500m (Local)',
+        historyRecordsTitle: 'Registros de Historial',
+        historyLoading: 'Cargando...',
+        historyEmpty: 'No hay registros de historial aún',
+        historyGroup: 'Grupo',
+        collaborators: 'Colaboradores'
       },
       en: {
         // Header
@@ -787,7 +801,21 @@
         timeout: '⏱️ Timeout. Verify that GPS is activated.',
         gpsError: '❌ GPS Error: ',
         iosWakeLockError: 'iOS: Configure "Auto-Lock: Never" in Settings',
-        iosScreenError: 'On iOS: Go to Settings → Display → Auto-Lock → "Never"'
+        iosScreenError: 'On iOS: Go to Settings → Display → Auto-Lock → "Never"',
+
+        // History Modal & Footer
+        speedHistoryTitle: '📊 Speed History',
+        historyStatsTitle: 'Statistics',
+        historyTotalRecords: 'Total Records',
+        historyHighestSpeed: 'Highest Speed',
+        historyAverageMax: 'Average Max',
+        historyMax10sLabel: 'Max 10s (Local)',
+        historyMax500mLabel: 'Max 500m (Local)',
+        historyRecordsTitle: 'History Records',
+        historyLoading: 'Loading...',
+        historyEmpty: 'No speed history records yet',
+        historyGroup: 'Group',
+        collaborators: 'Collaborators'
       },
       fr: {
         // Header
@@ -901,8 +929,22 @@
         positionUnavailable: '⚠️ GPS non disponible. Sortez à l\'extérieur.',
         timeout: '⏱️ Délai expiré. Vérifiez que le GPS est activé.',
         gpsError: '❌ Erreur GPS: ',
-        iosWakeLockError: 'iOS: Configurez "Verrouillage auto: Jamais" dans Réglages',
-        iosScreenError: 'Sur iOS: Allez dans Réglages → Affichage → Verrouillage auto → "Jamais"'
+        iosWakeLockError: 'iOS: Configure step "Verrouillage auto: Jamais" dans Réglages',
+        iosScreenError: 'Sur iOS: Allez dans Réglages → Affichage → Verrouillage auto → "Jamais"',
+
+        // History Modal & Footer
+        speedHistoryTitle: '📊 Historique de Vitesse',
+        historyStatsTitle: 'Statistiques',
+        historyTotalRecords: 'Total des Enregistrements',
+        historyHighestSpeed: 'Vitesse la Plus Élevée',
+        historyAverageMax: 'Moyenne des Max',
+        historyMax10sLabel: 'Max 10s (Local)',
+        historyMax500mLabel: 'Max 500m (Local)',
+        historyRecordsTitle: 'Enregistrements d\'Historique',
+        historyLoading: 'Chargement...',
+        historyEmpty: 'Aucun enregistrement d\'historique pour le moment',
+        historyGroup: 'Groupe',
+        collaborators: 'Collaborateurs'
       },
       de: {
         // Header
@@ -1017,7 +1059,21 @@
         timeout: '⏱️ Zeitüberschreitung. Überprüfen Sie, ob GPS aktiviert ist.',
         gpsError: '❌ GPS-Fehler: ',
         iosWakeLockError: 'iOS: Konfigurieren Sie "Automatische Sperre: Nie" in Einstellungen',
-        iosScreenError: 'Auf iOS: Gehen Sie zu Einstellungen → Anzeige → Automatische Sperre → "Nie"'
+        iosScreenError: 'Auf iOS: Gehen Sie zu Einstellungen → Anzeige → Automatische Sperre → "Nie"',
+
+        // History Modal & Footer
+        speedHistoryTitle: '📊 Geschwindigkeitsverlauf',
+        historyStatsTitle: 'Statistiken',
+        historyTotalRecords: 'Gesamtanzahl Datensätze',
+        historyHighestSpeed: 'Höchstgeschwindigkeit',
+        historyAverageMax: 'Durchschnittlicher Höchstwert',
+        historyMax10sLabel: 'Max 10s (Lokal)',
+        historyMax500mLabel: 'Max 500m (Lokal)',
+        historyRecordsTitle: 'Datensätze',
+        historyLoading: 'Laden...',
+        historyEmpty: 'Noch keine Datensätze vorhanden',
+        historyGroup: 'Gruppe',
+        collaborators: 'Mitarbeiter'
       }
     };
 
@@ -1152,6 +1208,37 @@
         instructionsList[4].textContent = t('step5');
         instructionsList[5].textContent = t('step6');
       }
+
+      // History modal
+      const historyTitle = document.querySelector('#history-modal h2');
+      if (historyTitle) historyTitle.textContent = t('speedHistoryTitle');
+
+      const historyStatTitle = document.querySelector('#history-modal h3');
+      if (historyStatTitle) historyStatTitle.textContent = t('historyStatsTitle');
+
+      const historyLabels = document.querySelectorAll('#history-modal p.text-xs.text-gray-600');
+      if (historyLabels.length >= 5) {
+        historyLabels[0].textContent = t('historyTotalRecords');
+        historyLabels[1].textContent = t('historyHighestSpeed');
+        historyLabels[2].textContent = t('historyAverageMax');
+        historyLabels[3].textContent = t('historyMax10sLabel');
+        historyLabels[4].textContent = t('historyMax500mLabel');
+      }
+
+      const historyRecordsTitle = document.querySelectorAll('#history-modal h3')[1];
+      if (historyRecordsTitle) historyRecordsTitle.textContent = t('historyRecordsTitle');
+
+      const historyLoading = document.getElementById('history-loading');
+      if (historyLoading) historyLoading.textContent = t('historyLoading');
+
+      const historyEmpty = document.getElementById('history-empty');
+      if (historyEmpty) historyEmpty.textContent = t('historyEmpty');
+
+      // Group labels in history records are dynamic, updated in loadSpeedHistory
+
+      // Footer
+      const collaboratorsLabel = document.querySelector('footer p.text-xs');
+      if (collaboratorsLabel) collaboratorsLabel.textContent = t('collaborators');
 
       // Group system
       const groupTitle = document.querySelector('.bg-purple-50 p.font-semibold');
@@ -2657,7 +2744,7 @@
                   ${record.max_speed_10s ? `<div class="text-[10px] bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">10s: ${parseFloat(record.max_speed_10s).toFixed(1)}</div>` : ''}
                   ${record.max_speed_500m ? `<div class="text-[10px] bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">500m: ${parseFloat(record.max_speed_500m).toFixed(1)}</div>` : ''}
                 </div>
-                ${record.group_name && record.group_name !== 'default' ? `<div class="text-[10px] text-gray-500 dark:text-gray-500 mt-1">Group: ${record.group_name}</div>` : ''}
+                ${record.group_name && record.group_name !== 'default' ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">${t('historyGroup')}: ${record.group_name}</div>` : ''}
               `;
               elements.historyRecordsList.appendChild(recordElement);
             });
