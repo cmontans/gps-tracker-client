@@ -1,6 +1,7 @@
 package com.tracker.gps.service
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -74,7 +75,7 @@ class LocationTrackingService : Service() {
         fun onUsersUpdate(users: List<UserData>)
         fun onConnectionStatusChanged(connected: Boolean)
         fun onGpsStatusChanged(active: Boolean)
-        fun onGroupHorn()
+        fun onGroupHorn(senderId: String, senderName: String)
         fun onError(message: String)
     }
 
@@ -307,8 +308,8 @@ class LocationTrackingService : Service() {
                     serviceListener?.onUsersUpdate(users)
                 }
 
-                override fun onGroupHorn() {
-                    serviceListener?.onGroupHorn()
+                override fun onGroupHorn(senderId: String, senderName: String) {
+                    serviceListener?.onGroupHorn(senderId, senderName)
                 }
 
                 override fun onError(error: String) {
@@ -343,7 +344,7 @@ class LocationTrackingService : Service() {
     fun getSessionTrack(): List<Pair<Location, Long>> = sessionTrack
 
     fun sendGroupHorn() {
-        webSocketClient?.sendGroupHorn(userId)
+        webSocketClient?.sendGroupHorn(userId, userName, groupName)
     }
 
     fun clearTracks() {
@@ -368,13 +369,20 @@ class LocationTrackingService : Service() {
     private fun checkAndAnnounceSpeed(speed: Double) {
         val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
         val voiceEnabled = prefs.getBoolean(getString(R.string.pref_voice_enabled_key), false)
-        val minSpeed = prefs.getFloat(getString(R.string.pref_voice_min_speed_key), 22f).toDouble()
-
         if (!voiceEnabled) return
-        if (speed < minSpeed) return
+
+        val speedUnit = prefs.getString(getString(R.string.pref_speed_unit_key), "kmh")
+        val convertedSpeed = when (speedUnit) {
+            "mph" -> speed * Constants.KMH_TO_MPH
+            "knots" -> speed * Constants.KMH_TO_KNOTS
+            else -> speed
+        }
+
+        val minSpeed = prefs.getFloat(getString(R.string.pref_voice_min_speed_key), 22f).toDouble()
+        if (convertedSpeed < minSpeed) return
 
         val currentTime = System.currentTimeMillis()
-        val speedInt = speed.toInt()
+        val speedInt = convertedSpeed.toInt()
 
         // Only announce if speed changed by at least 1 km/h and cooldown period passed
         if (speedInt != lastAnnouncedSpeed &&
@@ -392,7 +400,7 @@ class LocationTrackingService : Service() {
             }
             val announcement = speed.toString()
             tts.speak(announcement, TextToSpeech.QUEUE_FLUSH, null, null)
-            Log.d(TAG, "Announcing speed: $speed km/h")
+            Log.d(TAG, "Announcing speed: $speed")
         }
     }
 
@@ -416,10 +424,23 @@ class LocationTrackingService : Service() {
         }
     }
 
-    private fun createNotification(speed: Double) =
-        NotificationCompat.Builder(this, CHANNEL_ID)
+    private fun createNotification(speedInKmh: Double): Notification {
+        val prefs = getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
+        val speedUnit = prefs.getString(getString(R.string.pref_speed_unit_key), "kmh")
+        val convertedSpeed = when (speedUnit) {
+            "mph" -> speedInKmh * Constants.KMH_TO_MPH
+            "knots" -> speedInKmh * Constants.KMH_TO_KNOTS
+            else -> speedInKmh
+        }
+        val unitLabel = when (speedUnit) {
+            "mph" -> "mph"
+            "knots" -> "knots"
+            else -> "km/h"
+        }
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.tracking_active))
-            .setContentText(getString(R.string.tracking_notification_text, speed))
+            .setContentText(String.format("Velocidad: %.1f %s", convertedSpeed, unitLabel))
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
             .setContentIntent(
@@ -431,6 +452,7 @@ class LocationTrackingService : Service() {
                 )
             )
             .build()
+    }
 
     companion object {
         private const val TAG = "LocationTrackingService"

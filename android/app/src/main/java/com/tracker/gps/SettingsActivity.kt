@@ -15,6 +15,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var switchVoiceEnabled: SwitchMaterial
     private lateinit var switchVisualizerMode: SwitchMaterial
     private lateinit var etMinSpeed: TextInputEditText
+    private lateinit var spinnerSpeedUnit: android.widget.AutoCompleteTextView
     private lateinit var btnSave: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +31,10 @@ class SettingsActivity : AppCompatActivity() {
         switchVoiceEnabled = findViewById(R.id.switchVoiceEnabled)
         switchVisualizerMode = findViewById(R.id.switchVisualizerMode)
         etMinSpeed = findViewById(R.id.etMinSpeed)
+        spinnerSpeedUnit = findViewById(R.id.spinnerSpeedUnit)
         btnSave = findViewById(R.id.btnSave)
 
+        setupSpeedUnitSpinner()
         loadSettings()
 
         btnSave.setOnClickListener {
@@ -58,6 +61,14 @@ class SettingsActivity : AppCompatActivity() {
         switchVoiceEnabled.isChecked = voiceEnabled
         switchVisualizerMode.isChecked = visualizerMode
         etMinSpeed.setText(minSpeed.toString())
+
+        val speedUnit = prefs.getString(getString(R.string.pref_speed_unit_key), "kmh")
+        val unitLabel = when(speedUnit) {
+            "mph" -> getString(R.string.unit_mph)
+            "knots" -> getString(R.string.unit_knots)
+            else -> getString(R.string.unit_kmh)
+        }
+        spinnerSpeedUnit.setText(unitLabel, false)
     }
 
     private fun saveSettings() {
@@ -69,8 +80,26 @@ class SettingsActivity : AppCompatActivity() {
             putBoolean(getString(R.string.pref_visualizer_mode_key), switchVisualizerMode.isChecked)
             val minSpeed = etMinSpeed.text.toString().toFloatOrNull() ?: 22f
             putFloat(getString(R.string.pref_voice_min_speed_key), minSpeed)
+
+            val unitText = spinnerSpeedUnit.text.toString()
+            val unitValue = when(unitText) {
+                getString(R.string.unit_mph) -> "mph"
+                getString(R.string.unit_knots) -> "knots"
+                else -> "kmh"
+            }
+            putString(getString(R.string.pref_speed_unit_key), unitValue)
             apply()
         }
+    }
+
+    private fun setupSpeedUnitSpinner() {
+        val units = arrayOf(
+            getString(R.string.unit_kmh),
+            getString(R.string.unit_mph),
+            getString(R.string.unit_knots)
+        )
+        val adapter = android.widget.ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, units)
+        spinnerSpeedUnit.setAdapter(adapter)
     }
 
     override fun onSupportNavigateUp(): Boolean {

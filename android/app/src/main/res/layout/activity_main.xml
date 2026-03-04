@@ -192,6 +192,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvUnitCurrentSpeed"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/kmh"
@@ -220,6 +221,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvUnitMaxSpeed"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/kmh"
@@ -248,6 +250,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvUnitAvgSpeed"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/kmh"
@@ -283,6 +286,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvUnitAvg10s"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/kmh"
@@ -311,6 +315,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvUnitMax10s"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/kmh"
@@ -339,6 +344,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvUnitAvg500m"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/kmh"
@@ -367,6 +373,7 @@
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvUnitMax500m"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/kmh"

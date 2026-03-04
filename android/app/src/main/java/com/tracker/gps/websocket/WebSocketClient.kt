@@ -25,7 +25,7 @@ class GPSWebSocketClient(
         fun onConnected()
         fun onDisconnected()
         fun onUsersUpdate(users: List<UserData>)
-        fun onGroupHorn()
+        fun onGroupHorn(senderId: String, senderName: String)
         fun onError(error: String)
     }
 
@@ -48,7 +48,9 @@ class GPSWebSocketClient(
                         listener.onUsersUpdate(usersMessage.users)
                     }
                     "group-horn" -> {
-                        listener.onGroupHorn()
+                        val senderId = jsonObject.get("userId")?.asString ?: ""
+                        val senderName = jsonObject.get("userName")?.asString ?: "Usuario"
+                        listener.onGroupHorn(senderId, senderName)
                     }
                     "ping" -> {
                         sendPong()
@@ -111,8 +113,12 @@ class GPSWebSocketClient(
         send(gson.toJson(message))
     }
 
-    fun sendGroupHorn(userId: String) {
-        val message = WebSocketMessage.GroupHorn(userId = userId)
+    fun sendGroupHorn(userId: String, userName: String, groupName: String) {
+        val message = WebSocketMessage.GroupHorn(
+            userId = userId,
+            userName = userName,
+            groupName = groupName
+        )
         send(gson.toJson(message))
         Log.d(TAG, "Sent group horn")
     }

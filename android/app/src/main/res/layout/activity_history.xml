@@ -92,6 +92,7 @@
                         android:textColor="#F44336" />
 
                     <TextView
+                        android:id="@+id/tvUnitHighestSpeed"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/kmh"
@@ -122,6 +123,7 @@
                         android:textColor="#4CAF50" />
 
                     <TextView
+                        android:id="@+id/tvUnitAverageMaxSpeed"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/kmh"

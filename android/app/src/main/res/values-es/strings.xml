@@ -64,4 +64,12 @@
     <string name="pref_dark_mode_key">dark_mode</string>
     <string name="pref_auto_center_key">auto_center</string>
     <string name="auto_center_map">Centrar mapa automáticamente en mi ubicación</string>
+    <string name="speed_unit">Unidad de Velocidad</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_mph">mph</string>
+    <string name="unit_knots">knots</string>
+    <string name="voice_announcements">Anuncios de Voz</string>
+    <string name="min_speed_threshold">Velocidad Mínima para Anunciar</string>
+    <string name="visualizer_mode">Modo Visualizador (solo ver, no publicar)</string>
+    <string name="visualizer_mode_active">👁️ Modo Visualizador Activo</string>
 </resources>

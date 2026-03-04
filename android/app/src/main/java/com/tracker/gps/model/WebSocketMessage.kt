@@ -25,7 +25,9 @@ sealed class WebSocketMessage {
 
     data class GroupHorn(
         val type: String = "group-horn",
-        val userId: String
+        val userId: String,
+        val userName: String,
+        val groupName: String
     ) : WebSocketMessage()
 
     data class Ping(

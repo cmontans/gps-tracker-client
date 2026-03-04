@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -87,6 +88,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     // State
     private var isTracking = false
     private var userId: String = ""
+    private var speedUnit: String = "kmh"
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -97,13 +99,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             trackingService?.serviceListener = object : LocationTrackingService.ServiceListener {
                 override fun onSpeedUpdate(current: Double, max: Double, avg: Double, avg10s: Double, max10s: Double, avg500m: Double, max500m: Double) {
                     runOnUiThread {
-                        tvCurrentSpeed.text = String.format("%.1f", current)
-                        tvMaxSpeed.text = String.format("%.1f", max)
-                        tvAvgSpeed.text = String.format("%.1f", avg)
-                        tvAvg10s.text = String.format("%.1f", avg10s)
-                        tvMax10s.text = String.format("%.1f", max10s)
-                        tvAvg500m.text = String.format("%.1f", avg500m)
-                        tvMax500m.text = String.format("%.1f", max500m)
+                        tvCurrentSpeed.text = String.format("%.1f", convertSpeed(current))
+                        tvMaxSpeed.text = String.format("%.1f", convertSpeed(max))
+                        tvAvgSpeed.text = String.format("%.1f", convertSpeed(avg))
+                        tvAvg10s.text = String.format("%.1f", convertSpeed(avg10s))
+                        tvMax10s.text = String.format("%.1f", convertSpeed(max10s))
+                        tvAvg500m.text = String.format("%.1f", convertSpeed(avg500m))
+                        tvMax500m.text = String.format("%.1f", convertSpeed(max500m))
                         
                         // Enable download button if we have points
                         val track = trackingService?.getSessionTrack()
@@ -136,9 +138,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                 }
 
-                override fun onGroupHorn() {
+                override fun onGroupHorn(senderId: String, senderName: String) {
                     runOnUiThread {
-                        playHornSound()
+                        if (senderId != userId) {
+                            playHornSound()
+                            Toast.makeText(this@MainActivity, "📢 Horn from $senderName!", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
 
@@ -212,6 +217,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         initSound()
         loadPreferences()
         updateVisualizerModeIndicator()
+        updateSpeedUnitLabels()
         setupClickListeners()
     }
 
@@ -276,6 +282,36 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             prefs.edit().putString(getString(R.string.pref_user_id_key), newId).apply()
             newId
         }
+
+        speedUnit = prefs.getString(getString(R.string.pref_speed_unit_key), "kmh") ?: "kmh"
+        usersAdapter.setSpeedUnit(speedUnit)
+    }
+
+    private fun convertSpeed(speedInKmh: Double): Double {
+        return when (speedUnit) {
+            "mph" -> speedInKmh * com.tracker.gps.shared.util.Constants.KMH_TO_MPH
+            "knots" -> speedInKmh * com.tracker.gps.shared.util.Constants.KMH_TO_KNOTS
+            else -> speedInKmh
+        }
+    }
+
+    private fun getUnitLabel(): String {
+        return when (speedUnit) {
+            "mph" -> "mph"
+            "knots" -> "knots"
+            else -> "km/h"
+        }
+    }
+
+    private fun updateSpeedUnitLabels() {
+        val label = getUnitLabel()
+        findViewById<TextView>(R.id.tvUnitCurrentSpeed)?.text = label
+        findViewById<TextView>(R.id.tvUnitMaxSpeed)?.text = label
+        findViewById<TextView>(R.id.tvUnitAvgSpeed)?.text = label
+        findViewById<TextView>(R.id.tvUnitAvg10s)?.text = label
+        findViewById<TextView>(R.id.tvUnitMax10s)?.text = label
+        findViewById<TextView>(R.id.tvUnitAvg500m)?.text = label
+        findViewById<TextView>(R.id.tvUnitMax500m)?.text = label
     }
 
     private fun updateVisualizerModeIndicator() {
@@ -331,6 +367,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         btnGroupHorn.setOnClickListener {
+            playHornSound() // Play locally for immediate feedback
             trackingService?.sendGroupHorn()
         }
 
@@ -497,9 +534,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun playHornSound() {
-        // Play a system notification sound or vibrate
-        Toast.makeText(this, "🔔 Group Horn!", Toast.LENGTH_SHORT).show()
-        // In production, load and play actual horn sound
+        try {
+            val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 100)
+            toneG.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 500)
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error playing tone", e)
+            Toast.makeText(this, "🔔 Group Horn!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // Map Methods
@@ -545,13 +586,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 val marker = userMarkers[user.userId]
                 if (marker != null) {
                     marker.position = position
-                    marker.title = "${user.userName} - ${String.format("%.1f", user.speed)} km/h"
+                    marker.title = "${user.userName} - ${String.format("%.1f", convertSpeed(user.speed))} ${getUnitLabel()}"
                     marker.rotation = user.bearing
                 } else {
                     val newMarker = map.addMarker(
                         MarkerOptions()
                             .position(position)
-                            .title("${user.userName} - ${String.format("%.1f", user.speed)} km/h")
+                            .title("${user.userName} - ${String.format("%.1f", convertSpeed(user.speed))} ${getUnitLabel()}")
                             .rotation(user.bearing)
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
                     )
@@ -589,7 +630,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onResume() {
         super.onResume()
+        loadPreferences()
         updateVisualizerModeIndicator()
+        updateSpeedUnitLabels()
     }
 
     override fun onDestroy() {

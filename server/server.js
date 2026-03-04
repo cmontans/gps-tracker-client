@@ -88,7 +88,7 @@ wss.on('connection', (ws, req) => {
 
       switch (data.type) {
         case 'register':
-          const groupName = data.groupName || 'default';
+          const groupName = (data.groupName || 'default').toLowerCase();
           ws.userId = data.userId;
           ws.userName = data.userName || 'Usuario';
           ws.groupName = groupName;
@@ -106,7 +106,7 @@ wss.on('connection', (ws, req) => {
 
         case 'join':
           // Modo visualizador - solo escuchar, no registrar como usuario
-          const viewerGroup = data.groupName || 'default';
+          const viewerGroup = (data.groupName || 'default').toLowerCase();
           ws.groupName = viewerGroup;
           ws.viewerMode = true;
 
@@ -117,7 +117,7 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'speed':
-          const group = data.groupName || 'default';
+          const group = (data.groupName || 'default').toLowerCase();
 
           // Asegurar que el grupo existe
           if (!groups.has(group)) {
@@ -154,7 +154,7 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'group-horn':
-          const hornGroup = data.groupName || 'default';
+          const hornGroup = (data.groupName || 'default').toLowerCase();
           const hornUserId = data.userId;
           const hornUserName = data.userName || 'Usuario';
           const now = Date.now();

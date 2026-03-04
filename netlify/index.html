@@ -159,8 +159,19 @@
               </label>
             </div>
             <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" id="speed-unit-label">
+                Unidad de velocidad
+              </label>
+              <select id="speed-unit-select"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-colors">
+                <option value="kmh">km/h</option>
+                <option value="mph">mph</option>
+                <option value="knots">knots</option>
+              </select>
+            </div>
+            <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" id="min-speed-label">
-                Velocidad mínima para anunciar (km/h)
+                Velocidad mínima para anunciar
               </label>
               <input id="min-speed-input" type="number" value="22" min="0" max="200"
                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-colors"
@@ -203,24 +214,24 @@
                 <div class="text-center">
                   <p class="text-xs text-gray-600 dark:text-gray-400">Highest Speed</p>
                   <p id="history-highest-speed" class="text-2xl font-bold text-red-600 dark:text-red-400">0.0</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">km/h</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 speed-unit-label">km/h</p>
                 </div>
                 <div class="text-center">
                   <p class="text-xs text-gray-600 dark:text-gray-400">Average Max</p>
                   <p id="history-average-max" class="text-2xl font-bold text-green-600 dark:text-green-400">0.0</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">km/h</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 speed-unit-label">km/h</p>
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-4 mt-4 border-t border-indigo-100 dark:border-gray-500 pt-3">
                 <div class="text-center">
                   <p class="text-xs text-gray-600 dark:text-gray-400">Max 10s (Local)</p>
                   <p id="history-max-10s" class="text-xl font-bold text-purple-600 dark:text-purple-400">0.0</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">km/h</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 speed-unit-label">km/h</p>
                 </div>
                 <div class="text-center">
                   <p class="text-xs text-gray-600 dark:text-gray-400">Max 500m (Local)</p>
                   <p id="history-max-500m" class="text-xl font-bold text-indigo-600 dark:text-indigo-400">0.0</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400">km/h</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 speed-unit-label">km/h</p>
                 </div>
               </div>
             </div>
@@ -309,23 +320,26 @@
             <div id="current-speed-label" class="text-sm text-gray-600 dark:text-gray-400 mb-1">Velocidad Actual</div>
             <div id="speed-display" class="text-5xl sm:text-7xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">0.0
             </div>
-            <div class="text-xl sm:text-2xl text-gray-600 dark:text-gray-400">km/h</div>
+            <div id="unit-speed-display" class="text-xl sm:text-2xl text-gray-600 dark:text-gray-400 speed-unit-label">
+              km/h</div>
           </div>
 
           <div class="grid grid-cols-2 gap-2 sm:gap-4 mt-6">
-            <div
-              class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-3 sm:p-4 transition-colors">
-              <div id="max-session-label" class="text-xs text-green-600 dark:text-green-300 font-semibold mb-1">🏆
-                MÁXIMA SESIÓN</div>
-              <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-200">0.0</div>
-              <div class="text-xs sm:text-sm text-green-600 dark:text-green-300">km/h</div>
-            </div>
             <div
               class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-3 sm:p-4 transition-colors">
               <div id="average-label" class="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1">📊 PROMEDIO
               </div>
               <div id="avg-speed" class="text-2xl sm:text-3xl font-bold text-blue-700 dark:text-blue-200">0.0</div>
-              <div class="text-xs sm:text-sm text-blue-600 dark:text-blue-300">km/h</div>
+              <div id="unit-avg-speed" class="text-xs sm:text-sm text-blue-600 dark:text-blue-300 speed-unit-label">km/h
+              </div>
+            </div>
+            <div
+              class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-3 sm:p-4 transition-colors">
+              <div id="max-session-label" class="text-xs text-green-600 dark:text-green-300 font-semibold mb-1">🏆
+                MÁXIMA SESIÓN</div>
+              <div id="max-speed" class="text-2xl sm:text-3xl font-bold text-green-700 dark:text-green-200">0.0</div>
+              <div id="unit-max-speed" class="text-xs sm:text-sm text-green-600 dark:text-green-300 speed-unit-label">
+                km/h</div>
             </div>
           </div>
 
@@ -336,14 +350,15 @@
               <div id="avg-10s-label" class="text-xs text-purple-600 dark:text-purple-300 font-semibold mb-1">⏱️ PROM.
                 10s</div>
               <div id="avg-10s" class="text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-200">0.0</div>
-              <div class="text-xs text-purple-600 dark:text-purple-300">km/h</div>
+              <div id="unit-avg-10s" class="text-xs text-purple-600 dark:text-purple-300 speed-unit-label">km/h</div>
             </div>
             <div
               class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-3 sm:p-4 transition-colors">
               <div id="max-10s-label" class="text-xs text-purple-600 dark:text-purple-300 font-semibold mb-1">⏱️ MÁX.
                 10s</div>
               <div id="max-10s" class="text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-200">0.0</div>
-              <div class="text-xs text-purple-600 dark:text-purple-300">km/h</div>
+              <div id="unit-session-max-10s" class="text-xs text-purple-600 dark:text-purple-300 speed-unit-label">km/h
+              </div>
             </div>
           </div>
 
@@ -353,14 +368,15 @@
               <div id="avg-500m-label" class="text-xs text-indigo-600 dark:text-indigo-300 font-semibold mb-1">📏 PROM.
                 500m</div>
               <div id="avg-500m" class="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-200">0.0</div>
-              <div class="text-xs text-indigo-600 dark:text-indigo-300">km/h</div>
+              <div id="unit-avg-500m" class="text-xs text-indigo-600 dark:text-indigo-300 speed-unit-label">km/h</div>
             </div>
             <div
               class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 rounded-lg p-3 sm:p-4 transition-colors">
               <div id="max-500m-label" class="text-xs text-indigo-600 dark:text-indigo-300 font-semibold mb-1">📏 MÁX.
                 500m</div>
               <div id="max-500m" class="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-200">0.0</div>
-              <div class="text-xs text-indigo-600 dark:text-indigo-300">km/h</div>
+              <div id="unit-session-max-500m" class="text-xs text-indigo-600 dark:text-indigo-300 speed-unit-label">km/h
+              </div>
             </div>
           </div>
 
@@ -1113,6 +1129,24 @@
       document.getElementById('voice-enabled-label').textContent = t('voiceEnabled');
       document.getElementById('visualizer-mode-label').textContent = t('visualizerMode');
       document.getElementById('min-speed-label').textContent = t('minSpeedLabel');
+      document.getElementById('speed-unit-label').textContent = t('speedUnit');
+
+      // Update all speed unit labels
+      const unitText = speedUnit === 'kmh' ? 'km/h' : speedUnit;
+      document.querySelectorAll('.speed-unit-label').forEach(el => {
+        el.textContent = unitText;
+      });
+
+      // Explicitly update dashboard unit labels by ID for maximum reliability
+      const dashboardUnits = [
+        'unit-speed-display', 'unit-max-speed', 'unit-avg-speed',
+        'unit-avg-10s', 'unit-session-max-10s',
+        'unit-avg-500m', 'unit-session-max-500m'
+      ];
+      dashboardUnits.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = unitText;
+      });
 
       // Config section
       document.getElementById('your-name-label').textContent = t('yourName');
@@ -1348,6 +1382,8 @@
     let serverUrl = localStorage.getItem('serverUrl') || 'wss://urban-ricca-cmontans-34613e13.koyeb.app';
     let voiceEnabled = localStorage.getItem('voiceEnabled') === 'true';
     let visualizerMode = localStorage.getItem('visualizerMode') === 'true';
+    let speedUnit = localStorage.getItem('speedUnit') || 'kmh'; // kmh, mph, knots
+    let currentSpeed = 0;
     let minSpeedThreshold = parseFloat(localStorage.getItem('minSpeedThreshold')) || 22;
     let lastAnnouncedSpeed = -1;
     let lastAnnouncementTime = 0;
@@ -1362,11 +1398,16 @@
 
     // Variables para estadísticas
     let maxSpeed = 0;
+    let avgSpeed = 0;
+    let avg10s = 0;
+    let avg500m = 0;
     let speedReadings = [];
     let rejectedReadingsCount = 0;
     let acceptedReadingsCount = 0;
 
     // Persist session peaks
+    let sessionMax10s = 0;
+    let sessionMax500m = 0;
     let max10s = parseFloat(localStorage.getItem('max10s')) || 0;
     let max500m = parseFloat(localStorage.getItem('max500m')) || 0;
 
@@ -1374,6 +1415,35 @@
     let buffer10s = []; // {speed, timestamp}
     let buffer500m = []; // {lat, lon, speed, timestamp}
     let lastPoint = null;
+    let lastPosition = null; // Global to be accessible by submitSpeedHistory
+
+    // Global Audio Context persisted for iOS/Mobile support
+    let persistentAudioContext = null;
+
+    function initAudio() {
+      try {
+        if (!persistentAudioContext) {
+          persistentAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+          console.log('🎵 Initialized persistent AudioContext');
+        }
+        if (persistentAudioContext.state === 'suspended') {
+          persistentAudioContext.resume().then(() => {
+            console.log('🔊 AudioContext resumed via user interaction');
+          });
+        }
+
+        // Resume on every user interaction to be safe
+        const resumeAudio = () => {
+          if (persistentAudioContext && persistentAudioContext.state === 'suspended') {
+            persistentAudioContext.resume();
+          }
+        };
+        document.body.addEventListener('click', resumeAudio, { once: true });
+        document.body.addEventListener('touchstart', resumeAudio, { once: true });
+      } catch (e) {
+        console.warn('⚠️ AudioContext initialization failed:', e);
+      }
+    }
 
     // GPS Configuration Constants (aligned with Android app)
     const GPS_CONFIG = {
@@ -1381,8 +1451,26 @@
       MIN_SPEED_THRESHOLD: 1.5,      // km/h - speeds below this are considered stationary
       MAX_SPEED_READINGS: 20,        // number of readings to keep for averaging
       LOCATION_MAX_AGE: 1000,        // ms - cache GPS readings for 1 second (balanced frequency with filtering)
-      MS_TO_KMH: 3.6                 // conversion factor
+      MS_TO_KMH: 3.6,                 // conversion factor
+      KMH_TO_MPH: 0.621371,
+      KMH_TO_KNOTS: 0.539957
     };
+
+    function getConvertedSpeed(speedInKmh) {
+      if (speedUnit === 'mph') return speedInKmh * GPS_CONFIG.KMH_TO_MPH;
+      if (speedUnit === 'knots') return speedInKmh * GPS_CONFIG.KMH_TO_KNOTS;
+      return speedInKmh;
+    }
+
+    function updateUIStats() {
+      elements.speedDisplay.textContent = getConvertedSpeed(currentSpeed).toFixed(1);
+      elements.maxSpeed.textContent = getConvertedSpeed(maxSpeed).toFixed(1);
+      elements.avgSpeed.textContent = getConvertedSpeed(avgSpeed).toFixed(1);
+      elements.avg10s.textContent = getConvertedSpeed(avg10s).toFixed(1);
+      elements.max10s.textContent = getConvertedSpeed(sessionMax10s).toFixed(1);
+      elements.avg500m.textContent = getConvertedSpeed(avg500m).toFixed(1);
+      elements.max500m.textContent = getConvertedSpeed(sessionMax500m).toFixed(1);
+    }
 
     // Variables para el mapa
     let map = null;
@@ -1458,6 +1546,7 @@
       visualizerModeIndicator: document.getElementById('visualizer-mode-indicator'),
       visualizerModeText: document.getElementById('visualizer-mode-text'),
       minSpeedInput: document.getElementById('min-speed-input'),
+      speedUnitSelect: document.getElementById('speed-unit-select'),
       historyMax10s: document.getElementById('history-max-10s'),
       historyMax500m: document.getElementById('history-max-500m')
     };
@@ -1468,8 +1557,8 @@
     elements.groupName.value = groupName;
     elements.serverUrl.value = serverUrl;
     elements.languageSelect.value = currentLanguage;
-    elements.max10s.textContent = max10s.toFixed(1);
-    elements.max500m.textContent = max500m.toFixed(1);
+    elements.max10s.textContent = '0.0';
+    elements.max500m.textContent = '0.0';
 
     // Load auto-center preference (default: true)
     const autoCenterEnabled = localStorage.getItem('autoCenterMap') !== 'false';
@@ -1481,6 +1570,9 @@
 
     // Load visualizer mode preference
     elements.visualizerModeToggle.checked = visualizerMode;
+
+    // Load speed unit preference
+    elements.speedUnitSelect.value = speedUnit;
 
     // Initialize UI language on load
     updateUILanguage();
@@ -1509,7 +1601,7 @@
 
     // Guardar grupo cuando cambie
     elements.groupName.addEventListener('input', (e) => {
-      groupName = e.target.value.trim();
+      groupName = e.target.value.trim().toLowerCase();
       localStorage.setItem('groupName', groupName);
     });
 
@@ -1553,7 +1645,17 @@
     elements.minSpeedInput.addEventListener('change', (e) => {
       minSpeedThreshold = parseFloat(e.target.value) || 22;
       localStorage.setItem('minSpeedThreshold', minSpeedThreshold);
-      console.log('🎯 Min speed threshold:', minSpeedThreshold, 'km/h');
+      console.log('🎯 Min speed threshold:', minSpeedThreshold, speedUnit);
+    });
+
+    // Speed unit selection
+    elements.speedUnitSelect.addEventListener('change', (e) => {
+      speedUnit = e.target.value;
+      localStorage.setItem('speedUnit', speedUnit);
+      console.log('📏 Speed unit changed to:', speedUnit);
+      updateUILanguage();
+      // Update displays if currently tracking
+      updateUIStats();
     });
 
     // Modal de configuración
@@ -1662,14 +1764,13 @@
     // Resetear estadísticas
     elements.resetStatsButton.addEventListener('click', () => {
       maxSpeed = 0;
-      max10s = 0;
-      max500m = 0;
+      sessionMax10s = 0;
+      sessionMax500m = 0;
       speedReadings = [];
       buffer10s = [];
       buffer500m = [];
       sessionTrack = [];
-      localStorage.setItem('max10s', 0);
-      localStorage.setItem('max500m', 0);
+      // Do NOT reset local all-time peaks unless explicitly desired (matches Android behavior)
       elements.maxSpeed.textContent = '0.0';
       elements.avgSpeed.textContent = '0.0';
       elements.max10s.textContent = '0.0';
@@ -1688,43 +1789,58 @@
     // Función para generar y reproducir sonido de bocina potente
     function playHornSound() {
       try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Asegurar que el AudioContext esté inicializado y activo
+        if (!persistentAudioContext) {
+          initAudio();
+        } else if (persistentAudioContext.state === 'suspended') {
+          persistentAudioContext.resume();
+        }
+
+        const ctx = persistentAudioContext;
+        if (!ctx) return;
 
         // Crear osciladores para un sonido de bocina más realista y potente
-        const oscillator1 = audioContext.createOscillator();
-        const oscillator2 = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const oscillator1 = ctx.createOscillator();
+        const oscillator2 = ctx.createOscillator();
+        const gainNode = ctx.createGain();
 
         // Frecuencias de bocina de auto (más graves y potentes)
         oscillator1.type = 'sawtooth';
-        oscillator1.frequency.setValueAtTime(220, audioContext.currentTime); // A3
+        oscillator1.frequency.setValueAtTime(220, ctx.currentTime); // A3
 
         oscillator2.type = 'sawtooth';
-        oscillator2.frequency.setValueAtTime(330, audioContext.currentTime); // E4
+        oscillator2.frequency.setValueAtTime(330, ctx.currentTime); // E4
 
         // Conectar osciladores al gain
         oscillator1.connect(gainNode);
         oscillator2.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(ctx.destination);
 
         // Volumen inicial alto con fade out
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.8, audioContext.currentTime + 0.05); // Ataque rápido
-        gainNode.gain.exponentialRampToValueAtTime(0.6, audioContext.currentTime + 0.5); // Sostener
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5); // Fade out
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(1.2, ctx.currentTime + 0.05); // Ataque fuerte
+        gainNode.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.5); // Sostener
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5); // Fade out
 
         // Iniciar sonido
-        oscillator1.start(audioContext.currentTime);
-        oscillator2.start(audioContext.currentTime);
+        oscillator1.start(ctx.currentTime);
+        oscillator2.start(ctx.currentTime);
 
         // Detener después de 1.5 segundos
-        oscillator1.stop(audioContext.currentTime + 1.5);
-        oscillator2.stop(audioContext.currentTime + 1.5);
+        oscillator1.stop(ctx.currentTime + 1.5);
+        oscillator2.stop(ctx.currentTime + 1.5);
 
-        console.log('📢 Bocina reproducida');
+        console.log('📢 Bocina reproducida exitosamente');
+
+        // Feedback táctil si es posible
+        if (navigator.vibrate) {
+          navigator.vibrate([200, 100, 200]);
+        }
       } catch (error) {
         console.error('❌ Error reproduciendo bocina:', error);
-        showError('Error al reproducir bocina: ' + error.message);
+        // Fallback simple por si falla el WebAudio API avanzado
+        const beep = new Audio("data:audio/wav;base64,UklGRl9vT19XQVZFRm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTpvT18=");
+        beep.play().catch(() => { });
       }
     }
 
@@ -1794,7 +1910,7 @@
         type: 'group-horn',
         userId,
         userName: userName || 'Usuario',
-        groupName: groupName || 'default',
+        groupName: groupName.toLowerCase() || 'default',
         timestamp: Date.now()
       }));
 
@@ -1979,7 +2095,7 @@
         <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
           <div style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: ${color}; color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 1000; text-align: center; line-height: 1.3;">
             <div style="font-size: 10px; opacity: 0.9;">${displayName}</div>
-            <div style="font-size: 13px; margin-top: 1px;">${parseFloat(speed).toFixed(1)} km/h</div>
+            <div style="font-size: 13px; margin-top: 1px;">${getConvertedSpeed(speed).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</div>
           </div>
           <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform: rotate(${bearing}deg); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">
             <path d="M12 2 L4 20 L12 16 L20 20 Z" fill="${color}" stroke="white" stroke-width="1.5"/>
@@ -2021,8 +2137,8 @@
             marker.bindPopup(`
               <div style="text-align: center;">
                 <strong>${displayName}</strong><br>
-                <span style="font-size: 18px; font-weight: bold;">${parseFloat(user.speed).toFixed(1)} km/h</span><br>
-                <span style="font-size: 14px;">🏆 Max: ${parseFloat(user.maxSpeed || 0).toFixed(1)} km/h</span><br>
+                <span style="font-size: 18px; font-weight: bold;">${getConvertedSpeed(user.speed).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
+                <span style="font-size: 14px;">🏆 Max: ${getConvertedSpeed(user.maxSpeed || 0).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
                 <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             `);
@@ -2045,8 +2161,8 @@
             marker.setPopupContent(`
               <div style="text-align: center;">
                 <strong>${displayName}</strong><br>
-                <span style="font-size: 18px; font-weight: bold;">${parseFloat(user.speed).toFixed(1)} km/h</span><br>
-                <span style="font-size: 14px;">🏆 Max: ${parseFloat(user.maxSpeed || 0).toFixed(1)} km/h</span><br>
+                <span style="font-size: 18px; font-weight: bold;">${getConvertedSpeed(user.speed).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
+                <span style="font-size: 14px;">🏆 Max: ${getConvertedSpeed(user.maxSpeed || 0).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
                 <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             `);
@@ -2354,9 +2470,9 @@
             type: 'register',
             userId,
             userName: userName || 'Usuario',
-            groupName: groupName || 'default'
+            groupName: groupName.toLowerCase() || 'default'
           }));
-          console.log('✓ Registrado en servidor - Grupo:', groupName || 'default');
+          console.log('✓ Registrado en servidor - Grupo:', groupName.toLowerCase() || 'default');
 
           startKeepAlive();
         };
@@ -2442,13 +2558,13 @@
               </div>
               <div class="flex items-center gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>🧭 ${direction || '--'}</span>
-                <span>🏆 ${parseFloat(user.maxSpeed || 0).toFixed(1)} km/h</span>
+                <span>🏆 ${getConvertedSpeed(user.maxSpeed || 0).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span>
                 <span class="text-xs">${new Date(user.timestamp).toLocaleTimeString()}</span>
               </div>
             </div>
             <div class="text-right ml-4">
-              <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">${parseFloat(user.speed).toFixed(1)}</div>
-              <div class="text-sm text-gray-600 dark:text-gray-400">km/h</div>
+              <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">${getConvertedSpeed(user.speed).toFixed(1)}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">${speedUnit === 'kmh' ? 'km/h' : speedUnit}</div>
             </div>
           </div>
         </div>
@@ -2489,8 +2605,6 @@
         maximumAge: GPS_CONFIG.LOCATION_MAX_AGE  // Allow 1s cached positions for balanced update frequency
       };
 
-      let lastPosition = null;
-
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           // Filter out inaccurate GPS readings
@@ -2511,9 +2625,9 @@
             : 0.0;
 
           // Apply minimum speed threshold to filter out GPS noise when stationary
-          const speed = rawSpeed < GPS_CONFIG.MIN_SPEED_THRESHOLD ? 0.0 : rawSpeed;
+          currentSpeed = rawSpeed < GPS_CONFIG.MIN_SPEED_THRESHOLD ? 0.0 : rawSpeed;
 
-          elements.speedDisplay.textContent = speed.toFixed(1);
+          updateUIStats();
           updateGpsStatus(true);
           elements.gpsInfo.classList.remove('hidden');
 
@@ -2521,7 +2635,7 @@
           sessionTrack.push({
             lat: position.coords.latitude,
             lon: position.coords.longitude,
-            speed: speed,
+            speed: currentSpeed,
             timestamp: Date.now()
           });
 
@@ -2531,35 +2645,33 @@
             elements.downloadTrackButton.disabled = false;
           }
 
-          // Actualizar velocidad máxima (use raw speed before threshold for max tracking)
           if (rawSpeed > maxSpeed) {
             maxSpeed = rawSpeed;
-            elements.maxSpeed.textContent = maxSpeed.toFixed(1);
           }
 
           // Actualizar promedio
-          speedReadings.push(speed);
+          speedReadings.push(currentSpeed);
           if (speedReadings.length > GPS_CONFIG.MAX_SPEED_READINGS) speedReadings.shift();
-          const avgSpeed = (speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length).toFixed(1);
-          elements.avgSpeed.textContent = avgSpeed;
+          avgSpeed = speedReadings.reduce((a, b) => a + b, 0) / speedReadings.length;
 
           // --- 10s Average ---
           const now = Date.now();
-          buffer10s.push({ speed, timestamp: now });
+          buffer10s.push({ speed: currentSpeed, timestamp: now });
           // Remove readings older than 10 seconds
           buffer10s = buffer10s.filter(r => now - r.timestamp <= 10000);
           if (buffer10s.length > 0) {
-            const currentAvg10s = buffer10s.reduce((sum, r) => sum + r.speed, 0) / buffer10s.length;
-            elements.avg10s.textContent = currentAvg10s.toFixed(1);
-            if (currentAvg10s > max10s) {
-              max10s = currentAvg10s;
-              elements.max10s.textContent = max10s.toFixed(1);
+            avg10s = buffer10s.reduce((sum, r) => sum + r.speed, 0) / buffer10s.length;
+            if (avg10s > sessionMax10s) {
+              sessionMax10s = avg10s;
+            }
+            if (avg10s > max10s) {
+              max10s = avg10s;
               localStorage.setItem('max10s', max10s);
             }
           }
 
           // --- 500m Average ---
-          buffer500m.push({ lat: position.coords.latitude, lon: position.coords.longitude, speed, timestamp: now });
+          buffer500m.push({ lat: position.coords.latitude, lon: position.coords.longitude, speed: currentSpeed, timestamp: now });
           if (buffer500m.length > 1) {
             let totalDist = 0;
             let startIndex = buffer500m.length - 1;
@@ -2584,23 +2696,25 @@
             if (totalDist > 0) {
               // Average speed in the current 500m window
               const relevantPoints = buffer500m.slice(startIndex);
-              const currentAvg500m = relevantPoints.reduce((sum, r) => sum + r.speed, 0) / relevantPoints.length;
-
-              // Only display once we have at least partial movement, but maybe only valid if totalDist is close to 500?
-              // Let's show it as it builds up, but maybe indicate it's partial.
-              elements.avg500m.textContent = currentAvg500m.toFixed(1);
+              avg500m = relevantPoints.reduce((sum, r) => sum + r.speed, 0) / relevantPoints.length;
 
               // Only update max500m if we have actually covered ~500m (or at least 450m to be safe)
-              if (totalDist >= 450 && currentAvg500m > max500m) {
-                max500m = currentAvg500m;
-                elements.max500m.textContent = max500m.toFixed(1);
-                localStorage.setItem('max500m', max500m);
+              if (totalDist >= 450) {
+                if (avg500m > sessionMax500m) {
+                  sessionMax500m = avg500m;
+                }
+                if (avg500m > max500m) {
+                  max500m = avg500m;
+                  localStorage.setItem('max500m', max500m);
+                }
               }
             }
           }
 
+          updateUIStats();
+
           // Voice announcement
-          announceSpeed(speed);
+          announceSpeed(currentSpeed);
 
           // Calcular dirección/rumbo
           let bearing = 0;
@@ -2623,7 +2737,7 @@
               userId,
               userName: userName || 'Usuario',
               groupName: groupName || 'default',
-              speed: speed,
+              speed: currentSpeed,
               maxSpeed,
               lat: position.coords.latitude,
               lon: position.coords.longitude,
@@ -2675,8 +2789,8 @@
               userName: userName || 'Usuario',
               groupName: groupName || 'default',
               maxSpeed,
-              maxSpeed10s: max10s,
-              maxSpeed500m: max500m,
+              maxSpeed10s: sessionMax10s,
+              maxSpeed500m: sessionMax500m,
               latitude: lastPosition.coords.latitude,
               longitude: lastPosition.coords.longitude,
               timestamp: Date.now()
@@ -2709,12 +2823,12 @@
           const statsData = await statsResponse.json();
           const stats = statsData.statistics;
           elements.historyTotalRecords.textContent = stats.total_records || '0';
-          elements.historyHighestSpeed.textContent = parseFloat(stats.highest_speed || 0).toFixed(1);
-          elements.historyAverageMax.textContent = parseFloat(stats.average_max_speed || 0).toFixed(1);
+          elements.historyHighestSpeed.textContent = getConvertedSpeed(parseFloat(stats.highest_speed || 0)).toFixed(1);
+          elements.historyAverageMax.textContent = getConvertedSpeed(parseFloat(stats.average_max_speed || 0)).toFixed(1);
 
           // Update local session/all-time maxes with server values if they are higher
-          const serverMax10s = parseFloat(stats.highest_speed_10s || 0);
-          const serverMax500m = parseFloat(stats.highest_speed_500m || 0);
+          const serverMax10s = parseFloat(stats.highest_speed_10s || stats.maxSpeed10s || 0);
+          const serverMax500m = parseFloat(stats.highest_speed_500m || stats.maxSpeed500m || 0);
 
           if (serverMax10s > max10s) {
             max10s = serverMax10s;
@@ -2727,8 +2841,8 @@
             elements.max500m.textContent = max500m.toFixed(1);
           }
 
-          elements.historyMax10s.textContent = max10s.toFixed(1);
-          elements.historyMax500m.textContent = max500m.toFixed(1);
+          elements.historyMax10s.textContent = getConvertedSpeed(max10s).toFixed(1);
+          elements.historyMax500m.textContent = getConvertedSpeed(max500m).toFixed(1);
         }
 
         // Load history records
@@ -2748,15 +2862,15 @@
               recordElement.innerHTML = `
                 <div class="flex justify-between items-start mb-1">
                   <div class="text-sm font-semibold text-gray-800 dark:text-white">${record.date}</div>
-                  <div class="text-lg font-bold text-red-600 dark:text-red-400">${parseFloat(record.max_speed).toFixed(1)} km/h</div>
+                  <div class="text-lg font-bold text-red-600 dark:text-red-400">${getConvertedSpeed(parseFloat(record.max_speed)).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</div>
                 </div>
                 <div class="flex justify-between items-center text-xs text-gray-600 dark:text-gray-400">
                   <div>${record.time}</div>
                   <div>${parseFloat(record.latitude).toFixed(4)}, ${parseFloat(record.longitude).toFixed(4)}</div>
                 </div>
                 <div class="flex gap-2 mt-1">
-                  ${record.max_speed_10s ? `<div class="text-[10px] bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">10s: ${parseFloat(record.max_speed_10s).toFixed(1)}</div>` : ''}
-                  ${record.max_speed_500m ? `<div class="text-[10px] bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">500m: ${parseFloat(record.max_speed_500m).toFixed(1)}</div>` : ''}
+                  ${record.max_speed_10s ? `<div class="text-[10px] bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">10s: ${getConvertedSpeed(parseFloat(record.max_speed_10s)).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</div>` : ''}
+                  ${record.max_speed_500m ? `<div class="text-[10px] bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">500m: ${getConvertedSpeed(parseFloat(record.max_speed_500m)).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</div>` : ''}
                 </div>
                 ${record.group_name && record.group_name !== 'default' ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">${t('historyGroup')}: ${record.group_name}</div>` : ''}
               `;
@@ -2827,6 +2941,7 @@
 
     // Eventos de los botones
     elements.trackButton.addEventListener('click', () => {
+      initAudio(); // Initialize audio on first user interaction
       startTracking();
     });
 

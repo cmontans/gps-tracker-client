@@ -27,6 +27,7 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var speedHistoryApi: SpeedHistoryApi
 
     private var userId: String = ""
+    private var speedUnit: String = "kmh"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +45,7 @@ class HistoryActivity : AppCompatActivity() {
 
         // Get server URL
         val serverUrl = prefs.getString(getString(R.string.pref_server_url_key), getString(R.string.default_server_url)) ?: getString(R.string.default_server_url)
+        speedUnit = prefs.getString(getString(R.string.pref_speed_unit_key), "kmh") ?: "kmh"
         speedHistoryApi = SpeedHistoryApi(serverUrl)
 
         setupViews()
@@ -63,8 +65,29 @@ class HistoryActivity : AppCompatActivity() {
         tvEmptyState = findViewById(R.id.tvEmptyState)
 
         historyAdapter = HistoryAdapter()
+        historyAdapter.setSpeedUnit(speedUnit)
         rvHistory.layoutManager = LinearLayoutManager(this)
         rvHistory.adapter = historyAdapter
+        
+        updateUnitLabels()
+    }
+
+    private fun updateUnitLabels() {
+        val label = when(speedUnit) {
+            "mph" -> "mph"
+            "knots" -> "knots"
+            else -> "km/h"
+        }
+        findViewById<TextView>(R.id.tvUnitHighestSpeed)?.text = label
+        findViewById<TextView>(R.id.tvUnitAverageMaxSpeed)?.text = label
+    }
+
+    private fun convertSpeed(speedInKmh: Double): Double {
+        return when (speedUnit) {
+            "mph" -> speedInKmh * com.tracker.gps.shared.util.Constants.KMH_TO_MPH
+            "knots" -> speedInKmh * com.tracker.gps.shared.util.Constants.KMH_TO_KNOTS
+            else -> speedInKmh
+        }
     }
 
     private fun loadData() {
@@ -118,8 +141,8 @@ class HistoryActivity : AppCompatActivity() {
 
     private fun updateStatistics(stats: SpeedStatistics) {
         tvTotalRecords.text = stats.totalRecords
-        tvHighestSpeed.text = String.format("%.1f", stats.highestSpeed?.toDoubleOrNull() ?: 0.0)
-        tvAverageMax.text = String.format("%.1f", stats.averageMaxSpeed?.toDoubleOrNull() ?: 0.0)
+        tvHighestSpeed.text = String.format("%.1f", convertSpeed(stats.highestSpeed?.toDoubleOrNull() ?: 0.0))
+        tvAverageMax.text = String.format("%.1f", convertSpeed(stats.averageMaxSpeed?.toDoubleOrNull() ?: 0.0))
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

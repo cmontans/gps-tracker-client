@@ -80,6 +80,11 @@
     <string name="pref_visualizer_mode_key">visualizer_mode</string>
     <string name="visualizer_mode">Visualizer Mode (view only, don\'t publish)</string>
     <string name="visualizer_mode_active">👁️ Visualizer Mode Active</string>
+    <string name="speed_unit">Speed Unit</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="unit_mph">mph</string>
+    <string name="unit_knots">knots</string>
+    <string name="pref_speed_unit_key">speed_unit</string>
 
     <!-- History Screen -->
     <string name="speed_history">Speed History</string>
