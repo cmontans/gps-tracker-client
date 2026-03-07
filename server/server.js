@@ -12,10 +12,16 @@ app.use(cors());
 app.use(express.json());
 
 // Inicializar base de datos
-db.initializeDatabase().catch(err => {
-  console.error('❌ Error fatal al inicializar base de datos:', err);
-  console.warn('⚠️  El servidor continuará sin persistencia de datos');
-});
+let dbInitialized = false;
+db.initializeDatabase()
+  .then(() => {
+    dbInitialized = true;
+    console.log('✅ Base de datos lista para operar');
+  })
+  .catch(err => {
+    console.error('❌ Error fatal al inicializar base de datos:', err);
+    console.warn('⚠️ El servidor continuará sin persistencia de datos');
+  });
 
 // Crear servidor HTTP
 const server = app.listen(PORT, () => {
@@ -239,10 +245,29 @@ app.get('/health', (req, res) => {
 
   res.json({
     status: 'ok',
+    database: dbInitialized ? 'connected' : 'error/missing',
     totalUsers: totalUsers,
     totalGroups: groups.size,
     timestamp: Date.now()
   });
+});
+
+// Endpoint para verificar conexión a BD específicamente
+app.get('/api/db-status', async (req, res) => {
+  try {
+    const result = await db.pool.query('SELECT NOW()');
+    res.json({
+      status: 'connected',
+      time: result.rows[0].now,
+      initialized: dbInitialized
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message,
+      initialized: dbInitialized
+    });
+  }
 });
 
 // Endpoint para obtener grupos y usuarios
@@ -287,10 +312,12 @@ app.post('/api/speed-history', async (req, res) => {
     const { userId, userName, groupName, maxSpeed, maxSpeed10s, maxSpeed500m, latitude, longitude, timestamp } = req.body;
 
     // Validate required fields
-    if (!userId || maxSpeed === undefined || !latitude || !longitude || !timestamp) {
+    if (!userId || maxSpeed === undefined || latitude === undefined || longitude === undefined || !timestamp) {
+      console.log('⚠️ Intento de guardar historial con campos faltantes:', req.body);
       return res.status(400).json({
         error: 'Faltan campos requeridos',
-        required: ['userId', 'maxSpeed', 'latitude', 'longitude', 'timestamp']
+        required: ['userId', 'maxSpeed', 'latitude', 'longitude', 'timestamp'],
+        received: Object.keys(req.body)
       });
     }
 
@@ -313,7 +340,7 @@ app.post('/api/speed-history', async (req, res) => {
       timestamp
     });
 
-    console.log(`💾 Registro de velocidad guardado: ${userName || userId} - ${maxSpeed} km/h`);
+    console.log(`💾 Registro de velocidad guardado: ID=${record.id}, Usuario=${userName || userId}, Vel=${maxSpeed} km/h`);
 
     res.status(201).json({
       success: true,

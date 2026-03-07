@@ -40,7 +40,8 @@ class GPSWebSocketClient(
             try {
                 Log.d(TAG, "Received: $it")
                 val jsonObject = gson.fromJson(it, JsonObject::class.java)
-                val type = jsonObject.get("type")?.asString
+                val type = if (jsonObject.has("type") && !jsonObject.get("type").isJsonNull) 
+                    jsonObject.get("type").asString else ""
 
                 when (type) {
                     "users" -> {
@@ -48,8 +49,10 @@ class GPSWebSocketClient(
                         listener.onUsersUpdate(usersMessage.users)
                     }
                     "group-horn" -> {
-                        val senderId = jsonObject.get("userId")?.asString ?: ""
-                        val senderName = jsonObject.get("userName")?.asString ?: "Usuario"
+                        val senderId = if (jsonObject.has("userId") && !jsonObject.get("userId").isJsonNull) 
+                            jsonObject.get("userId").asString else ""
+                        val senderName = if (jsonObject.has("userName") && !jsonObject.get("userName").isJsonNull) 
+                            jsonObject.get("userName").asString else "Usuario"
                         listener.onGroupHorn(senderId, senderName)
                     }
                     "ping" -> {

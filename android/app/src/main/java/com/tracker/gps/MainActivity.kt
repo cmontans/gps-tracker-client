@@ -82,8 +82,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var wakeLock: PowerManager.WakeLock? = null
 
     // Sound
-    private lateinit var soundPool: SoundPool
+    private var soundPool: SoundPool? = null
     private var hornSoundId: Int = 0
+    private var toneGenerator: android.media.ToneGenerator? = null
 
     // State
     private var isTracking = false
@@ -142,7 +143,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     runOnUiThread {
                         if (senderId != userId) {
                             playHornSound()
-                            Toast.makeText(this@MainActivity, "📢 Horn from $senderName!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, getString(R.string.horn_received, senderName), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -259,18 +260,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun initSound() {
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
+        try {
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
 
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(1)
-            .setAudioAttributes(audioAttributes)
-            .build()
+            soundPool = SoundPool.Builder()
+                .setMaxStreams(1)
+                .setAudioAttributes(audioAttributes)
+                .build()
 
-        // We'll generate a simple beep sound programmatically
-        // In a production app, you would load from a resource file
+            toneGenerator = android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 100)
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Error initializing sound", e)
+        }
     }
 
     private fun loadPreferences() {
@@ -534,9 +538,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun playHornSound() {
+        if (isFinishing || isDestroyed) return
+        
         try {
-            val toneG = android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 100)
-            toneG.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 500)
+            if (toneGenerator == null) {
+                toneGenerator = android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 100)
+            }
+            toneGenerator?.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 500)
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error playing tone", e)
             Toast.makeText(this, "🔔 Group Horn!", Toast.LENGTH_SHORT).show()
@@ -641,7 +649,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             unbindService(serviceConnection)
         }
         releaseWakeLock()
-        soundPool.release()
+        soundPool?.release()
+        soundPool = null
+        toneGenerator?.release()
+        toneGenerator = null
     }
 
     private fun saveFitTrackToFile(uri: android.net.Uri) {

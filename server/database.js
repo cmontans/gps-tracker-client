@@ -4,9 +4,18 @@ require('dotenv').config();
 
 // Create connection pool
 // Always use SSL for cloud databases (Koyeb, Railway, etc.)
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.warn('⚠️  DATABASE_URL no configurada. Las operaciones de base de datos fallarán.');
+} else {
+  // Mask connection string for safety in logs
+  const masked = connectionString.replace(/:.+@/, ':****@');
+  console.log('🔌 Configurando Pool con:', masked);
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+  connectionString: connectionString,
+  ssl: connectionString ? { rejectUnauthorized: false } : false
 });
 
 // Test connection
@@ -78,13 +87,13 @@ async function initializeDatabase() {
     `);
 
     await client.query('COMMIT');
-    console.log('✅ Esquema de base de datos inicializado correctamente');
+    console.log('✅ Esquema de base de datos verificado/inicializado');
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('❌ Error inicializando base de datos:', error);
+    if (client) await client.query('ROLLBACK');
+    console.error('❌ Error inicializando base de datos:', error.message);
     throw error;
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 

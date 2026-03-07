@@ -45,7 +45,7 @@
     <!-- Settings -->
     <string name="server_url">URL du Serveur</string>
     <string name="user_id">ID Utilisateur</string>
-    <string name="default_server_url">wss://gps-tracker-server-production-5900.up.railway.app</string>
+    <string name="default_server_url">wss://urban-ricca-cmontans-34613e13.koyeb.app</string>
 
     <!-- Messages -->
     <string name="enter_name">Veuillez entrer votre nom</string>
@@ -54,6 +54,7 @@
     <string name="notification_permission_required">L\'autorisation de notification est requise pour Android 13+</string>
     <string name="tracking_active">Suivi GPS Actif</string>
     <string name="tracking_notification_text">Vitesse: %1$.1f km/h</string>
+    <string name="horn_received">📢 %1$s a activé le klaxon !</string>
 
     <!-- Errors -->
     <string name="gps_error">Erreur GPS: %1$s</string>

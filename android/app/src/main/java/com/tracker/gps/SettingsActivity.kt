@@ -75,6 +75,7 @@ class SettingsActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().apply {
             putString(getString(R.string.pref_server_url_key), etServerUrl.text.toString())
+            putString(getString(R.string.pref_user_id_key), etUserId.text.toString())
             putBoolean(getString(R.string.pref_auto_center_key), switchAutoCenter.isChecked)
             putBoolean(getString(R.string.pref_voice_enabled_key), switchVoiceEnabled.isChecked)
             putBoolean(getString(R.string.pref_visualizer_mode_key), switchVisualizerMode.isChecked)

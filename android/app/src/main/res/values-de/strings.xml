@@ -45,7 +45,7 @@
     <!-- Settings -->
     <string name="server_url">Server-URL</string>
     <string name="user_id">Benutzer-ID</string>
-    <string name="default_server_url">wss://gps-tracker-server-production-5900.up.railway.app</string>
+    <string name="default_server_url">wss://urban-ricca-cmontans-34613e13.koyeb.app</string>
 
     <!-- Messages -->
     <string name="enter_name">Bitte gib deinen Namen ein</string>
@@ -54,6 +54,7 @@
     <string name="notification_permission_required">Benachrichtigungsberechtigung ist für Android 13+ erforderlich</string>
     <string name="tracking_active">GPS-Tracking Aktiv</string>
     <string name="tracking_notification_text">Geschwindigkeit: %1$.1f km/h</string>
+    <string name="horn_received">📢 %1$s hat das Gruppenhorn ausgelöst!</string>
 
     <!-- Errors -->
     <string name="gps_error">GPS-Fehler: %1$s</string>

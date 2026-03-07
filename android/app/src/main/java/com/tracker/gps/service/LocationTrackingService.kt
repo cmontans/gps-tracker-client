@@ -67,6 +67,10 @@ class LocationTrackingService : Service() {
     private var lastLocation: Location? = null
     private val userTracks = mutableMapOf<String, MutableList<Pair<Double, Double>>>()
 
+    private var lastSubmittedMaxSpeed: Double = 0.0
+    private var lastSubmissionTime: Long = 0
+    private val submissionThrottleMs = 60000L // 1 minute throttle
+
     var serviceListener: ServiceListener? = null
 
     interface ServiceListener {
@@ -278,6 +282,14 @@ class LocationTrackingService : Service() {
                     val bearing = if (location.hasBearing()) location.bearing else 0f
                     it.sendSpeed(userId, userName, groupName, currentSpeed, maxSpeed, location.latitude, location.longitude, bearing)
                 }
+            }
+            
+            // Periodically submit high scores (history) even if tracking hasn't stopped
+            // Only if max speed increased significantly or enough time passed
+            if (maxSpeed > lastSubmittedMaxSpeed && (now - lastSubmissionTime) > submissionThrottleMs) {
+                lastSubmittedMaxSpeed = maxSpeed
+                lastSubmissionTime = now
+                submitMaxSpeedRecord()
             }
         }
 

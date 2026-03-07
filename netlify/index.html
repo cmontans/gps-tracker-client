@@ -1416,6 +1416,8 @@
     let buffer500m = []; // {lat, lon, speed, timestamp}
     let lastPoint = null;
     let lastPosition = null; // Global to be accessible by submitSpeedHistory
+    let lastSubmittedMaxSpeed = 0;
+    let lastSubmissionTime = 0;
 
     // Global Audio Context persisted for iOS/Mobile support
     let persistentAudioContext = null;
@@ -2744,6 +2746,12 @@
               bearing: Math.round(bearing),
               timestamp: Date.now()
             }));
+
+            // Periodically submit history during the session
+            const now = Date.now();
+            if (maxSpeed > lastSubmittedMaxSpeed && (now - lastSubmissionTime) > 60000) {
+              submitSpeedHistory();
+            }
           }
 
           lastPosition = position;
@@ -2778,12 +2786,19 @@
     async function submitSpeedHistory() {
       if (maxSpeed > 0 && lastPosition) {
         try {
-          const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
-          const response = await fetch(`${httpUrl}/api/speed-history`, {
+          // Limpiar URL: eliminar espacios y barras finales extras
+          const baseUrl = serverUrl.trim().replace(/\/+$/, '');
+          const httpUrl = baseUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+          const url = `${httpUrl}/api/speed-history`;
+
+          console.log(`📤 Enviando registro de historial a: ${url}`);
+
+          const response = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
+            keepalive: true, // Crucial para que termine aunque se cierre la pestaña
             body: JSON.stringify({
               userId,
               userName: userName || 'Usuario',
@@ -2799,8 +2814,11 @@
 
           if (response.ok) {
             console.log('✅ Speed history record submitted successfully');
+            lastSubmittedMaxSpeed = maxSpeed;
+            lastSubmissionTime = Date.now();
           } else {
-            console.error('❌ Failed to submit speed history:', response.status);
+            const errData = await response.json().catch(() => ({}));
+            console.error('❌ Failed to submit speed history:', response.status, errData);
           }
         } catch (error) {
           console.error('❌ Error submitting speed history:', error);
@@ -2815,7 +2833,8 @@
         elements.historyEmpty.classList.add('hidden');
         elements.historyRecordsList.innerHTML = '';
 
-        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const baseUrl = serverUrl.trim().replace(/\/+$/, '');
+        const httpUrl = baseUrl.replace('wss://', 'https://').replace('ws://', 'http://');
 
         // Load statistics
         const statsResponse = await fetch(`${httpUrl}/api/speed-history/${userId}/stats`);
