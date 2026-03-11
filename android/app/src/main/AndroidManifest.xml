@@ -17,8 +17,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
-    <!-- For Android 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
 
     <application
         android:allowBackup="true"
@@ -55,11 +57,27 @@
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.GPSSpeedTracker.NoActionBar" />
 
+        <activity
+            android:name=".ui.JumpTrackerActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:label="Kite Jump Tracker"
+            android:screenOrientation="portrait" />
+
         <service
             android:name=".service.LocationTrackingService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <service
+            android:name=".service.JumpTrackingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
+                android:value="This service uses barometer and accelerometer data to measure kitesurfing jump heights in the background while the device is in a wetsuit." />
+        </service>
 
         <!-- Wearable Data Layer Listener -->
         <service

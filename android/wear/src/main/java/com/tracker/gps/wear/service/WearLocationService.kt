@@ -48,10 +48,12 @@ class WearLocationService : Service() {
     private var isStandaloneMode = false
     private var connectedNodeId: String? = null
 
-    // Speed tracking
     private var currentSpeed = 0.0
     private var maxSpeed = 0.0
     private val speedReadings = mutableListOf<Double>()
+    private var currentAltitude = 0.0
+    private var lastJumpHeight = 0.0
+    private var isCurrentlyJumping = false
     private var hasGps = false
     private var isConnected = false
 
@@ -204,6 +206,10 @@ class WearLocationService : Service() {
                     isConnected = status.isConnected
                     listener?.onConnectionStatusChanged(isConnected)
                 }
+                WearPaths.JUMP_UPDATE -> {
+                    val jumpState = DataSerializer.fromBytes<JumpState>(messageEvent.data)
+                    handleJumpStateUpdate(jumpState)
+                }
             }
         }
     }
@@ -347,6 +353,13 @@ class WearLocationService : Service() {
         notifyTrackingState()
     }
 
+    private fun handleJumpStateUpdate(state: JumpState) {
+        currentAltitude = state.currentAltitude
+        lastJumpHeight = state.lastJumpHeight
+        isCurrentlyJumping = state.isCurrentlyJumping
+        notifyTrackingState()
+    }
+
     private fun handleUsersUpdate(userList: List<UserData>) {
         users.clear()
         users.addAll(userList)
@@ -366,7 +379,10 @@ class WearLocationService : Service() {
             groupName = groupName,
             currentSpeed = currentSpeed,
             maxSpeed = maxSpeed,
-            avgSpeed = avgSpeed
+            avgSpeed = avgSpeed,
+            currentAltitude = currentAltitude,
+            lastJumpHeight = lastJumpHeight,
+            isCurrentlyJumping = isCurrentlyJumping
         )
 
         listener?.onTrackingStateChanged(state)

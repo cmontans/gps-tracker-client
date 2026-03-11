@@ -269,6 +269,25 @@ fun MainScreen(
             }
         }
 
+        // Jump Tracker row
+        item {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = if (trackingState.isCurrentlyJumping) "JUMPING!" else "WAITING FOR JUMP",
+                    style = MaterialTheme.typography.caption2,
+                    color = if (trackingState.isCurrentlyJumping) Color.Green else Color.Gray,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    SpeedCard("Alt", trackingState.currentAltitude, unit = "m")
+                    SpeedCard("Last Jump", trackingState.lastJumpHeight, unit = "m")
+                }
+            }
+        }
+
         // Start/Stop button
         item {
             Chip(
@@ -390,7 +409,7 @@ fun StatusChip(label: String, color: Color) {
 }
 
 @Composable
-fun SpeedCard(label: String, speed: Double, large: Boolean = false) {
+fun SpeedCard(label: String, speed: Double, unit: String = "km/h", large: Boolean = false) {
     Card(
         onClick = { },
         modifier = Modifier
@@ -399,18 +418,18 @@ fun SpeedCard(label: String, speed: Double, large: Boolean = false) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(1.dp) // Changed 8dp to 1dp to fix overflow on small screens
         ) {
             Text(
                 text = label,
-                style = if (large) MaterialTheme.typography.caption1 else MaterialTheme.typography.caption2
+                style = if (large) MaterialTheme.typography.caption1 else MaterialTheme.typography.caption3
             )
             Text(
                 text = "%.1f".format(speed),
-                style = if (large) MaterialTheme.typography.display1 else MaterialTheme.typography.title2
+                style = if (large) MaterialTheme.typography.display1 else MaterialTheme.typography.title3
             )
             Text(
-                text = "km/h",
+                text = unit,
                 style = MaterialTheme.typography.caption3
             )
         }

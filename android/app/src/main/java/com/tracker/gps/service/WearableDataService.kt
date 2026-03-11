@@ -110,6 +110,22 @@ class WearableDataService(private val context: Context) {
     }
 
     /**
+     * Send jump state to all connected watches
+     */
+    fun sendJumpState(state: JumpState) {
+        serviceScope.launch {
+            val data = DataSerializer.toBytes(state)
+            connectedNodes.forEach { nodeId ->
+                try {
+                    messageClient.sendMessage(nodeId, WearPaths.JUMP_UPDATE, data).await()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error sending jump state to $nodeId", e)
+                }
+            }
+        }
+    }
+
+    /**
      * Send users list to all connected watches
      */
     fun sendUsersUpdate(users: List<UserData>) {
