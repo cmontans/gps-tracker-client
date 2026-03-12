@@ -9,12 +9,17 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.PowerManager
+import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -81,16 +86,27 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d("WEAR_APP", "onCreate started")
+        installSplashScreen()
         super.onCreate(savedInstanceState)
-
-        // Check and request permissions
-        checkPermissions()
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setTurnScreenOn(true)
+            setShowWhenLocked(true)
+        } else {
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+            )
+        }
+        window.addFlags(WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON)
 
         // Bind to service
         Intent(this, WearLocationService::class.java).also { intent ->
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         }
 
+        Log.d("WEAR_APP", "setting content")
         setContent {
             WearApp(
                 trackingState = trackingState.value,
@@ -121,7 +137,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun checkPermissions() {
+    fun checkAndRequestPermissions() {
         val permissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -129,10 +145,6 @@ class MainActivity : ComponentActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            permissions.add(Manifest.permission.ACTIVITY_RECOGNITION)
         }
 
         val permissionsToRequest = permissions.filter {
@@ -158,6 +170,27 @@ class MainActivity : ComponentActivity() {
     private fun stopTracking() {
         locationService?.stopTracking()
     }
+
+    fun wakeScreen(duration: Long) {
+        try {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            val wakeLock = powerManager.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE,
+                "GPSTracker:JumpWake"
+            )
+            wakeLock.acquire(duration)
+        } catch (e: Exception) {
+            Log.e("WEAR_APP", "Error waking screen: ${e.message}")
+        }
+    }
+
+    fun setKeepScreenOn(on: Boolean) {
+        if (on) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 }
 
 @Composable
@@ -171,6 +204,29 @@ fun WearApp(
     onGroupHorn: () -> Unit,
     onResetStats: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(trackingState.isCurrentlyJumping) {
+        Log.d("WEAR_APP", "isCurrentlyJumping changed: ${trackingState.isCurrentlyJumping}")
+        if (trackingState.isCurrentlyJumping) {
+            (context as? MainActivity)?.let {
+                Log.d("WEAR_APP", "Triggering wakeScreen")
+                it.wakeScreen(30000) // Wake for 30s (or until jump ends + 10s)
+                it.setKeepScreenOn(true)
+            }
+        } else {
+            // Jump ended, wait 10 seconds before letting screen dim
+            Log.d("WEAR_APP", "Jump ended, waiting 10s before dimming")
+            delay(10000)
+            Log.d("WEAR_APP", "Clearing keepScreenOn")
+            (context as? MainActivity)?.setKeepScreenOn(false)
+        }
+    }
+    
+    LaunchedEffect(Unit) {
+        // Request permissions after the UI has fully drawn to avoid freezing the splash screen
+        // (context as? MainActivity)?.checkAndRequestPermissions()
+    }
+
     WearAppTheme {
         val navController = rememberSwipeDismissableNavController()
         val listState = rememberScalingLazyListState()
@@ -184,7 +240,10 @@ fun WearApp(
             },
             positionIndicator = {
                 PositionIndicator(scalingLazyListState = listState)
-            }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.background)
         ) {
             SwipeDismissableNavHost(
                 navController = navController,

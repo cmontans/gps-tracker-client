@@ -1,4 +1,4 @@
-package com.tracker.gps.util
+package com.tracker.gps.shared.util
 
 import android.content.Context
 import android.hardware.Sensor
@@ -8,9 +8,9 @@ import android.hardware.SensorManager
 import android.util.Log
 
 enum class JumpSensitivity(val takeoffGForce: Float, val minHeight: Double) {
-    BAJA(18.0f, 1.5),
-    MEDIA(15.0f, 1.0),
-    ALTA(12.0f, 0.5)
+    BAJA(30.0f, 1.5),
+    MEDIA(22.0f, 1.0),
+    ALTA(15.0f, 0.5)
 }
 
 /**
@@ -37,6 +37,9 @@ class JumpDetector(
     private var maxAltitude: Double = 0.0
     private var takeoffTime: Long = 0L
     private var isJumping: Boolean = false
+
+    private var lastJumpTime: Long = 0L
+    private val JUMP_COOLDOWN_MS = 2000L // 2 seconds delay between jumps
 
     private val rotationMatrix = FloatArray(9)
     private val linearAcc = FloatArray(3)
@@ -66,10 +69,18 @@ class JumpDetector(
                 val filteredAltitude = kalmanFilter.update(rawAltitude)
 
                 if (isJumping) {
+                    // Only update max altitude if it's reasonably close to the filtered mean
+                    // to avoid spikes if the sensor is jittery during impact or fast ascent
                     if (filteredAltitude > maxAltitude) {
                         maxAltitude = filteredAltitude
                     }
-                    onAltitudeUpdate(Math.max(0.0, maxAltitude - baselineAltitude), true)
+                    val currentHeight = Math.max(0.0, maxAltitude - baselineAltitude)
+                    onAltitudeUpdate(currentHeight, true)
+                    
+                    // Log every 500ms during jump for debugging
+                    if (System.currentTimeMillis() % 500 < 50) {
+                        Log.d("JumpDetector", "Jumping: RawAlt=${String.format("%.2f", rawAltitude)}, FiltAlt=${String.format("%.2f", filteredAltitude)}, Height=${String.format("%.2f", currentHeight)}")
+                    }
                 } else {
                     onAltitudeUpdate(0.0, false)
                 }
@@ -100,12 +111,13 @@ class JumpDetector(
 
         if (!isJumping) {
             // Takeoff Detection
-            if (verticalAcc > sensitivity.takeoffGForce) {
+            if (verticalAcc > sensitivity.takeoffGForce && (currentTime - lastJumpTime > JUMP_COOLDOWN_MS)) {
                 isJumping = true
                 takeoffTime = currentTime
                 baselineAltitude = kalmanFilter.getCurrentAltitude()
                 maxAltitude = baselineAltitude
                 Log.d("JumpDetector", "Takeoff detected! Baseline: $baselineAltitude")
+                Log.d("JumpDetector", "ST_JUMPING set to true")
             }
         } else {
             // Landing Detection
@@ -135,6 +147,7 @@ class JumpDetector(
 
         isJumping = false
         maxAltitude = 0.0
+        lastJumpTime = System.currentTimeMillis() // Start cooldown when jump completes
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}

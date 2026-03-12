@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.os.Binder
 import android.os.Build
@@ -23,6 +24,7 @@ import com.tracker.gps.wear.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import java.util.*
+import com.tracker.gps.shared.util.JumpDetector
 
 class WearLocationService : Service() {
     private val binder = LocalBinder()
@@ -60,6 +62,9 @@ class WearLocationService : Service() {
     // Users
     private val users = mutableListOf<UserData>()
 
+    // Standalone Jump Detector
+    private lateinit var jumpDetector: JumpDetector
+
     // WebSocket (for standalone mode)
     private var webSocketClient: org.java_websocket.client.WebSocketClient? = null
 
@@ -94,6 +99,23 @@ class WearLocationService : Service() {
         setupLocationCallback()
         setupDataLayerListeners()
 
+        // Initialize Jump Detector for standalone mode
+        jumpDetector = JumpDetector(
+            context = this,
+            onJumpDetected = { height, hangtime ->
+                // Handled standalone jump, we can print it
+                lastJumpHeight = height
+                notifyTrackingState()
+            },
+            onAltitudeUpdate = { altitude, isJmp ->
+                if (isStandaloneMode) {
+                    currentAltitude = altitude
+                    isCurrentlyJumping = isJmp
+                    notifyTrackingState()
+                }
+            }
+        )
+
         // Check for phone connectivity
         serviceScope.launch {
             checkPhoneConnection()
@@ -101,6 +123,18 @@ class WearLocationService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // When service is started via startForegroundService, we must call startForeground
+        // to avoid a crash. We do this with a basic notification.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, createNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification())
+        }
+        
+        return START_STICKY
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -126,8 +160,13 @@ class WearLocationService : Service() {
             apply()
         }
 
-        startForeground(NOTIFICATION_ID, createNotification())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, createNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification())
+        }
         startLocationUpdates()
+        jumpDetector.start()
 
         // Determine mode and connect
         serviceScope.launch {
@@ -150,6 +189,7 @@ class WearLocationService : Service() {
 
         isTracking = false
         stopLocationUpdates()
+        jumpDetector.stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
 
         if (isStandaloneMode) {

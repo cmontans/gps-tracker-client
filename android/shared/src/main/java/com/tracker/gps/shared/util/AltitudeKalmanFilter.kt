@@ -1,12 +1,12 @@
-package com.tracker.gps.util
+package com.tracker.gps.shared.util
 
 /**
  * 1D Kalman Filter to smooth raw barometer readings.
  * Crucial to mitigate "wetsuit squeeze" (rapid false pressure changes).
  */
 class AltitudeKalmanFilter(
-    private val processNoise: Double = 0.1,    // Q: Expected rate of altitude change
-    private val measurementNoise: Double = 1.0 // R: Base noise dampening
+    private val processNoise: Double = 0.05,    // Lowered: expect smoother altitude changes
+    private val measurementNoise: Double = 2.5 // Increased: dampen barometer jitter more
 ) {
     private var altitude: Double = 0.0
     private var variance: Double = 1.0

@@ -1,4 +1,4 @@
-package com.tracker.gps.util
+package com.tracker.gps.shared.util
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

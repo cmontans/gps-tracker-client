@@ -14,7 +14,7 @@ import com.tracker.gps.model.JumpSession
 import com.tracker.gps.service.JumpTrackingService
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.tracker.gps.util.JumpSensitivity
+import com.tracker.gps.shared.util.JumpSensitivity
 
 class JumpViewModel(application: Application) : AndroidViewModel(application) {
 

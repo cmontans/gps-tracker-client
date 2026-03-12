@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.tracker.gps.ui.theme.ElectricBlue
 import com.tracker.gps.ui.theme.NeonCyan
 import com.tracker.gps.ui.viewmodel.JumpViewModel
-import com.tracker.gps.util.JumpSensitivity
+import com.tracker.gps.shared.util.JumpSensitivity
 
 @Composable
 fun DashboardScreen(viewModel: JumpViewModel) {

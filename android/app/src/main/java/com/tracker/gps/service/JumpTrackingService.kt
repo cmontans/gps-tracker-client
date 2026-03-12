@@ -12,8 +12,8 @@ import android.speech.tts.TextToSpeech
 import java.util.Locale
 import com.tracker.gps.db.AppDatabase
 import com.tracker.gps.model.JumpSession
-import com.tracker.gps.util.JumpDetector
-import com.tracker.gps.util.JumpSensitivity
+import com.tracker.gps.shared.util.JumpDetector
+import com.tracker.gps.shared.util.JumpSensitivity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
