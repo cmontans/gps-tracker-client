@@ -5,11 +5,13 @@ import com.google.android.gms.wearable.*
 import com.tracker.gps.shared.model.WearControlCommand
 import com.tracker.gps.shared.model.WearPaths
 import com.tracker.gps.shared.util.DataSerializer
+import kotlinx.coroutines.*
 
 /**
  * Service that listens for data and messages from connected watches
  */
 class PhoneDataLayerListenerService : WearableListenerService() {
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         when (messageEvent.path) {
@@ -28,6 +30,36 @@ class PhoneDataLayerListenerService : WearableListenerService() {
                     putExtra(EXTRA_DATA, messageEvent.data)
                 }
                 sendBroadcast(intent)
+            }
+            WearPaths.JUMP_RECORD_SYNC -> {
+                try {
+                    val record = DataSerializer.fromBytes<com.tracker.gps.shared.model.JumpRecordSync>(messageEvent.data)
+                    saveJumpToHistory(record)
+                } catch (e: Exception) {
+                    android.util.Log.e(TAG, "Error parsing jump record", e)
+                }
+            }
+        }
+    }
+
+    private fun saveJumpToHistory(record: com.tracker.gps.shared.model.JumpRecordSync) {
+        serviceScope.launch {
+            try {
+                val jump = com.tracker.gps.model.JumpSession(
+                    timestamp = record.timestamp,
+                    maxHeight = record.maxHeight,
+                    hangtime = record.hangtime
+                )
+                com.tracker.gps.db.AppDatabase.getDatabase(applicationContext).jumpDao().insertJump(jump)
+                android.util.Log.d(TAG, "Saved watch jump to history: ${record.maxHeight}m")
+                
+                val intent = Intent("com.tracker.gps.ACTION_JUMP_DETECTED").apply {
+                    putExtra("maxHeight", record.maxHeight)
+                    putExtra("hangtime", record.hangtime)
+                }
+                sendBroadcast(intent)
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Error saving watch jump to history", e)
             }
         }
     }
@@ -61,6 +93,11 @@ class PhoneDataLayerListenerService : WearableListenerService() {
             putExtra(EXTRA_NODE_COUNT, capabilityInfo.nodes.size)
         }
         sendBroadcast(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
     }
 
     companion object {

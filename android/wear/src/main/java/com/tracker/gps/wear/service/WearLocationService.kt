@@ -55,6 +55,8 @@ class WearLocationService : Service() {
     private val speedReadings = mutableListOf<Double>()
     private var currentAltitude = 0.0
     private var lastJumpHeight = 0.0
+    private var sessionMaxJumpHeight = 0.0
+    private val jumpHistory = mutableListOf<Double>()
     private var isCurrentlyJumping = false
     private var hasGps = false
     private var isConnected = false
@@ -99,13 +101,45 @@ class WearLocationService : Service() {
         setupLocationCallback()
         setupDataLayerListeners()
 
-        // Initialize Jump Detector for standalone mode
         jumpDetector = JumpDetector(
             context = this,
             onJumpDetected = { height, hangtime ->
                 // Handled standalone jump, we can print it
                 lastJumpHeight = height
+                if (height > sessionMaxJumpHeight) {
+                    sessionMaxJumpHeight = height
+                }
+                jumpHistory.add(0, height) // Newest first
                 notifyTrackingState()
+                
+                // Sync jump record to phone for history
+                serviceScope.launch {
+                    try {
+                        val record = JumpRecordSync(
+                            maxHeight = height,
+                            hangtime = hangtime,
+                            timestamp = System.currentTimeMillis()
+                        )
+                        val dataBytes = DataSerializer.toBytes(record)
+                        
+                        connectedNodeId?.let { nodeId ->
+                            messageClient.sendMessage(nodeId, WearPaths.JUMP_RECORD_SYNC, dataBytes).await()
+                        } ?: run {
+                            // If no connection, find connected nodes
+                            val capability = capabilityClient.getCapability(
+                                Constants.CAPABILITY_TRACKER_APP,
+                                CapabilityClient.FILTER_REACHABLE
+                            ).await()
+                            
+                            capability.nodes.firstOrNull()?.id?.let { nodeId ->
+                                connectedNodeId = nodeId
+                                messageClient.sendMessage(nodeId, WearPaths.JUMP_RECORD_SYNC, dataBytes).await()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("WearLocationService", "Error syncing jump to phone", e)
+                    }
+                }
             },
             onAltitudeUpdate = { altitude, isJmp ->
                 if (isStandaloneMode) {
@@ -217,6 +251,8 @@ class WearLocationService : Service() {
     fun resetStats() {
         maxSpeed = 0.0
         speedReadings.clear()
+        sessionMaxJumpHeight = 0.0
+        jumpHistory.clear()
         notifyTrackingState()
     }
 
@@ -422,6 +458,8 @@ class WearLocationService : Service() {
             avgSpeed = avgSpeed,
             currentAltitude = currentAltitude,
             lastJumpHeight = lastJumpHeight,
+            sessionMaxJumpHeight = sessionMaxJumpHeight,
+            jumpHistory = jumpHistory.toList(),
             isCurrentlyJumping = isCurrentlyJumping
         )
 

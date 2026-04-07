@@ -131,6 +131,12 @@ class JumpTrackingService : Service() {
             AppDatabase.getDatabase(applicationContext).jumpDao().insertJump(jump)
             Log.d(TAG, "Saved jump: ${height}m, ${hangtime}ms")
             
+            val intent = Intent("com.tracker.gps.ACTION_JUMP_DETECTED").apply {
+                putExtra("maxHeight", height)
+                putExtra("hangtime", hangtime)
+            }
+            sendBroadcast(intent)
+            
             val notificationManager = getSystemService(NotificationManager::class.java)
             val notificationText = "%.1f".format(height)
             notificationManager.notify(NOTIFICATION_ID, createNotification("Last Jump: $notificationText m"))

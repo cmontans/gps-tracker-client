@@ -23,10 +23,25 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.wear.compose.material.*
+import androidx.lifecycle.lifecycleScope
+import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.Scaffold
+import androidx.wear.compose.material.Vignette
+import androidx.wear.compose.material.VignettePosition
+import androidx.wear.compose.material.PositionIndicator
+import androidx.wear.compose.material.TimeText
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.Card
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
@@ -34,6 +49,7 @@ import com.tracker.gps.shared.model.TrackingState
 import com.tracker.gps.shared.model.UserData
 import com.tracker.gps.wear.service.WearLocationService
 import com.tracker.gps.wear.theme.WearAppTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private var locationService: WearLocationService? = null
@@ -205,6 +221,40 @@ fun WearApp(
     onResetStats: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = context.getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
+    var userName by remember { mutableStateOf(prefs.getString("user_name", "Wear User") ?: "Wear User") }
+    var groupName by remember { mutableStateOf(prefs.getString("group_name", "Default Group") ?: "Default Group") }
+
+    val nameLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            result.data?.let { intent ->
+                android.app.RemoteInput.getResultsFromIntent(intent)?.getCharSequence("input_result")?.toString()?.let { newName ->
+                    if (newName.isNotBlank()) {
+                        userName = newName
+                        prefs.edit().putString("user_name", newName).apply()
+                    }
+                }
+            }
+        }
+    }
+
+    val groupLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            result.data?.let { intent ->
+                android.app.RemoteInput.getResultsFromIntent(intent)?.getCharSequence("input_result")?.toString()?.let { newGroup ->
+                    if (newGroup.isNotBlank()) {
+                        groupName = newGroup
+                        prefs.edit().putString("group_name", newGroup).apply()
+                    }
+                }
+            }
+        }
+    }
+
     LaunchedEffect(trackingState.isCurrentlyJumping) {
         Log.d("WEAR_APP", "isCurrentlyJumping changed: ${trackingState.isCurrentlyJumping}")
         if (trackingState.isCurrentlyJumping) {
@@ -254,9 +304,24 @@ fun WearApp(
                         trackingState = trackingState,
                         isConnected = isConnected,
                         hasGps = hasGps,
+                        userName = userName,
+                        groupName = groupName,
+                        onUserNameClick = {
+                            val input = android.app.RemoteInput.Builder("input_result").setLabel("New Name").build()
+                            val intent = android.content.Intent("android.support.wearable.input.action.REMOTE_INPUT")
+                            intent.putExtra("android.support.wearable.input.extra.REMOTE_INPUTS", arrayOf(input))
+                            nameLauncher.launch(intent)
+                        },
+                        onGroupNameClick = {
+                            val input = android.app.RemoteInput.Builder("input_result").setLabel("New Group").build()
+                            val intent = android.content.Intent("android.support.wearable.input.action.REMOTE_INPUT")
+                            intent.putExtra("android.support.wearable.input.extra.REMOTE_INPUTS", arrayOf(input))
+                            groupLauncher.launch(intent)
+                        },
                         onStartTracking = onStartTracking,
                         onStopTracking = onStopTracking,
                         onNavigateToUsers = { navController.navigate("users") },
+                        onNavigateToHeights = { navController.navigate("heights") },
                         onGroupHorn = onGroupHorn,
                         onResetStats = onResetStats
                     )
@@ -264,6 +329,13 @@ fun WearApp(
                 composable("users") {
                     UsersScreen(
                         users = users,
+                        listState = listState
+                    )
+                }
+                composable("heights") {
+                    HeightsHistoryScreen(
+                        jumpHistory = trackingState.jumpHistory,
+                        maxHeight = trackingState.sessionMaxJumpHeight,
                         listState = listState
                     )
                 }
@@ -277,9 +349,14 @@ fun MainScreen(
     trackingState: TrackingState,
     isConnected: Boolean,
     hasGps: Boolean,
+    userName: String,
+    groupName: String,
+    onUserNameClick: () -> Unit,
+    onGroupNameClick: () -> Unit,
     onStartTracking: (String, String) -> Unit,
     onStopTracking: () -> Unit,
     onNavigateToUsers: () -> Unit,
+    onNavigateToHeights: () -> Unit,
     onGroupHorn: () -> Unit,
     onResetStats: () -> Unit
 ) {
@@ -342,8 +419,39 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     SpeedCard("Alt", trackingState.currentAltitude, unit = "m")
-                    SpeedCard("Last Jump", trackingState.lastJumpHeight, unit = "m")
+                    SpeedCard("Last", trackingState.lastJumpHeight, unit = "m")
                 }
+                SpeedCard("Max Session", trackingState.sessionMaxJumpHeight, unit = "m", large = true)
+            }
+        }
+
+        // Configuration
+        if (!trackingState.isTracking) {
+            item {
+                Chip(
+                    onClick = onUserNameClick,
+                    label = { 
+                        Column {
+                            Text("Name", style = MaterialTheme.typography.caption2)
+                            Text(userName, style = MaterialTheme.typography.body1) 
+                        }
+                    },
+                    colors = ChipDefaults.secondaryChipColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            item {
+                Chip(
+                    onClick = onGroupNameClick,
+                    label = { 
+                        Column {
+                            Text("Group", style = MaterialTheme.typography.caption2)
+                            Text(groupName, style = MaterialTheme.typography.body1) 
+                        }
+                    },
+                    colors = ChipDefaults.secondaryChipColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 
@@ -354,8 +462,7 @@ fun MainScreen(
                     if (trackingState.isTracking) {
                         onStopTracking()
                     } else {
-                        // TODO: Show input dialog for name/group
-                        onStartTracking("Watch User", "Default Group")
+                        onStartTracking(userName, groupName)
                     }
                 },
                 label = {
@@ -393,12 +500,79 @@ fun MainScreen(
             )
         }
 
+        // View heights button
+        item {
+            Chip(
+                onClick = onNavigateToHeights,
+                label = { Text("Heights") },
+                colors = ChipDefaults.secondaryChipColors(),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
         // Reset stats button
         if (trackingState.isTracking) {
             item {
                 Chip(
                     onClick = onResetStats,
                     label = { Text("Reset") },
+                    colors = ChipDefaults.secondaryChipColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun HeightsHistoryScreen(
+    jumpHistory: List<Double>,
+    maxHeight: Double,
+    listState: ScalingLazyListState
+) {
+    ScalingLazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        state = listState,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 20.dp)
+    ) {
+        item {
+            Text(
+                text = "Session Heights",
+                style = MaterialTheme.typography.title3,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
+        item {
+            Card(
+                onClick = { },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Session Max", style = MaterialTheme.typography.caption2)
+                    Text("%.1f m".format(maxHeight), style = MaterialTheme.typography.title1, color = Color.Green)
+                }
+            }
+        }
+
+        if (jumpHistory.isEmpty()) {
+            item {
+                Text("No jumps yet", style = MaterialTheme.typography.body2)
+            }
+        } else {
+            items(jumpHistory.size) { index ->
+                val height = jumpHistory[index]
+                Chip(
+                    onClick = { },
+                    label = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Jump ${jumpHistory.size - index}")
+                            Text("%.1f m".format(height), fontWeight = FontWeight.Bold)
+                        }
+                    },
                     colors = ChipDefaults.secondaryChipColors(),
                     modifier = Modifier.fillMaxWidth()
                 )

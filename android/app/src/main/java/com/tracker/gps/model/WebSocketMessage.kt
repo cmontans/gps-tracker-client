@@ -30,6 +30,15 @@ sealed class WebSocketMessage {
         val groupName: String
     ) : WebSocketMessage()
 
+    data class GroupJump(
+        val type: String = "group-jump",
+        val userId: String,
+        val userName: String,
+        val groupName: String,
+        val maxHeight: Double,
+        val hangtime: Long
+    ) : WebSocketMessage()
+
     data class Ping(
         val type: String = "ping"
     ) : WebSocketMessage()

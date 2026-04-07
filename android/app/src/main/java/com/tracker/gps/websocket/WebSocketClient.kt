@@ -26,6 +26,7 @@ class GPSWebSocketClient(
         fun onDisconnected()
         fun onUsersUpdate(users: List<UserData>)
         fun onGroupHorn(senderId: String, senderName: String)
+        fun onGroupJump(senderId: String, senderName: String, maxHeight: Double, hangtime: Long)
         fun onError(error: String)
     }
 
@@ -54,6 +55,17 @@ class GPSWebSocketClient(
                         val senderName = if (jsonObject.has("userName") && !jsonObject.get("userName").isJsonNull) 
                             jsonObject.get("userName").asString else "Usuario"
                         listener.onGroupHorn(senderId, senderName)
+                    }
+                    "group-jump" -> {
+                        val senderId = if (jsonObject.has("userId") && !jsonObject.get("userId").isJsonNull) 
+                            jsonObject.get("userId").asString else ""
+                        val senderName = if (jsonObject.has("userName") && !jsonObject.get("userName").isJsonNull) 
+                            jsonObject.get("userName").asString else "Usuario"
+                        val maxHeight = if (jsonObject.has("maxHeight") && !jsonObject.get("maxHeight").isJsonNull) 
+                            jsonObject.get("maxHeight").asDouble else 0.0
+                        val hangtime = if (jsonObject.has("hangtime") && !jsonObject.get("hangtime").isJsonNull) 
+                            jsonObject.get("hangtime").asLong else 0L
+                        listener.onGroupJump(senderId, senderName, maxHeight, hangtime)
                     }
                     "ping" -> {
                         sendPong()
@@ -124,6 +136,18 @@ class GPSWebSocketClient(
         )
         send(gson.toJson(message))
         Log.d(TAG, "Sent group horn")
+    }
+
+    fun sendGroupJump(userId: String, userName: String, groupName: String, maxHeight: Double, hangtime: Long) {
+        val message = WebSocketMessage.GroupJump(
+            userId = userId,
+            userName = userName,
+            groupName = groupName,
+            maxHeight = maxHeight,
+            hangtime = hangtime
+        )
+        send(gson.toJson(message))
+        Log.d(TAG, "Sent group jump: ${maxHeight}m")
     }
 
     private fun sendPong() {

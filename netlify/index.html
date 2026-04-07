@@ -2497,6 +2497,11 @@
               playHornSound();
               showSuccess(t('hornReceived').replace('{name}', senderName));
             }
+          } else if (data.type === 'group-jump') {
+            const senderName = data.userId === userId ? t('you') || 'Tú' : (data.userName || 'Usuario');
+            const heightStr = data.maxHeight ? data.maxHeight.toFixed(1) : '0';
+            const hangStr = data.hangtime ? (data.hangtime / 1000).toFixed(1) : '0';
+            showSuccess(`🦘 ¡SALTO! ${senderName} saltó ${heightStr}m (${hangStr}s)`);
           }
         };
 

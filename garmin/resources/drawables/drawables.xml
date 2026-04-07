@@ -1,0 +1,6 @@
+<resources>
+    <drawables>
+        <!-- A simple placeholder for launcher icon -->
+        <bitmap id="LauncherIcon" filename="icon.png" />
+    </drawables>
+</resources>

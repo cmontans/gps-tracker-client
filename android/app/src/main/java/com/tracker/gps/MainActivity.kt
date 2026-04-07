@@ -149,6 +149,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                 }
 
+                override fun onGroupJump(senderId: String, senderName: String, maxHeight: Double, hangtime: Long) {
+                    runOnUiThread {
+                        if (senderId != userId) {
+                            val msg = "🦘 ¡SALTO! $senderName saltó ${"%.1f".format(maxHeight)}m"
+                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+
                 override fun onError(message: String) {
                     runOnUiThread {
                         Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
