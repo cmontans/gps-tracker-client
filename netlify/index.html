@@ -2879,6 +2879,9 @@
             console.log('✅ Speed history record submitted successfully');
             lastSubmittedMaxSpeed = maxSpeed;
             lastSubmissionTime = Date.now();
+            
+            // Reload the speed history to sync stats and record lists in UI
+            loadSpeedHistory().catch(err => console.warn('⚠️ Failed to reload history after submit:', err));
           } else {
             const errData = await response.json().catch(() => ({}));
             console.error('❌ Failed to submit speed history:', response.status, errData);
@@ -2968,11 +2971,11 @@
     }
 
     // Detener seguimiento
-    function stopTracking() {
+    async function stopTracking() {
       console.log('⏹️ DETENIENDO SEGUIMIENTO');
 
       // Submit max speed record before stopping
-      submitSpeedHistory();
+      await submitSpeedHistory();
 
       if (watchId) {
         navigator.geolocation.clearWatch(watchId);
