@@ -2811,12 +2811,6 @@
               bearing: Math.round(bearing),
               timestamp: Date.now()
             }));
-
-            // Periodically submit history during the session
-            const now = Date.now();
-            if (maxSpeed > lastSubmittedMaxSpeed && (now - lastSubmissionTime) > 60000) {
-              submitSpeedHistory();
-            }
           }
 
           lastPosition = position;
