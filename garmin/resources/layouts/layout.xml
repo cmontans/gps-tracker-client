@@ -1,0 +1,5 @@
+<layout id="MainLayout">
+    <label id="SpeedLabel" x="center" y="30%" font="Gfx.FONT_LARGE" justification="Gfx.TEXT_JUSTIFY_CENTER" color="Gfx.COLOR_WHITE" />
+    <label id="JumpLabel" x="center" y="60%" font="Gfx.FONT_MEDIUM" justification="Gfx.TEXT_JUSTIFY_CENTER" color="Gfx.COLOR_BLUE" />
+    <label id="StatusLabel" x="center" y="80%" font="Gfx.FONT_XTINY" justification="Gfx.TEXT_JUSTIFY_CENTER" color="Gfx.COLOR_LT_GRAY" text="@Strings.WaitingGps" />
+</layout>

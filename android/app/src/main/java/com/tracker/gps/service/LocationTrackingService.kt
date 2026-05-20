@@ -9,6 +9,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 import android.location.Location
 import android.os.Binder
 import android.os.Build
@@ -71,6 +73,16 @@ class LocationTrackingService : Service() {
     private var lastSubmissionTime: Long = 0
     private val submissionThrottleMs = 60000L // 1 minute throttle
 
+    private val jumpReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == "com.tracker.gps.ACTION_JUMP_DETECTED") {
+                val maxHeight = intent.getDoubleExtra("maxHeight", 0.0)
+                val hangtime = intent.getLongExtra("hangtime", 0L)
+                webSocketClient?.sendGroupJump(userId, userName, groupName, maxHeight, hangtime)
+            }
+        }
+    }
+
     var serviceListener: ServiceListener? = null
 
     interface ServiceListener {
@@ -80,6 +92,7 @@ class LocationTrackingService : Service() {
         fun onConnectionStatusChanged(connected: Boolean)
         fun onGpsStatusChanged(active: Boolean)
         fun onGroupHorn(senderId: String, senderName: String)
+        fun onGroupJump(senderId: String, senderName: String, maxHeight: Double, hangtime: Long)
         fun onError(message: String)
     }
 
@@ -92,6 +105,13 @@ class LocationTrackingService : Service() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
         initializeTextToSpeech()
+
+        val filter = IntentFilter("com.tracker.gps.ACTION_JUMP_DETECTED")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(jumpReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(jumpReceiver, filter)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -324,6 +344,10 @@ class LocationTrackingService : Service() {
                     serviceListener?.onGroupHorn(senderId, senderName)
                 }
 
+                override fun onGroupJump(senderId: String, senderName: String, maxHeight: Double, hangtime: Long) {
+                    serviceListener?.onGroupJump(senderId, senderName, maxHeight, hangtime)
+                }
+
                 override fun onError(error: String) {
                     serviceListener?.onError(error)
                 }
@@ -419,6 +443,7 @@ class LocationTrackingService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         textToSpeech?.shutdown()
+        unregisterReceiver(jumpReceiver)
         Log.d(TAG, "Service destroyed, TextToSpeech shut down")
     }
 

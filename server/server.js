@@ -199,6 +199,33 @@ wss.on('connection', (ws, req) => {
           });
           break;
 
+        case 'group-jump':
+          const jumpGroup = (data.groupName || 'default').toLowerCase();
+          const jumpUserId = data.userId;
+          const jumpUserName = data.userName || 'Usuario';
+          const nowJump = Date.now();
+
+          // Validar que el grupo existe
+          if (!groups.has(jumpGroup)) {
+            console.log(`⚠️ Intento de salto en grupo inexistente: ${jumpGroup}`);
+            break;
+          }
+
+          // Log de auditoría
+          console.log(`🦘 Salto de ${jumpUserName} (${jumpUserId}) en grupo ${jumpGroup}`);
+
+          // Distribuir mensaje a todos los usuarios del mismo grupo
+          broadcastToGroup(jumpGroup, {
+            type: 'group-jump',
+            userId: jumpUserId,
+            userName: jumpUserName,
+            groupName: jumpGroup,
+            maxHeight: data.maxHeight,
+            hangtime: data.hangtime,
+            timestamp: data.timestamp || nowJump
+          });
+          break;
+
         default:
           console.log('⚠️ Tipo de mensaje desconocido:', data.type);
       }

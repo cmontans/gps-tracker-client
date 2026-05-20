@@ -1,0 +1,576 @@
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 1; @symbol_usingdef<0> = [Toybox,1,6,12]; @symbol_usingdef<1> = [Sensor,1,13,19]; ]
+using Toybox.Sensor;
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 2; @symbol_usingdef<0> = [Toybox,2,6,12]; @symbol_usingdef<1> = [Math,2,13,17]; ]
+using Toybox.Math;
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 3; @symbol_usingdef<0> = [Toybox,3,6,12]; @symbol_usingdef<1> = [System,3,13,19]; ]
+using Toybox.System;
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 5; @symbol_classdef = [JumpDetector,5,6,18]; ]
+class JumpDetector {
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 5; ]
+    <init> {
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 5; ]
+    static
+    <init> {
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 6; @position = 16; @symbol_vardef = [kalmanFilter,6,16,28]; ]
+    private
+    var kalmanFilter;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 9; @position = 16; @symbol_vardef = [isJumping,9,16,25]; ]
+    private
+    var isJumping = false;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 10; @position = 16; @symbol_vardef = [baselineAltitude,10,16,32]; ]
+    private
+    var baselineAltitude = 0.0f;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 11; @position = 16; @symbol_vardef = [maxAltitude,11,16,27]; ]
+    private
+    var maxAltitude = 0.0f;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 12; @position = 16; @symbol_vardef = [takeoffTime,12,16,27]; ]
+    private
+    var takeoffTime = 0;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 13; @position = 16; @symbol_vardef = [lastJumpTime,13,16,28]; ]
+    private
+    var lastJumpTime = 0;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 16; @position = 16; @symbol_vardef = [takeoffGForce,16,16,29]; ]
+    private
+    var takeoffGForce = 22.0f;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 17; @position = 16; @symbol_vardef = [minHeight,17,16,25]; ]
+    private
+    var minHeight = 1.0f;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 18; @position = 16; @symbol_vardef = [JUMP_COOLDOWN_MS,18,16,32]; ]
+    private
+    var JUMP_COOLDOWN_MS = 2000;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 21; @position = 16; @symbol_vardef = [parentApp,21,16,25]; ]
+    private
+    var parentApp;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 23; @symbol_functiondef = [initialize,23,13,23]; @symbol_param<0> = [app,23,24,27]; ]
+    function initialize(app) as Void {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_23_29_26_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 24 8 ]
+        %tmp.1 = lgetv %app;
+        symbol [ app %tmp.1 24 20 23 ];
+        symbol [ parentApp ? 24 8 17 ];
+        putv self :parentApp %tmp.1;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 25 8 ]
+        symbol [ AltitudeKalmanFilter %tmp.5 25 27 47 ];
+        %tmp.5 = getv ? :AltitudeKalmanFilter;
+        %tmp.6 = 0.01f;
+        %tmp.7 = 2.0f;
+        %tmp.2 = newc %tmp.5 (%tmp.6, %tmp.7);
+        symbol [ kalmanFilter ? 25 8 20 ];
+        putv self :kalmanFilter %tmp.2;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_23_29_26_4_stop:
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 28; @symbol_functiondef = [start,28,13,18]; ]
+    function start() {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_28_21_32_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 30 8 ]
+        symbol [ Sensor %tmp.1 30 8 14 ];
+        %tmp.1 = getm $.Toybox.Sensor;
+        symbol [ enableSensorEvents %tmp.2 30 15 33 ];
+        %tmp.2 = getv function %tmp.1 :enableSensorEvents;
+        %tmp.3 = self;
+        symbol [ method %tmp.4 30 34 40 ];
+        %tmp.4 = getv function %tmp.3 :method;
+        %tmp.6 = const :onSensor;
+        symbol [ onSensor %tmp.6 30 42 50 const ];
+        %tmp.7 = invoke %tmp.3 %tmp.4(%tmp.6);
+        invoke %tmp.1 %tmp.2(%tmp.7);
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 31 8 ]
+        symbol [ System %tmp.8 31 8 14 ];
+        %tmp.8 = getm $.Toybox.System;
+        symbol [ println %tmp.9 31 15 22 ];
+        %tmp.9 = getv function %tmp.8 :println;
+        %tmp.10 = "JumpDetector started";
+        invoke %tmp.8 %tmp.9(%tmp.10);
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_28_21_32_4_stop:
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 34; @symbol_functiondef = [stop,34,13,17]; ]
+    function stop() {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_34_20_36_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 35 8 ]
+        symbol [ Sensor %tmp.1 35 8 14 ];
+        %tmp.1 = getm $.Toybox.Sensor;
+        symbol [ enableSensorEvents %tmp.2 35 15 33 ];
+        %tmp.2 = getv function %tmp.1 :enableSensorEvents;
+        %tmp.3 = null;
+        invoke %tmp.1 %tmp.2(%tmp.3);
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_34_20_36_4_stop:
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 38; @symbol_functiondef = [onSensor,38,13,21]; @symbol_param<0> = [info,38,22,26]; @symbol_param<0>_type<0> = [Sensor,38,30,36]; @symbol_param<0>_type<1> = [Info,38,37,41]; ]
+    function onSensor(info as Sensor.Info) as Void {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_38_51_87_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 39 8 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_38_51_87_4_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_38_51_87_4_stop" ]
+        %currentTime.1 = local;
+        symbol [ currentTime %currentTime.1 39 12 23 ];
+        symbol [ System %tmp.1 39 26 32 ];
+        %tmp.1 = getm $.Toybox.System;
+        symbol [ getTimer %tmp.2 39 33 41 ];
+        %tmp.2 = getv function %tmp.1 :getTimer;
+        %tmp.3 = invoke %tmp.1 %tmp.2();
+        lputv %currentTime.1 %tmp.3;
+        symbol [ currentTime %currentTime.1 39 12 23 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 42 8 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_8_54_8_if_stmt:
+        %tmp.4 = lgetv %info;
+        symbol [ info %tmp.4 42 12 16 ];
+        symbol [ altitude %tmp.5 42 17 25 ];
+        %tmp.5 = getv %tmp.4 :altitude;
+        %tmp.6 = null;
+        %tmp.7 = ne %tmp.5 %tmp.6;
+        bf %tmp.7 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_8_54_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_8_54_8_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_35_54_8_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 43 12 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_35_54_8_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_35_54_8_stop" ]
+        %filteredAltitude.2 = local;
+        symbol [ filteredAltitude %filteredAltitude.2 43 16 32 ];
+        symbol [ kalmanFilter %tmp.9 43 35 47 ];
+        %tmp.9 = getv ? :kalmanFilter;
+        symbol [ update %tmp.10 43 48 54 ];
+        %tmp.10 = getv function %tmp.9 :update;
+        %tmp.11 = lgetv %info;
+        symbol [ info %tmp.11 43 55 59 ];
+        symbol [ altitude %tmp.12 43 60 68 ];
+        %tmp.12 = getv %tmp.11 :altitude;
+        symbol [ toFloat %tmp.13 43 69 76 ];
+        %tmp.13 = getv function %tmp.12 :toFloat;
+        %tmp.14 = invoke %tmp.12 %tmp.13();
+        %tmp.15 = invoke %tmp.9 %tmp.10(%tmp.14);
+        lputv %filteredAltitude.2 %tmp.15;
+        symbol [ filteredAltitude %filteredAltitude.2 43 16 32 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 45 12 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_12_53_12_if_stmt:
+        symbol [ isJumping %tmp.17 45 16 25 ];
+        %tmp.17 = getv ? :isJumping;
+        bf %tmp.17 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_12_53_12_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_12_53_12_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_27_53_12_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 46 16 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_46_16_48_16_if_stmt:
+        %tmp.18 = lgetv %filteredAltitude.2;
+        symbol [ filteredAltitude %tmp.18 46 20 36 ];
+        symbol [ maxAltitude %tmp.20 46 39 50 ];
+        %tmp.20 = getv ? :maxAltitude;
+        %tmp.21 = gt %tmp.18 %tmp.20;
+        bf %tmp.21 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_46_16_48_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_46_16_48_16_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_46_52_48_16_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 47 20 ]
+        %tmp.22 = lgetv %filteredAltitude.2;
+        symbol [ filteredAltitude %tmp.22 47 34 50 ];
+        symbol [ maxAltitude ? 47 20 31 ];
+        putv self :maxAltitude %tmp.22;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_46_52_48_16_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_46_16_48_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_46_16_48_16_if_end:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 49 16 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_27_53_12_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_27_53_12_stop" ]
+        %currentHeight.3 = local;
+        symbol [ currentHeight %currentHeight.3 49 20 33 ];
+        symbol [ maxAltitude %tmp.24 49 36 47 ];
+        %tmp.24 = getv ? :maxAltitude;
+        symbol [ baselineAltitude %tmp.26 49 50 66 ];
+        %tmp.26 = getv ? :baselineAltitude;
+        %tmp.27 = sub %tmp.24 %tmp.26;
+        lputv %currentHeight.3 %tmp.27;
+        symbol [ currentHeight %currentHeight.3 49 20 33 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 50 16 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_50_16_50_63_if_stmt:
+        %tmp.28 = lgetv %currentHeight.3;
+        symbol [ currentHeight %tmp.28 50 20 33 ];
+        %tmp.29 = 0;
+        %tmp.30 = lt %tmp.28 %tmp.29;
+        bf %tmp.30 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_50_16_50_63_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_50_16_50_63_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_50_39_50_63_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 50 41 ]
+        %tmp.31 = 0.0f;
+        lputv %currentHeight.3 %tmp.31;
+        symbol [ currentHeight %currentHeight.3 50 41 54 ];
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_50_39_50_63_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_50_16_50_63_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_50_16_50_63_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_27_53_12_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_12_53_12_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_45_12_53_12_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_35_54_8_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_8_54_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_42_8_54_8_if_end:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 58 8 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_8_86_8_if_stmt:
+        %tmp.32 = lgetv %info;
+        symbol [ info %tmp.32 58 12 16 ];
+        symbol [ accel %tmp.33 58 17 22 ];
+        %tmp.33 = getv %tmp.32 :accel;
+        %tmp.34 = null;
+        %tmp.35 = ne %tmp.33 %tmp.34;
+        bf %tmp.35 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_8_86_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_8_86_8_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_32_86_8_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 59 12 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_32_86_8_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_32_86_8_stop" ]
+        %accRaw.4 = local;
+        symbol [ accRaw %accRaw.4 59 16 22 ];
+        %tmp.36 = lgetv %info;
+        symbol [ info %tmp.36 59 25 29 ];
+        symbol [ accel %tmp.37 59 30 35 ];
+        %tmp.37 = getv %tmp.36 :accel;
+        lputv %accRaw.4 %tmp.37;
+        symbol [ accRaw %accRaw.4 59 16 22 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 60 12 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_12_85_12_if_stmt:
+        %tmp.38 = lgetv %accRaw.4;
+        symbol [ accRaw %tmp.38 60 16 22 ];
+        symbol [ Toybox %tmp.40 60 34 40 ];
+        %tmp.40 = getv ? :Toybox;
+        symbol [ Lang %tmp.41 60 41 45 ];
+        %tmp.41 = getv %tmp.40 :Lang;
+        symbol [ Array %tmp.42 60 46 51 ];
+        %tmp.42 = getv %tmp.41 :Array;
+        %tmp.43 = isa %tmp.38 %tmp.42;
+        bf %tmp.43 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_12_85_12_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_12_85_12_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 61 16 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_stop" ]
+        %accel.5 = local;
+        symbol [ accel %accel.5 61 20 25 ];
+        %tmp.44 = lgetv %accRaw.4;
+        symbol [ accRaw %tmp.44 61 28 34 ];
+        %tmp.45 = as %tmp.44 { (Toybox.Lang.Array) };
+        %tmp.46 = as %tmp.45 Toybox.Lang.Array<Toybox.Lang.Float>;
+        symbol [ Toybox %tmp.46 61 38 44 ];
+        symbol [ Lang %tmp.46 61 45 49 ];
+        symbol [ Array %tmp.46 61 50 55 ];
+        symbol [ Toybox %tmp.46 61 56 62 ];
+        symbol [ Lang %tmp.46 61 63 67 ];
+        symbol [ Float %tmp.46 61 68 73 ];
+        lputv %accel.5 %tmp.46;
+        symbol [ accel %accel.5 61 20 25 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 62 16 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_stop" ]
+        %ax.6 = local;
+        symbol [ ax %ax.6 62 20 22 ];
+        %tmp.47 = lgetv %accel.5;
+        symbol [ accel %tmp.47 62 25 30 ];
+        %tmp.48 = 0;
+        %tmp.49 = agetv %tmp.47 %tmp.48;
+        lputv %ax.6 %tmp.49;
+        symbol [ ax %ax.6 62 20 22 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 63 16 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_stop" ]
+        %ay.7 = local;
+        symbol [ ay %ay.7 63 20 22 ];
+        %tmp.50 = lgetv %accel.5;
+        symbol [ accel %tmp.50 63 25 30 ];
+        %tmp.51 = 1;
+        %tmp.52 = agetv %tmp.50 %tmp.51;
+        lputv %ay.7 %tmp.52;
+        symbol [ ay %ay.7 63 20 22 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 64 16 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_stop" ]
+        %az.8 = local;
+        symbol [ az %az.8 64 20 22 ];
+        %tmp.53 = lgetv %accel.5;
+        symbol [ accel %tmp.53 64 25 30 ];
+        %tmp.54 = 2;
+        %tmp.55 = agetv %tmp.53 %tmp.54;
+        lputv %az.8 %tmp.55;
+        symbol [ az %az.8 64 20 22 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 65 16 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_stop" ]
+        %accMagnitude.9 = local;
+        symbol [ accMagnitude %accMagnitude.9 65 20 32 ];
+        symbol [ Math %tmp.56 65 35 39 ];
+        %tmp.56 = getm $.Toybox.Math;
+        symbol [ sqrt %tmp.57 65 40 44 ];
+        %tmp.57 = getv function %tmp.56 :sqrt;
+        %tmp.58 = lgetv %ax.6;
+        symbol [ ax %tmp.58 65 45 47 ];
+        %tmp.59 = lgetv %ax.6;
+        symbol [ ax %tmp.59 65 48 50 ];
+        %tmp.60 = mul %tmp.58 %tmp.59;
+        %tmp.61 = lgetv %ay.7;
+        symbol [ ay %tmp.61 65 53 55 ];
+        %tmp.62 = lgetv %ay.7;
+        symbol [ ay %tmp.62 65 56 58 ];
+        %tmp.63 = mul %tmp.61 %tmp.62;
+        %tmp.64 = add %tmp.60 %tmp.63;
+        %tmp.65 = lgetv %az.8;
+        symbol [ az %tmp.65 65 61 63 ];
+        %tmp.66 = lgetv %az.8;
+        symbol [ az %tmp.66 65 64 66 ];
+        %tmp.67 = mul %tmp.65 %tmp.66;
+        %tmp.68 = add %tmp.64 %tmp.67;
+        %tmp.69 = invoke %tmp.56 %tmp.57(%tmp.68);
+        lputv %accMagnitude.9 %tmp.69;
+        symbol [ accMagnitude %accMagnitude.9 65 20 32 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 67 12 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_12_84_12_if_stmt:
+        symbol [ isJumping %tmp.71 67 17 26 ];
+        %tmp.71 = getv ? :isJumping;
+        %tmp.72 = not %tmp.71;
+        bf %tmp.72 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_12_84_12_if_else_false;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_12_84_12_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_28_76_12_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 69 16 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_16_75_16_if_stmt:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_20_69_98_begin:
+        %tmp.73 = lgetv %accMagnitude.9;
+        symbol [ accMagnitude %tmp.73 69 20 32 ];
+        symbol [ takeoffGForce %tmp.75 69 35 48 ];
+        %tmp.75 = getv ? :takeoffGForce;
+        %tmp.76 = gt %tmp.73 %tmp.75;
+        bf %tmp.76 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_16_75_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_52_69_98_true:
+        %tmp.77 = lgetv %currentTime.1;
+        symbol [ currentTime %tmp.77 69 53 64 ];
+        symbol [ lastJumpTime %tmp.79 69 67 79 ];
+        %tmp.79 = getv ? :lastJumpTime;
+        %tmp.80 = sub %tmp.77 %tmp.79;
+        symbol [ JUMP_COOLDOWN_MS %tmp.82 69 82 98 ];
+        %tmp.82 = getv ? :JUMP_COOLDOWN_MS;
+        %tmp.83 = gt %tmp.80 %tmp.82;
+        push %tmp.83;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_52_69_98_end:
+        %tmp.84 = phi [%tmp.76 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_20_69_98_begin] [%tmp.83 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_52_69_98_true] [%tmp.84 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_52_69_98_end];
+        bf %tmp.84 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_16_75_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_16_75_16_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_101_75_16_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 70 20 ]
+        %tmp.85 = true;
+        symbol [ isJumping ? 70 20 29 ];
+        putv self :isJumping %tmp.85;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 71 20 ]
+        %tmp.86 = lgetv %currentTime.1;
+        symbol [ currentTime %tmp.86 71 34 45 ];
+        symbol [ takeoffTime ? 71 20 31 ];
+        putv self :takeoffTime %tmp.86;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 72 20 ]
+        symbol [ kalmanFilter %tmp.88 72 39 51 ];
+        %tmp.88 = getv ? :kalmanFilter;
+        symbol [ update %tmp.89 72 52 58 ];
+        %tmp.89 = getv function %tmp.88 :update;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_begin:
+        %tmp.90 = lgetv %info;
+        symbol [ info %tmp.90 72 59 63 ];
+        symbol [ altitude %tmp.91 72 64 72 ];
+        %tmp.91 = getv %tmp.90 :altitude;
+        %tmp.92 = null;
+        %tmp.93 = ne %tmp.91 %tmp.92;
+        bf %tmp.93 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_else_false;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_true:
+        %tmp.94 = lgetv %info;
+        symbol [ info %tmp.94 72 83 87 ];
+        symbol [ altitude %tmp.95 72 88 96 ];
+        %tmp.95 = getv %tmp.94 :altitude;
+        symbol [ toFloat %tmp.96 72 97 104 ];
+        %tmp.96 = getv function %tmp.95 :toFloat;
+        %tmp.97 = invoke %tmp.95 %tmp.96();
+        push %tmp.97;
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_else_false:
+        %tmp.98 = 0.0f;
+        push %tmp.98;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_end:
+        %tmp.99 = phi [%tmp.93 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_begin] [%tmp.97 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_true] [%tmp.98 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_else_false] [%tmp.99 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_72_59_72_109_end];
+        %tmp.100 = invoke %tmp.88 %tmp.89(%tmp.99);
+        symbol [ baselineAltitude ? 72 20 36 ];
+        putv self :baselineAltitude %tmp.100;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 73 20 ]
+        symbol [ baselineAltitude %tmp.102 73 34 50 ];
+        %tmp.102 = getv ? :baselineAltitude;
+        symbol [ maxAltitude ? 73 20 31 ];
+        putv self :maxAltitude %tmp.102;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 74 20 ]
+        symbol [ System %tmp.103 74 20 26 ];
+        %tmp.103 = getm $.Toybox.System;
+        symbol [ println %tmp.104 74 27 34 ];
+        %tmp.104 = getv function %tmp.103 :println;
+        %tmp.105 = "Takeoff detected";
+        invoke %tmp.103 %tmp.104(%tmp.105);
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_101_75_16_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_16_75_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_69_16_75_16_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_28_76_12_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_12_84_12_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_12_84_12_if_else_false:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_76_19_84_12_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 78 16 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_16_83_16_if_stmt:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_20_78_74_begin:
+        %tmp.106 = lgetv %accMagnitude.9;
+        symbol [ accMagnitude %tmp.106 78 20 32 ];
+        %tmp.107 = 15.0f;
+        %tmp.108 = gt %tmp.106 %tmp.107;
+        bf %tmp.108 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_16_83_16_if_false;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_44_78_74_true:
+        %tmp.109 = lgetv %currentTime.1;
+        symbol [ currentTime %tmp.109 78 45 56 ];
+        symbol [ takeoffTime %tmp.111 78 59 70 ];
+        %tmp.111 = getv ? :takeoffTime;
+        %tmp.112 = sub %tmp.109 %tmp.111;
+        %tmp.113 = 800;
+        %tmp.114 = gt %tmp.112 %tmp.113;
+        push %tmp.114;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_44_78_74_end:
+        %tmp.115 = phi [%tmp.108 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_20_78_74_begin] [%tmp.114 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_44_78_74_true] [%tmp.115 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_44_78_74_end];
+        bf %tmp.115 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_16_83_16_if_false;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_16_83_16_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_79_80_16_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 79 20 ]
+        %tmp.116 = self;
+        symbol [ completeJump %tmp.117 79 20 32 ];
+        %tmp.117 = getv function %tmp.116 :completeJump;
+        %tmp.118 = lgetv %currentTime.1;
+        symbol [ currentTime %tmp.118 79 33 44 ];
+        invoke %tmp.116 %tmp.117(%tmp.118);
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_79_80_16_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_16_83_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_16_83_16_if_false:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 80 23 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_80_23_83_16_if_stmt:
+        %tmp.119 = lgetv %currentTime.1;
+        symbol [ currentTime %tmp.119 80 27 38 ];
+        symbol [ takeoffTime %tmp.121 80 41 52 ];
+        %tmp.121 = getv ? :takeoffTime;
+        %tmp.122 = sub %tmp.119 %tmp.121;
+        %tmp.123 = 10000;
+        %tmp.124 = gt %tmp.122 %tmp.123;
+        bf %tmp.124 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_80_23_83_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_80_23_83_16_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_80_62_83_16_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 82 20 ]
+        %tmp.125 = self;
+        symbol [ completeJump %tmp.126 82 20 32 ];
+        %tmp.126 = getv function %tmp.125 :completeJump;
+        %tmp.127 = lgetv %currentTime.1;
+        symbol [ currentTime %tmp.127 82 33 44 ];
+        invoke %tmp.125 %tmp.126(%tmp.127);
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_80_62_83_16_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_80_23_83_16_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_80_23_83_16_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_78_16_83_16_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_76_19_84_12_stop:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_67_12_84_12_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_53_85_12_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_12_85_12_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_60_12_85_12_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_32_86_8_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_8_86_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_58_8_86_8_if_end:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_38_51_87_4_stop:
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 89; @symbol_functiondef = [completeJump,89,21,33]; @symbol_param<0> = [landingTime,89,34,45]; ]
+    private
+    function completeJump(landingTime) {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_89_47_104_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 90 8 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_90_8_90_34_if_stmt:
+        symbol [ isJumping %tmp.2 90 13 22 ];
+        %tmp.2 = getv ? :isJumping;
+        %tmp.3 = not %tmp.2;
+        bf %tmp.3 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_90_8_90_34_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_90_8_90_34_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_90_24_90_34_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 90 26 ]
+        ret ?;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_90_24_90_34_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_90_8_90_34_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_90_8_90_34_if_end:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 92 8 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_89_47_104_4_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_89_47_104_4_stop" ]
+        %hangtimeMs.1 = local;
+        symbol [ hangtimeMs %hangtimeMs.1 92 12 22 ];
+        %tmp.4 = lgetv %landingTime;
+        symbol [ landingTime %tmp.4 92 25 36 ];
+        symbol [ takeoffTime %tmp.6 92 39 50 ];
+        %tmp.6 = getv ? :takeoffTime;
+        %tmp.7 = sub %tmp.4 %tmp.6;
+        lputv %hangtimeMs.1 %tmp.7;
+        symbol [ hangtimeMs %hangtimeMs.1 92 12 22 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 93 8 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_89_47_104_4_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_89_47_104_4_stop" ]
+        %height.2 = local;
+        symbol [ height %height.2 93 12 18 ];
+        symbol [ maxAltitude %tmp.9 93 21 32 ];
+        %tmp.9 = getv ? :maxAltitude;
+        symbol [ baselineAltitude %tmp.11 93 35 51 ];
+        %tmp.11 = getv ? :baselineAltitude;
+        %tmp.12 = sub %tmp.9 %tmp.11;
+        lputv %height.2 %tmp.12;
+        symbol [ height %height.2 93 12 18 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 95 8 ]
+        symbol [ System %tmp.13 95 8 14 ];
+        %tmp.13 = getm $.Toybox.System;
+        symbol [ println %tmp.14 95 15 22 ];
+        %tmp.14 = getv function %tmp.13 :println;
+        %tmp.15 = "Landing detected! Hangtime: ";
+        %tmp.16 = lgetv %hangtimeMs.1;
+        symbol [ hangtimeMs %tmp.16 95 56 66 ];
+        %tmp.17 = add %tmp.15 %tmp.16;
+        %tmp.18 = "ms, Height: ";
+        %tmp.19 = add %tmp.17 %tmp.18;
+        %tmp.20 = lgetv %height.2;
+        symbol [ height %tmp.20 95 86 92 ];
+        %tmp.21 = add %tmp.19 %tmp.20;
+        %tmp.22 = "m";
+        %tmp.23 = add %tmp.21 %tmp.22;
+        invoke %tmp.13 %tmp.14(%tmp.23);
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 97 8 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_8_99_8_if_stmt:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_12_97_43_begin:
+        %tmp.24 = lgetv %hangtimeMs.1;
+        symbol [ hangtimeMs %tmp.24 97 12 22 ];
+        %tmp.25 = 1500;
+        %tmp.26 = gt %tmp.24 %tmp.25;
+        bf %tmp.26 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_8_99_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_33_97_43_true:
+        %tmp.27 = lgetv %height.2;
+        symbol [ height %tmp.27 97 33 39 ];
+        symbol [ minHeight %tmp.29 97 43 52 ];
+        %tmp.29 = getv ? :minHeight;
+        %tmp.30 = gte %tmp.27 %tmp.29;
+        push %tmp.30;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_33_97_43_end:
+        %tmp.31 = phi [%tmp.26 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_12_97_43_begin] [%tmp.30 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_33_97_43_true] [%tmp.31 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_33_97_43_end];
+        bf %tmp.31 @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_8_99_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_8_99_8_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_54_99_8_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 98 12 ]
+        symbol [ parentApp %tmp.33 98 12 21 ];
+        %tmp.33 = getv ? :parentApp;
+        symbol [ onJumpDetected %tmp.34 98 22 36 ];
+        %tmp.34 = getv function %tmp.33 :onJumpDetected;
+        %tmp.35 = lgetv %height.2;
+        symbol [ height %tmp.35 98 37 43 ];
+        %tmp.36 = lgetv %hangtimeMs.1;
+        symbol [ hangtimeMs %tmp.36 98 45 55 ];
+        invoke %tmp.33 %tmp.34(%tmp.35, %tmp.36);
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_54_99_8_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_8_99_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_97_8_99_8_if_end:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 101 8 ]
+        %tmp.37 = false;
+        symbol [ isJumping ? 101 8 17 ];
+        putv self :isJumping %tmp.37;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 102 8 ]
+        %tmp.38 = 0.0f;
+        symbol [ maxAltitude ? 102 8 19 ];
+        putv self :maxAltitude %tmp.38;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc" 103 8 ]
+        symbol [ System %tmp.39 103 23 29 ];
+        %tmp.39 = getm $.Toybox.System;
+        symbol [ getTimer %tmp.40 103 30 38 ];
+        %tmp.40 = getv function %tmp.39 :getTimer;
+        %tmp.41 = invoke %tmp.39 %tmp.40();
+        symbol [ lastJumpTime ? 103 8 20 ];
+        putv self :lastJumpTime %tmp.41;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_JumpDetector_mc_89_47_104_4_stop:
+    }
+}
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\JumpDetector.mc"; @line = 1; ]
+<init> {
+}

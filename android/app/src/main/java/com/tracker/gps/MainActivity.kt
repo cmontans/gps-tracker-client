@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var btnSettings: View
     private lateinit var btnHistory: View
     private lateinit var btnWaypoints: View
+    private lateinit var btnJumpTracker: View
     private lateinit var btnToggleMap: Button
     private lateinit var btnFullscreenMap: Button
     private lateinit var btnGroupHorn: Button
@@ -148,6 +149,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
                 }
 
+                override fun onGroupJump(senderId: String, senderName: String, maxHeight: Double, hangtime: Long) {
+                    runOnUiThread {
+                        if (senderId != userId) {
+                            val msg = "🦘 ¡SALTO! $senderName saltó ${"%.1f".format(maxHeight)}m"
+                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+
                 override fun onError(message: String) {
                     runOnUiThread {
                         Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
@@ -229,6 +239,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
         btnWaypoints = findViewById(R.id.btnWaypoints)
+        btnJumpTracker = findViewById(R.id.btnJumpTracker)
         btnToggleMap = findViewById(R.id.btnToggleMap)
         btnFullscreenMap = findViewById(R.id.btnFullscreenMap)
         btnGroupHorn = findViewById(R.id.btnGroupHorn)
@@ -357,6 +368,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         btnWaypoints.setOnClickListener {
             startActivity(Intent(this, WaypointsActivity::class.java))
+        }
+
+        btnJumpTracker.setOnClickListener {
+            startActivity(Intent(this, com.tracker.gps.ui.JumpTrackerActivity::class.java))
         }
 
         btnToggleMap.setOnClickListener {

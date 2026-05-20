@@ -11,6 +11,8 @@ object WearPaths {
     const val CONNECTION_STATUS = "/tracking/connection"
     const val STATS_UPDATE = "/tracking/stats"
     const val GROUP_HORN = "/tracking/horn"
+    const val JUMP_UPDATE = "/tracking/jump"
+    const val JUMP_RECORD_SYNC = "/tracking/jump_record"
 }
 
 /**
@@ -37,6 +39,30 @@ data class TrackingState(
     val currentSpeed: Double = 0.0,
     val maxSpeed: Double = 0.0,
     val avgSpeed: Double = 0.0,
+    val currentAltitude: Double = 0.0,
+    val lastJumpHeight: Double = 0.0,
+    val sessionMaxJumpHeight: Double = 0.0,
+    val jumpHistory: List<Double> = emptyList(),
+    val isCurrentlyJumping: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+/**
+ * Jump record sync sent from watch to phone to be saved in history
+ */
+data class JumpRecordSync(
+    val maxHeight: Double,
+    val hangtime: Long,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+/**
+ * Jump state shared between phone and watch
+ */
+data class JumpState(
+    val currentAltitude: Double = 0.0,
+    val lastJumpHeight: Double = 0.0,
+    val isCurrentlyJumping: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 )
 

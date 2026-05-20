@@ -1,0 +1,10 @@
+<resources>
+    <strings>
+        <string id="AppName">GPS Tracker</string>
+        <string id="SpeedLabel">Speed</string>
+        <string id="JumpLabel">Max Jump</string>
+        <string id="WaitingGps">Waiting for GPS...</string>
+        <string id="Start">Start</string>
+        <string id="Stop">Stop</string>
+    </strings>
+</resources>

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.os.Binder
 import android.os.Build
@@ -23,6 +24,8 @@ import com.tracker.gps.wear.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import java.util.*
+import android.speech.tts.TextToSpeech
+import com.tracker.gps.shared.util.JumpDetector
 
 class WearLocationService : Service() {
     private val binder = LocalBinder()
@@ -48,15 +51,27 @@ class WearLocationService : Service() {
     private var isStandaloneMode = false
     private var connectedNodeId: String? = null
 
-    // Speed tracking
     private var currentSpeed = 0.0
     private var maxSpeed = 0.0
     private val speedReadings = mutableListOf<Double>()
+    private var currentAltitude = 0.0
+    private var lastJumpHeight = 0.0
+    private var sessionMaxJumpHeight = 0.0
+    private val jumpHistory = mutableListOf<Double>()
+    private var isCurrentlyJumping = false
     private var hasGps = false
     private var isConnected = false
 
     // Users
     private val users = mutableListOf<UserData>()
+
+    // Standalone Jump Detector
+    private lateinit var jumpDetector: JumpDetector
+
+    private var textToSpeech: TextToSpeech? = null
+    private var lastAnnouncedSpeed: Int = -1
+    private var lastAnnouncementTime: Long = 0
+    private val announcementCooldownMs = 3000L
 
     // WebSocket (for standalone mode)
     private var webSocketClient: org.java_websocket.client.WebSocketClient? = null
@@ -91,6 +106,75 @@ class WearLocationService : Service() {
         createNotificationChannel()
         setupLocationCallback()
         setupDataLayerListeners()
+        initializeTextToSpeech()
+
+        jumpDetector = JumpDetector(
+            context = this,
+            onJumpDetected = { height, hangtime ->
+                // Handled standalone jump, we can print it
+                lastJumpHeight = height
+                if (height > sessionMaxJumpHeight) {
+                    sessionMaxJumpHeight = height
+                }
+                jumpHistory.add(0, height) // Newest first
+                notifyTrackingState()
+
+                // Announce height via TTS
+                textToSpeech?.let { tts ->
+                    if (tts.isSpeaking) {
+                        tts.stop()
+                    }
+                    val heightText = "%.1f".format(height)
+                    tts.speak(heightText, TextToSpeech.QUEUE_FLUSH, null, "wear_jump_tts")
+                }
+
+                // Bring MainActivity to the foreground and wake the screen
+                try {
+                    val startAppIntent = Intent(this@WearLocationService, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    }
+                    startActivity(startAppIntent)
+                } catch (e: Exception) {
+                    android.util.Log.e("WearLocationService", "Failed to start MainActivity on jump", e)
+                }
+                
+                // Sync jump record to phone for history
+                serviceScope.launch {
+                    try {
+                        val record = JumpRecordSync(
+                            maxHeight = height,
+                            hangtime = hangtime,
+                            timestamp = System.currentTimeMillis()
+                        )
+                        val dataBytes = DataSerializer.toBytes(record)
+                        
+                        connectedNodeId?.let { nodeId ->
+                            messageClient.sendMessage(nodeId, WearPaths.JUMP_RECORD_SYNC, dataBytes).await()
+                        } ?: run {
+                            // If no connection, find connected nodes
+                            val capability = capabilityClient.getCapability(
+                                Constants.CAPABILITY_TRACKER_APP,
+                                CapabilityClient.FILTER_REACHABLE
+                            ).await()
+                            
+                            capability.nodes.firstOrNull()?.id?.let { nodeId ->
+                                connectedNodeId = nodeId
+                                messageClient.sendMessage(nodeId, WearPaths.JUMP_RECORD_SYNC, dataBytes).await()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("WearLocationService", "Error syncing jump to phone", e)
+                    }
+                }
+            },
+            onAltitudeUpdate = { altitude, isJmp ->
+                if (isStandaloneMode) {
+                    currentAltitude = altitude
+                    isCurrentlyJumping = isJmp
+                    notifyTrackingState()
+                }
+            }
+        )
 
         // Check for phone connectivity
         serviceScope.launch {
@@ -100,9 +184,22 @@ class WearLocationService : Service() {
 
     override fun onBind(intent: Intent?): IBinder = binder
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // When service is started via startForegroundService, we must call startForeground
+        // to avoid a crash. We do this with a basic notification.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, createNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification())
+        }
+        
+        return START_STICKY
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         stopTracking()
+        textToSpeech?.shutdown()
         serviceScope.cancel()
     }
 
@@ -117,6 +214,8 @@ class WearLocationService : Service() {
         this.userName = userName
         this.groupName = groupName
         this.isTracking = true
+        lastAnnouncedSpeed = -1
+        lastAnnouncementTime = 0
 
         prefs.edit().apply {
             putString(Constants.PREF_USER_NAME, userName)
@@ -124,8 +223,13 @@ class WearLocationService : Service() {
             apply()
         }
 
-        startForeground(NOTIFICATION_ID, createNotification())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, createNotification(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification())
+        }
         startLocationUpdates()
+        jumpDetector.start()
 
         // Determine mode and connect
         serviceScope.launch {
@@ -148,6 +252,7 @@ class WearLocationService : Service() {
 
         isTracking = false
         stopLocationUpdates()
+        jumpDetector.stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
 
         if (isStandaloneMode) {
@@ -175,6 +280,10 @@ class WearLocationService : Service() {
     fun resetStats() {
         maxSpeed = 0.0
         speedReadings.clear()
+        sessionMaxJumpHeight = 0.0
+        jumpHistory.clear()
+        lastAnnouncedSpeed = -1
+        lastAnnouncementTime = 0
         notifyTrackingState()
     }
 
@@ -203,6 +312,10 @@ class WearLocationService : Service() {
                     val status = DataSerializer.fromBytes<ConnectionStatus>(messageEvent.data)
                     isConnected = status.isConnected
                     listener?.onConnectionStatusChanged(isConnected)
+                }
+                WearPaths.JUMP_UPDATE -> {
+                    val jumpState = DataSerializer.fromBytes<JumpState>(messageEvent.data)
+                    handleJumpStateUpdate(jumpState)
                 }
             }
         }
@@ -291,6 +404,8 @@ class WearLocationService : Service() {
             sendLocationToPhone(location)
         }
 
+        checkAndAnnounceSpeed(currentSpeed)
+
         notifyTrackingState()
     }
 
@@ -347,6 +462,13 @@ class WearLocationService : Service() {
         notifyTrackingState()
     }
 
+    private fun handleJumpStateUpdate(state: JumpState) {
+        currentAltitude = state.currentAltitude
+        lastJumpHeight = state.lastJumpHeight
+        isCurrentlyJumping = state.isCurrentlyJumping
+        notifyTrackingState()
+    }
+
     private fun handleUsersUpdate(userList: List<UserData>) {
         users.clear()
         users.addAll(userList)
@@ -366,7 +488,12 @@ class WearLocationService : Service() {
             groupName = groupName,
             currentSpeed = currentSpeed,
             maxSpeed = maxSpeed,
-            avgSpeed = avgSpeed
+            avgSpeed = avgSpeed,
+            currentAltitude = currentAltitude,
+            lastJumpHeight = lastJumpHeight,
+            sessionMaxJumpHeight = sessionMaxJumpHeight,
+            jumpHistory = jumpHistory.toList(),
+            isCurrentlyJumping = isCurrentlyJumping
         )
 
         listener?.onTrackingStateChanged(state)
@@ -384,6 +511,47 @@ class WearLocationService : Service() {
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun initializeTextToSpeech() {
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.getDefault()
+                android.util.Log.d("WearLocationService", "TextToSpeech initialized successfully")
+            } else {
+                android.util.Log.e("WearLocationService", "TextToSpeech initialization failed")
+            }
+        }
+    }
+
+    private fun checkAndAnnounceSpeed(speed: Double) {
+        val voiceEnabled = prefs.getBoolean(Constants.PREF_VOICE_ENABLED, Constants.DEFAULT_VOICE_ENABLED)
+        if (!voiceEnabled) return
+
+        val minSpeed = prefs.getFloat(Constants.PREF_VOICE_MIN_SPEED, Constants.DEFAULT_MIN_SPEED.toFloat()).toDouble()
+        if (speed < minSpeed) return
+
+        val currentTime = System.currentTimeMillis()
+        val speedInt = speed.toInt()
+
+        // Only announce if speed changed by at least 1 km/h and cooldown period passed
+        if (speedInt != lastAnnouncedSpeed &&
+            (currentTime - lastAnnouncementTime) >= announcementCooldownMs) {
+            announceSpeed(speedInt)
+            lastAnnouncedSpeed = speedInt
+            lastAnnouncementTime = currentTime
+        }
+    }
+
+    private fun announceSpeed(speed: Int) {
+        textToSpeech?.let { tts ->
+            if (tts.isSpeaking) {
+                tts.stop()
+            }
+            val announcement = speed.toString()
+            tts.speak(announcement, TextToSpeech.QUEUE_FLUSH, null, "wear_speed_tts")
+            android.util.Log.d("WearLocationService", "Announcing speed: $speed")
         }
     }
 

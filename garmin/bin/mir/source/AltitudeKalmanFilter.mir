@@ -1,0 +1,213 @@
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 1; @symbol_importdef<0> = [Toybox,1,7,13]; @symbol_importdef<1> = [Math,1,14,18]; ]
+import Toybox.Math;
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 2; @symbol_importdef<0> = [Toybox,2,7,13]; @symbol_importdef<1> = [Lang,2,14,18]; ]
+import Toybox.Lang;
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 4; @symbol_classdef = [AltitudeKalmanFilter,4,6,26]; ]
+class AltitudeKalmanFilter {
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 4; ]
+    <init> {
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 4; ]
+    static
+    <init> {
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 5; @position = 16; @symbol_vardef = [processNoise,5,16,28]; @symbol_type<0> = [Lang,5,32,36]; @symbol_type<1> = [Float,5,37,42]; ]
+    private
+    var processNoise as Lang.Float;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 6; @position = 16; @symbol_vardef = [measurementNoise,6,16,32]; @symbol_type<0> = [Lang,6,36,40]; @symbol_type<1> = [Float,6,41,46]; ]
+    private
+    var measurementNoise as Lang.Float;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 7; @position = 16; @symbol_vardef = [altitude,7,16,24]; @symbol_type<0> = [Lang,7,28,32]; @symbol_type<1> = [Float,7,33,38]; ]
+    private
+    var altitude as Lang.Float;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 8; @position = 16; @symbol_vardef = [variance,8,16,24]; @symbol_type<0> = [Lang,8,28,32]; @symbol_type<1> = [Float,8,33,38]; ]
+    private
+    var variance as Lang.Float;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 9; @position = 16; @symbol_vardef = [isInitialized,9,16,29]; @symbol_type<0> = [Lang,9,33,37]; @symbol_type<1> = [Boolean,9,38,45]; ]
+    private
+    var isInitialized as Lang.Boolean;
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 11; @symbol_functiondef = [initialize,11,13,23]; @symbol_param<0> = [pNoise,11,24,30]; @symbol_param<1> = [mNoise,11,32,38]; ]
+    function initialize(pNoise, mNoise) as Void {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_11_40_17_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 12 8 ]
+        %tmp.1 = lgetv %pNoise;
+        symbol [ pNoise %tmp.1 12 23 29 ];
+        symbol [ processNoise ? 12 8 20 ];
+        putv self :processNoise %tmp.1;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 13 8 ]
+        %tmp.2 = lgetv %mNoise;
+        symbol [ mNoise %tmp.2 13 27 33 ];
+        symbol [ measurementNoise ? 13 8 24 ];
+        putv self :measurementNoise %tmp.2;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 14 8 ]
+        %tmp.3 = 0.0f;
+        symbol [ altitude ? 14 8 16 ];
+        putv self :altitude %tmp.3;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 15 8 ]
+        %tmp.4 = 1.0f;
+        symbol [ variance ? 15 8 16 ];
+        putv self :variance %tmp.4;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 16 8 ]
+        %tmp.5 = false;
+        symbol [ isInitialized ? 16 8 21 ];
+        putv self :isInitialized %tmp.5;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_11_40_17_4_stop:
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 19; @symbol_functiondef = [reset,19,13,18]; @symbol_param<0> = [initialAltitude,19,19,34]; ]
+    function reset(initialAltitude) {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_19_36_23_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 20 8 ]
+        %tmp.1 = lgetv %initialAltitude;
+        symbol [ initialAltitude %tmp.1 20 19 34 ];
+        symbol [ altitude ? 20 8 16 ];
+        putv self :altitude %tmp.1;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 21 8 ]
+        %tmp.2 = 1.0f;
+        symbol [ variance ? 21 8 16 ];
+        putv self :variance %tmp.2;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 22 8 ]
+        %tmp.3 = true;
+        symbol [ isInitialized ? 22 8 21 ];
+        putv self :isInitialized %tmp.3;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_19_36_23_4_stop:
+    }
+    [ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 25; @symbol_functiondef = [update,25,13,19]; @symbol_param<0> = [measurement,25,20,31]; ]
+    function update(measurement) {
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 26 8 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_26_8_29_8_if_stmt:
+        symbol [ isInitialized %tmp.2 26 13 26 ];
+        %tmp.2 = getv ? :isInitialized;
+        %tmp.3 = not %tmp.2;
+        bf %tmp.3 @E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_26_8_29_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_26_8_29_8_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_26_28_29_8_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 27 12 ]
+        %tmp.4 = self;
+        symbol [ reset %tmp.5 27 12 17 ];
+        %tmp.5 = getv function %tmp.4 :reset;
+        %tmp.6 = lgetv %measurement;
+        symbol [ measurement %tmp.6 27 18 29 ];
+        invoke %tmp.4 %tmp.5(%tmp.6);
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 28 12 ]
+        %tmp.7 = lgetv %measurement;
+        symbol [ measurement %tmp.7 28 19 30 ];
+        ret %tmp.7;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_26_28_29_8_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_26_8_29_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_26_8_29_8_if_end:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 31 8 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_stop" ]
+        %residual.1 = local;
+        symbol [ residual %residual.1 31 12 20 ];
+        %tmp.8 = lgetv %measurement;
+        symbol [ measurement %tmp.8 31 23 34 ];
+        symbol [ altitude %tmp.10 31 37 45 ];
+        %tmp.10 = getv ? :altitude;
+        %tmp.11 = sub %tmp.8 %tmp.10;
+        lputv %residual.1 %tmp.11;
+        symbol [ residual %residual.1 31 12 20 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 32 8 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_32_8_34_8_if_stmt:
+        %tmp.12 = lgetv %residual.1;
+        symbol [ residual %tmp.12 32 12 20 ];
+        %tmp.13 = 0;
+        %tmp.14 = lt %tmp.12 %tmp.13;
+        bf %tmp.14 @E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_32_8_34_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_32_8_34_8_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_32_26_34_8_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 33 12 ]
+        %tmp.15 = lgetv %residual.1;
+        symbol [ residual %tmp.15 33 24 32 ];
+        %tmp.16 = sub 0 %tmp.15;
+        lputv %residual.1 %tmp.16;
+        symbol [ residual %residual.1 33 12 20 ];
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_32_26_34_8_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_32_8_34_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_32_8_34_8_if_end:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 35 8 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_stop" ]
+        %adaptiveMeasurementNoise.2 = local;
+        symbol [ adaptiveMeasurementNoise %adaptiveMeasurementNoise.2 35 12 36 ];
+        symbol [ measurementNoise %tmp.18 35 39 55 ];
+        %tmp.18 = getv ? :measurementNoise;
+        lputv %adaptiveMeasurementNoise.2 %tmp.18;
+        symbol [ adaptiveMeasurementNoise %adaptiveMeasurementNoise.2 35 12 36 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 36 8 ]
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_36_8_38_8_if_stmt:
+        %tmp.19 = lgetv %residual.1;
+        symbol [ residual %tmp.19 36 12 20 ];
+        %tmp.20 = 3.0;
+        %tmp.21 = gt %tmp.19 %tmp.20;
+        bf %tmp.21 @E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_36_8_38_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_36_8_38_8_if_true:
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_36_28_38_8_start:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 37 12 ]
+        symbol [ measurementNoise %tmp.23 37 39 55 ];
+        %tmp.23 = getv ? :measurementNoise;
+        %tmp.24 = 20.0f;
+        %tmp.25 = mul %tmp.23 %tmp.24;
+        lputv %adaptiveMeasurementNoise.2 %tmp.25;
+        symbol [ adaptiveMeasurementNoise %adaptiveMeasurementNoise.2 37 12 36 ];
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_36_28_38_8_stop:
+        goto @E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_36_8_38_8_if_end;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_36_8_38_8_if_end:
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 40 8 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_stop" ]
+        %predictedVariance.3 = local;
+        symbol [ predictedVariance %predictedVariance.3 40 12 29 ];
+        symbol [ variance %tmp.27 40 32 40 ];
+        %tmp.27 = getv ? :variance;
+        symbol [ processNoise %tmp.29 40 43 55 ];
+        %tmp.29 = getv ? :processNoise;
+        %tmp.30 = add %tmp.27 %tmp.29;
+        lputv %predictedVariance.3 %tmp.30;
+        symbol [ predictedVariance %predictedVariance.3 40 12 29 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 41 8 ]
+        [ "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_start" "E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_stop" ]
+        %kalmanGain.4 = local;
+        symbol [ kalmanGain %kalmanGain.4 41 12 22 ];
+        %tmp.31 = lgetv %predictedVariance.3;
+        symbol [ predictedVariance %tmp.31 41 25 42 ];
+        %tmp.32 = lgetv %predictedVariance.3;
+        symbol [ predictedVariance %tmp.32 41 46 63 ];
+        %tmp.33 = lgetv %adaptiveMeasurementNoise.2;
+        symbol [ adaptiveMeasurementNoise %tmp.33 41 66 90 ];
+        %tmp.34 = add %tmp.32 %tmp.33;
+        %tmp.35 = div %tmp.31 %tmp.34;
+        lputv %kalmanGain.4 %tmp.35;
+        symbol [ kalmanGain %kalmanGain.4 41 12 22 ];
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 43 8 ]
+        symbol [ altitude %tmp.37 43 19 27 ];
+        %tmp.37 = getv ? :altitude;
+        %tmp.38 = lgetv %kalmanGain.4;
+        symbol [ kalmanGain %tmp.38 43 30 40 ];
+        %tmp.39 = lgetv %measurement;
+        symbol [ measurement %tmp.39 43 44 55 ];
+        symbol [ altitude %tmp.41 43 58 66 ];
+        %tmp.41 = getv ? :altitude;
+        %tmp.42 = sub %tmp.39 %tmp.41;
+        %tmp.43 = mul %tmp.38 %tmp.42;
+        %tmp.44 = add %tmp.37 %tmp.43;
+        symbol [ altitude ? 43 8 16 ];
+        putv self :altitude %tmp.44;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 44 8 ]
+        %tmp.45 = 1.0f;
+        %tmp.46 = lgetv %kalmanGain.4;
+        symbol [ kalmanGain %tmp.46 44 27 37 ];
+        %tmp.47 = sub %tmp.45 %tmp.46;
+        %tmp.48 = lgetv %predictedVariance.3;
+        symbol [ predictedVariance %tmp.48 44 41 58 ];
+        %tmp.49 = mul %tmp.47 %tmp.48;
+        symbol [ variance ? 44 8 16 ];
+        putv self :variance %tmp.49;
+[ "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc" 46 8 ]
+        symbol [ altitude %tmp.51 46 15 23 ];
+        %tmp.51 = getv ? :altitude;
+        ret %tmp.51;
+E__Carlos_GitHub_gps_tracker_client_garmin_source_AltitudeKalmanFilter_mc_25_33_47_4_stop:
+    }
+}
+[ @file = "E:\Carlos\GitHub\gps-tracker-client\garmin\source\AltitudeKalmanFilter.mc"; @line = 1; ]
+<init> {
+}
