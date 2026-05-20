@@ -86,6 +86,20 @@ async function initializeDatabase() {
       ON waypoints(group_name)
     `);
 
+    // Migrate: add max_speed_10s and max_speed_500m columns if they don't exist (for pre-existing tables)
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'speed_history' AND column_name = 'max_speed_10s') THEN
+          ALTER TABLE speed_history ADD COLUMN max_speed_10s DECIMAL(10, 2);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'speed_history' AND column_name = 'max_speed_500m') THEN
+          ALTER TABLE speed_history ADD COLUMN max_speed_500m DECIMAL(10, 2);
+        END IF;
+      END
+      $$;
+    `);
+
     await client.query('COMMIT');
     console.log('✅ Esquema de base de datos verificado/inicializado');
   } catch (error) {
