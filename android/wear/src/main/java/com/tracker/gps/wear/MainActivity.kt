@@ -47,6 +47,7 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.tracker.gps.shared.model.TrackingState
 import com.tracker.gps.shared.model.UserData
+import com.tracker.gps.shared.util.Constants
 import com.tracker.gps.wear.service.WearLocationService
 import com.tracker.gps.wear.theme.WearAppTheme
 import kotlinx.coroutines.launch
@@ -187,6 +188,16 @@ class MainActivity : ComponentActivity() {
         locationService?.stopTracking()
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setTurnScreenOn(true)
+            setShowWhenLocked(true)
+        }
+        wakeScreen(15000)
+    }
+
     fun wakeScreen(duration: Long) {
         try {
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -224,6 +235,8 @@ fun WearApp(
     val prefs = context.getSharedPreferences("gps_tracker_prefs", Context.MODE_PRIVATE)
     var userName by remember { mutableStateOf(prefs.getString("user_name", "Wear User") ?: "Wear User") }
     var groupName by remember { mutableStateOf(prefs.getString("group_name", "Default Group") ?: "Default Group") }
+    var voiceEnabled by remember { mutableStateOf(prefs.getBoolean(Constants.PREF_VOICE_ENABLED, Constants.DEFAULT_VOICE_ENABLED)) }
+    var voiceMinSpeed by remember { mutableStateOf(prefs.getFloat(Constants.PREF_VOICE_MIN_SPEED, Constants.DEFAULT_MIN_SPEED.toFloat())) }
 
     val nameLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
@@ -306,6 +319,16 @@ fun WearApp(
                         hasGps = hasGps,
                         userName = userName,
                         groupName = groupName,
+                        voiceEnabled = voiceEnabled,
+                        voiceMinSpeed = voiceMinSpeed,
+                        onVoiceEnabledChange = { enabled ->
+                            voiceEnabled = enabled
+                            prefs.edit().putBoolean(Constants.PREF_VOICE_ENABLED, enabled).apply()
+                        },
+                        onVoiceMinSpeedChange = { limit ->
+                            voiceMinSpeed = limit
+                            prefs.edit().putFloat(Constants.PREF_VOICE_MIN_SPEED, limit).apply()
+                        },
                         onUserNameClick = {
                             val input = android.app.RemoteInput.Builder("input_result").setLabel("New Name").build()
                             val intent = android.content.Intent("android.support.wearable.input.action.REMOTE_INPUT")
@@ -351,6 +374,10 @@ fun MainScreen(
     hasGps: Boolean,
     userName: String,
     groupName: String,
+    voiceEnabled: Boolean,
+    voiceMinSpeed: Float,
+    onVoiceEnabledChange: (Boolean) -> Unit,
+    onVoiceMinSpeedChange: (Float) -> Unit,
     onUserNameClick: () -> Unit,
     onGroupNameClick: () -> Unit,
     onStartTracking: (String, String) -> Unit,
@@ -385,6 +412,16 @@ fun MainScreen(
             }
         }
 
+        // Last Jump display
+        item {
+            SpeedCard(
+                label = "Last Jump",
+                speed = trackingState.lastJumpHeight,
+                unit = "m",
+                large = true
+            )
+        }
+
         // Speed display
         item {
             SpeedCard(
@@ -414,13 +451,7 @@ fun MainScreen(
                     color = if (trackingState.isCurrentlyJumping) Color.Green else Color.Gray,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    SpeedCard("Alt", trackingState.currentAltitude, unit = "m")
-                    SpeedCard("Last", trackingState.lastJumpHeight, unit = "m")
-                }
+                SpeedCard("Alt", trackingState.currentAltitude, unit = "m")
                 SpeedCard("Max Session", trackingState.sessionMaxJumpHeight, unit = "m", large = true)
             }
         }
@@ -452,6 +483,39 @@ fun MainScreen(
                     colors = ChipDefaults.secondaryChipColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+            item {
+                Chip(
+                    onClick = { onVoiceEnabledChange(!voiceEnabled) },
+                    label = { 
+                        Column {
+                            Text("Voice Speed Alerts", style = MaterialTheme.typography.caption2)
+                            Text(if (voiceEnabled) "Enabled" else "Disabled", style = MaterialTheme.typography.body1) 
+                        }
+                    },
+                    colors = ChipDefaults.secondaryChipColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            if (voiceEnabled) {
+                item {
+                    Chip(
+                        onClick = {
+                            val limits = listOf(15f, 18f, 20f, 22f, 25f, 28f, 30f, 35f)
+                            val currIdx = limits.indexOf(voiceMinSpeed)
+                            val nextIdx = if (currIdx == -1 || currIdx == limits.lastIndex) 0 else currIdx + 1
+                            onVoiceMinSpeedChange(limits[nextIdx])
+                        },
+                        label = { 
+                            Column {
+                                Text("Voice Speed Limit", style = MaterialTheme.typography.caption2)
+                                Text("%.0f km/h".format(voiceMinSpeed), style = MaterialTheme.typography.body1) 
+                            }
+                        },
+                        colors = ChipDefaults.secondaryChipColors(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
 

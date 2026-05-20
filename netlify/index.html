@@ -1419,6 +1419,24 @@
     let lastSubmittedMaxSpeed = 0;
     let lastSubmissionTime = 0;
 
+    function getHttpUrl(wsUrl) {
+      if (!wsUrl) return '';
+      let url = wsUrl.trim().replace(/\/+$/, '');
+      if (url.startsWith('wss://')) {
+        return url.replace('wss://', 'https://');
+      }
+      if (url.startsWith('ws://')) {
+        return url.replace('ws://', 'http://');
+      }
+      if (url.startsWith('https://') || url.startsWith('http://')) {
+        return url;
+      }
+      if (url.includes('localhost') || url.includes('127.0.0.1')) {
+        return `http://${url}`;
+      }
+      return `https://${url}`;
+    }
+
     // Global Audio Context persisted for iOS/Mobile support
     let persistentAudioContext = null;
 
@@ -1699,7 +1717,7 @@
     // Load waypoints for the current group
     async function loadWaypoints() {
       try {
-        const httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const httpUrl = getHttpUrl(serverUrl);
         const response = await fetch(`${httpUrl}/api/waypoints/${groupName}`);
         if (!response.ok) return;
         const data = await response.json();
@@ -2582,6 +2600,35 @@
     function startTracking() {
       console.log('🎯 Iniciando seguimiento GPS...');
 
+      // Reset session statistics on start
+      maxSpeed = 0;
+      sessionMax10s = 0;
+      sessionMax500m = 0;
+      avgSpeed = 0;
+      avg10s = 0;
+      avg500m = 0;
+      speedReadings = [];
+      buffer10s = [];
+      buffer500m = [];
+      sessionTrack = [];
+      lastSubmittedMaxSpeed = 0;
+      lastSubmissionTime = 0;
+      rejectedReadingsCount = 0;
+      acceptedReadingsCount = 0;
+
+      // Update UI displays to 0 initially
+      updateUIStats();
+      elements.avgSpeed.textContent = '0.0';
+      elements.maxSpeed.textContent = '0.0';
+      elements.max10s.textContent = '0.0';
+      elements.max500m.textContent = '0.0';
+      elements.avg10s.textContent = '0.0';
+      elements.avg500m.textContent = '0.0';
+
+      // Disable download button initially
+      elements.downloadTrackButton.classList.add('opacity-50', 'cursor-not-allowed');
+      elements.downloadTrackButton.disabled = true;
+
       // Validar nombre
       if (!userName || userName.trim() === '') {
         showError(t('enterName'));
@@ -2627,9 +2674,22 @@
           console.log(`✓ Accepted GPS reading #${acceptedReadingsCount}: accuracy=${accuracy.toFixed(1)}m`);
 
           // Calculate raw speed in km/h
-          const rawSpeed = position.coords.speed !== null
-            ? Math.max(0, position.coords.speed * GPS_CONFIG.MS_TO_KMH)
-            : 0.0;
+          let rawSpeed = 0.0;
+          if (position.coords.speed !== null && position.coords.speed !== undefined) {
+            rawSpeed = Math.max(0, position.coords.speed * GPS_CONFIG.MS_TO_KMH);
+          } else if (lastPosition) {
+            const distMeters = getDistance(
+              lastPosition.coords.latitude,
+              lastPosition.coords.longitude,
+              position.coords.latitude,
+              position.coords.longitude
+            );
+            const timeSeconds = ((position.timestamp || Date.now()) - (lastPosition.timestamp || Date.now())) / 1000;
+            if (timeSeconds > 0) {
+              const speedMs = distMeters / timeSeconds;
+              rawSpeed = speedMs * GPS_CONFIG.MS_TO_KMH;
+            }
+          }
 
           // Apply minimum speed threshold to filter out GPS noise when stationary
           currentSpeed = rawSpeed < GPS_CONFIG.MIN_SPEED_THRESHOLD ? 0.0 : rawSpeed;
@@ -2791,9 +2851,7 @@
     async function submitSpeedHistory() {
       if (maxSpeed > 0 && lastPosition) {
         try {
-          // Limpiar URL: eliminar espacios y barras finales extras
-          const baseUrl = serverUrl.trim().replace(/\/+$/, '');
-          const httpUrl = baseUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+          const httpUrl = getHttpUrl(serverUrl);
           const url = `${httpUrl}/api/speed-history`;
 
           console.log(`📤 Enviando registro de historial a: ${url}`);
@@ -2838,8 +2896,7 @@
         elements.historyEmpty.classList.add('hidden');
         elements.historyRecordsList.innerHTML = '';
 
-        const baseUrl = serverUrl.trim().replace(/\/+$/, '');
-        const httpUrl = baseUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        const httpUrl = getHttpUrl(serverUrl);
 
         // Load statistics
         const statsResponse = await fetch(`${httpUrl}/api/speed-history/${userId}/stats`);
@@ -2857,12 +2914,10 @@
           if (serverMax10s > max10s) {
             max10s = serverMax10s;
             localStorage.setItem('max10s', max10s);
-            elements.max10s.textContent = max10s.toFixed(1);
           }
           if (serverMax500m > max500m) {
             max500m = serverMax500m;
             localStorage.setItem('max500m', max500m);
-            elements.max500m.textContent = max500m.toFixed(1);
           }
 
           elements.historyMax10s.textContent = getConvertedSpeed(max10s).toFixed(1);
@@ -2991,6 +3046,9 @@
         btn.style.opacity = visible ? '1' : '0.5';
       });
     })();
+
+    // Load speed history on startup in background to sync all-time stats
+    loadSpeedHistory().catch(err => console.warn('⚠️ Background stats fetch failed:', err));
 
     console.log('✓ 3WB Tracker listo');
     console.log('📱 iOS:', isIOS, '| Standalone:', isStandalone);

@@ -24,6 +24,7 @@ import com.tracker.gps.wear.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import java.util.*
+import android.speech.tts.TextToSpeech
 import com.tracker.gps.shared.util.JumpDetector
 
 class WearLocationService : Service() {
@@ -67,6 +68,11 @@ class WearLocationService : Service() {
     // Standalone Jump Detector
     private lateinit var jumpDetector: JumpDetector
 
+    private var textToSpeech: TextToSpeech? = null
+    private var lastAnnouncedSpeed: Int = -1
+    private var lastAnnouncementTime: Long = 0
+    private val announcementCooldownMs = 3000L
+
     // WebSocket (for standalone mode)
     private var webSocketClient: org.java_websocket.client.WebSocketClient? = null
 
@@ -100,6 +106,7 @@ class WearLocationService : Service() {
         createNotificationChannel()
         setupLocationCallback()
         setupDataLayerListeners()
+        initializeTextToSpeech()
 
         jumpDetector = JumpDetector(
             context = this,
@@ -111,6 +118,25 @@ class WearLocationService : Service() {
                 }
                 jumpHistory.add(0, height) // Newest first
                 notifyTrackingState()
+
+                // Announce height via TTS
+                textToSpeech?.let { tts ->
+                    if (tts.isSpeaking) {
+                        tts.stop()
+                    }
+                    val heightText = "%.1f".format(height)
+                    tts.speak(heightText, TextToSpeech.QUEUE_FLUSH, null, "wear_jump_tts")
+                }
+
+                // Bring MainActivity to the foreground and wake the screen
+                try {
+                    val startAppIntent = Intent(this@WearLocationService, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    }
+                    startActivity(startAppIntent)
+                } catch (e: Exception) {
+                    android.util.Log.e("WearLocationService", "Failed to start MainActivity on jump", e)
+                }
                 
                 // Sync jump record to phone for history
                 serviceScope.launch {
@@ -173,6 +199,7 @@ class WearLocationService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopTracking()
+        textToSpeech?.shutdown()
         serviceScope.cancel()
     }
 
@@ -187,6 +214,8 @@ class WearLocationService : Service() {
         this.userName = userName
         this.groupName = groupName
         this.isTracking = true
+        lastAnnouncedSpeed = -1
+        lastAnnouncementTime = 0
 
         prefs.edit().apply {
             putString(Constants.PREF_USER_NAME, userName)
@@ -253,6 +282,8 @@ class WearLocationService : Service() {
         speedReadings.clear()
         sessionMaxJumpHeight = 0.0
         jumpHistory.clear()
+        lastAnnouncedSpeed = -1
+        lastAnnouncementTime = 0
         notifyTrackingState()
     }
 
@@ -373,6 +404,8 @@ class WearLocationService : Service() {
             sendLocationToPhone(location)
         }
 
+        checkAndAnnounceSpeed(currentSpeed)
+
         notifyTrackingState()
     }
 
@@ -478,6 +511,47 @@ class WearLocationService : Service() {
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun initializeTextToSpeech() {
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.getDefault()
+                android.util.Log.d("WearLocationService", "TextToSpeech initialized successfully")
+            } else {
+                android.util.Log.e("WearLocationService", "TextToSpeech initialization failed")
+            }
+        }
+    }
+
+    private fun checkAndAnnounceSpeed(speed: Double) {
+        val voiceEnabled = prefs.getBoolean(Constants.PREF_VOICE_ENABLED, Constants.DEFAULT_VOICE_ENABLED)
+        if (!voiceEnabled) return
+
+        val minSpeed = prefs.getFloat(Constants.PREF_VOICE_MIN_SPEED, Constants.DEFAULT_MIN_SPEED.toFloat()).toDouble()
+        if (speed < minSpeed) return
+
+        val currentTime = System.currentTimeMillis()
+        val speedInt = speed.toInt()
+
+        // Only announce if speed changed by at least 1 km/h and cooldown period passed
+        if (speedInt != lastAnnouncedSpeed &&
+            (currentTime - lastAnnouncementTime) >= announcementCooldownMs) {
+            announceSpeed(speedInt)
+            lastAnnouncedSpeed = speedInt
+            lastAnnouncementTime = currentTime
+        }
+    }
+
+    private fun announceSpeed(speed: Int) {
+        textToSpeech?.let { tts ->
+            if (tts.isSpeaking) {
+                tts.stop()
+            }
+            val announcement = speed.toString()
+            tts.speak(announcement, TextToSpeech.QUEUE_FLUSH, null, "wear_speed_tts")
+            android.util.Log.d("WearLocationService", "Announcing speed: $speed")
         }
     }
 
