@@ -336,7 +336,6 @@ class WearLocationService : Service() {
         ).apply {
             setMinUpdateIntervalMillis(Constants.LOCATION_MIN_UPDATE_INTERVAL)
             setMaxUpdateDelayMillis(Constants.LOCATION_MAX_UPDATE_DELAY)
-            setMinUpdateDistanceMeters(Constants.LOCATION_MIN_DISPLACEMENT)
         }.build()
 
         fusedLocationClient.requestLocationUpdates(
@@ -352,8 +351,8 @@ class WearLocationService : Service() {
 
     private fun handleLocationUpdate(location: Location) {
         // Filter out inaccurate GPS readings (>= to be stricter)
-        if (location.hasAccuracy() && location.accuracy >= Constants.MAX_GPS_ACCURACY) {
-            android.util.Log.w("WearLocationService", "❌ REJECTED GPS reading: accuracy=${location.accuracy}m")
+        if (location.hasAccuracy() && location.accuracy >= Constants.WEAR_MAX_GPS_ACCURACY) {
+            android.util.Log.w("WearLocationService", "❌ REJECTED GPS reading: accuracy=${location.accuracy}m (threshold: ${Constants.WEAR_MAX_GPS_ACCURACY}m)")
             return
         }
 

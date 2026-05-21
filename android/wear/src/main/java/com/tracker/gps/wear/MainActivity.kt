@@ -174,6 +174,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startTracking(userName: String, groupName: String) {
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasFineLocation || !hasCoarseLocation) {
+            checkAndRequestPermissions()
+            return
+        }
+
         val intent = Intent(this, WearLocationService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
@@ -287,7 +302,8 @@ fun WearApp(
     
     LaunchedEffect(Unit) {
         // Request permissions after the UI has fully drawn to avoid freezing the splash screen
-        // (context as? MainActivity)?.checkAndRequestPermissions()
+        delay(500)
+        (context as? MainActivity)?.checkAndRequestPermissions()
     }
 
     WearAppTheme {
