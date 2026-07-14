@@ -3,6 +3,14 @@ const WebSocket = require('ws');
 const express = require('express');
 const cors = require('cors');
 const db = require('./database');
+const {
+  MAX_USERNAME_LEN,
+  MAX_GROUPNAME_LEN,
+  MAX_USERID_LEN,
+  sanitizeText,
+  normalizeGroupName,
+  escapeXml
+} = require('./sanitize');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +46,12 @@ const groups = new Map(); // Map<groupName, Map<userId, userData>>
 const hornRateLimit = new Map(); // Map<userId, timestamp>
 const HORN_COOLDOWN = 5000; // 5 segundos de cooldown entre bocinas
 
+// Per-connection message rate limiting (defends against flooding)
+const WS_RATE_LIMIT_WINDOW = 1000; // ms
+const WS_RATE_LIMIT_MAX = 30;      // max messages per window per connection
+const USER_IDLE_TIMEOUT = 10000;   // ms - evict users not heard from in this long
+const KML_FRESHNESS_WINDOW = 30000; // ms - hide users staler than this in KML
+
 // Función para broadcast a un grupo específico
 function broadcastToGroup(groupName, data) {
   const message = JSON.stringify(data);
@@ -63,11 +77,15 @@ function sendUsersListToGroup(groupName) {
 // Limpiar usuarios inactivos (más de 10 segundos sin actualizar)
 setInterval(() => {
   const now = Date.now();
-  let hasChanges = false;
 
   groups.forEach((groupUsers, groupName) => {
+    let hasChanges = false;
+
     groupUsers.forEach((user, userId) => {
-      if (now - user.timestamp > 10000) {
+      // Use the server-side receipt time, not the client-supplied timestamp,
+      // so a device with a skewed clock is not evicted instantly (or never).
+      const lastSeen = user.receivedAt || user.timestamp;
+      if (now - lastSeen > USER_IDLE_TIMEOUT) {
         groupUsers.delete(userId);
         hasChanges = true;
         console.log(`❌ Usuario inactivo eliminado: ${userId} (Grupo: ${groupName})`);
@@ -82,6 +100,14 @@ setInterval(() => {
       sendUsersListToGroup(groupName);
     }
   });
+
+  // Sweep stale horn-rate-limit entries so the map does not grow unbounded
+  // (unclean disconnects and REST-only users never trigger the WS close cleanup).
+  hornRateLimit.forEach((ts, uid) => {
+    if (now - ts > HORN_COOLDOWN) {
+      hornRateLimit.delete(uid);
+    }
+  });
 }, 5000);
 
 // Manejar conexiones WebSocket
@@ -90,16 +116,28 @@ wss.on('connection', (ws, req) => {
 
   ws.on('message', (message) => {
     try {
+      // Per-connection message rate limiting
+      const nowMs = Date.now();
+      if (nowMs - (ws._rateWindowStart || 0) > WS_RATE_LIMIT_WINDOW) {
+        ws._rateWindowStart = nowMs;
+        ws._rateCount = 0;
+      }
+      ws._rateCount = (ws._rateCount || 0) + 1;
+      if (ws._rateCount > WS_RATE_LIMIT_MAX) {
+        // Silently drop excess messages to avoid amplifying a flood with replies
+        return;
+      }
+
       const data = JSON.parse(message);
 
       switch (data.type) {
         case 'register':
-          const groupName = (data.groupName || 'default').toLowerCase();
-          ws.userId = data.userId;
-          ws.userName = data.userName || 'Usuario';
+          const groupName = normalizeGroupName(data.groupName);
+          ws.userId = sanitizeText(data.userId, MAX_USERID_LEN);
+          ws.userName = sanitizeText(data.userName, MAX_USERNAME_LEN) || 'Usuario';
           ws.groupName = groupName;
 
-          console.log(`📝 Usuario registrado: ${data.userName || data.userId} (Grupo: ${groupName})`);
+          console.log(`📝 Usuario registrado: ${ws.userName || ws.userId} (Grupo: ${groupName})`);
 
           // Crear grupo si no existe
           if (!groups.has(groupName)) {
@@ -112,7 +150,7 @@ wss.on('connection', (ws, req) => {
 
         case 'join':
           // Modo visualizador - solo escuchar, no registrar como usuario
-          const viewerGroup = (data.groupName || 'default').toLowerCase();
+          const viewerGroup = normalizeGroupName(data.groupName);
           ws.groupName = viewerGroup;
           ws.viewerMode = true;
 
@@ -123,7 +161,15 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'speed':
-          const group = (data.groupName || 'default').toLowerCase();
+          const group = normalizeGroupName(data.groupName);
+          const speedUserId = sanitizeText(data.userId, MAX_USERID_LEN);
+
+          // Drop updates with an invalid userId or non-finite coordinates
+          if (!speedUserId ||
+              !Number.isFinite(data.lat) || !Number.isFinite(data.lon) ||
+              !Number.isFinite(data.speed)) {
+            break;
+          }
 
           // Asegurar que el grupo existe
           if (!groups.has(group)) {
@@ -131,24 +177,25 @@ wss.on('connection', (ws, req) => {
           }
 
           const groupUsers = groups.get(group);
-          const currentUser = groupUsers.get(data.userId);
+          const currentUser = groupUsers.get(speedUserId);
           const newMaxSpeed = currentUser
             ? Math.max(currentUser.maxSpeed || 0, data.maxSpeed || data.speed)
             : data.maxSpeed || data.speed;
 
           // Actualizar datos del usuario en su grupo
-          groupUsers.set(data.userId, {
-            userId: data.userId,
-            userName: data.userName || 'Usuario',
+          groupUsers.set(speedUserId, {
+            userId: speedUserId,
+            userName: sanitizeText(data.userName, MAX_USERNAME_LEN) || 'Usuario',
             speed: data.speed,
             maxSpeed: newMaxSpeed,
             lat: data.lat,
             lon: data.lon,
-            bearing: data.bearing || 0,
-            timestamp: data.timestamp
+            bearing: Number.isFinite(data.bearing) ? data.bearing : 0,
+            timestamp: data.timestamp,
+            receivedAt: Date.now() // server-side receipt time for eviction/KML freshness
           });
 
-          console.log(`📊 [${group}] ${data.userName || data.userId}: ${data.speed} km/h | Rumbo: ${data.bearing}° | Max: ${newMaxSpeed} km/h`);
+          console.log(`📊 [${group}] ${speedUserId}: ${data.speed} km/h | Rumbo: ${data.bearing}° | Max: ${newMaxSpeed} km/h`);
 
           // Enviar lista actualizada solo a usuarios del mismo grupo
           sendUsersListToGroup(group);
@@ -160,9 +207,9 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'group-horn':
-          const hornGroup = (data.groupName || 'default').toLowerCase();
-          const hornUserId = data.userId;
-          const hornUserName = data.userName || 'Usuario';
+          const hornGroup = normalizeGroupName(data.groupName);
+          const hornUserId = sanitizeText(data.userId, MAX_USERID_LEN);
+          const hornUserName = sanitizeText(data.userName, MAX_USERNAME_LEN) || 'Usuario';
           const now = Date.now();
 
           // Validar que el grupo existe
@@ -200,9 +247,9 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'group-jump':
-          const jumpGroup = (data.groupName || 'default').toLowerCase();
-          const jumpUserId = data.userId;
-          const jumpUserName = data.userName || 'Usuario';
+          const jumpGroup = normalizeGroupName(data.groupName);
+          const jumpUserId = sanitizeText(data.userId, MAX_USERID_LEN);
+          const jumpUserName = sanitizeText(data.userName, MAX_USERNAME_LEN) || 'Usuario';
           const nowJump = Date.now();
 
           // Validar que el grupo existe
@@ -315,7 +362,7 @@ app.get('/groups', (req, res) => {
 
 // Endpoint para obtener usuarios de un grupo específico
 app.get('/groups/:groupName', (req, res) => {
-  const groupName = req.params.groupName;
+  const groupName = normalizeGroupName(req.params.groupName);
   const groupUsers = groups.get(groupName);
 
   if (!groupUsers) {
@@ -465,16 +512,17 @@ app.post('/api/waypoints', async (req, res) => {
       });
     }
 
+    const normalizedGroup = normalizeGroupName(groupName);
     const waypoint = await db.createWaypoint({
-      groupName,
-      name,
-      description,
+      groupName: normalizedGroup,
+      name: sanitizeText(name, 100),
+      description: sanitizeText(description, 500),
       latitude,
       longitude,
-      createdBy
+      createdBy: sanitizeText(createdBy, MAX_USERID_LEN)
     });
 
-    console.log(`📍 Waypoint created: ${name} for group ${groupName}`);
+    console.log(`📍 Waypoint created: ${name} for group ${normalizedGroup}`);
 
     res.status(201).json({
       success: true,
@@ -492,7 +540,7 @@ app.post('/api/waypoints', async (req, res) => {
 // GET endpoint to retrieve all waypoints for a group
 app.get('/api/waypoints/:groupName', async (req, res) => {
   try {
-    const { groupName } = req.params;
+    const groupName = normalizeGroupName(req.params.groupName);
     const waypoints = await db.getWaypointsByGroup(groupName);
 
     res.json({
@@ -602,19 +650,23 @@ function generateUsersKML(groupName = null) {
   }
 
   // Filter out stale users (older than 30 seconds)
-  const activeUsers = allUsers.filter(user => (now - user.timestamp) < 30000);
+  const activeUsers = allUsers.filter(user => (now - (user.receivedAt || user.timestamp)) < KML_FRESHNESS_WINDOW);
 
   // Generate KML placemarks for each user
   const placemarks = activeUsers.map(user => {
     const age = Math.floor((now - user.timestamp) / 1000);
     const ageStatus = age < 5 ? '🟢' : age < 10 ? '🟡' : '🟠';
 
+    const safeName = escapeXml(user.userName);
+    const safeUserId = escapeXml(user.userId);
+    const safeGroup = escapeXml(user.groupName || 'default');
+
     return `
     <Placemark>
-      <name>${ageStatus} ${user.userName}</name>
+      <name>${ageStatus} ${safeName}</name>
       <description><![CDATA[
-        <b>User:</b> ${user.userName} (${user.userId})<br/>
-        <b>Group:</b> ${user.groupName || 'default'}<br/>
+        <b>User:</b> ${safeName} (${safeUserId})<br/>
+        <b>Group:</b> ${safeGroup}<br/>
         <b>Speed:</b> ${user.speed.toFixed(1)} km/h<br/>
         <b>Max Speed:</b> ${user.maxSpeed.toFixed(1)} km/h<br/>
         <b>Bearing:</b> ${user.bearing.toFixed(0)}°<br/>
@@ -631,7 +683,7 @@ function generateUsersKML(groupName = null) {
   const kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>GPS Tracker - Active Users${groupName ? ` (${groupName})` : ''}</name>
+    <name>GPS Tracker - Active Users${groupName ? ` (${escapeXml(groupName)})` : ''}</name>
     <description>Real-time positions of active GPS tracker users</description>
 
     <!-- Define styles for user markers -->
@@ -657,7 +709,7 @@ function generateUsersKML(groupName = null) {
 
 // GET endpoint for KML Network Link (root document with auto-refresh)
 app.get('/kml/network-link', (req, res) => {
-  const groupName = req.query.group;
+  const groupName = req.query.group ? normalizeGroupName(req.query.group) : null;
   const refreshInterval = parseInt(req.query.refresh) || 5; // Default 5 seconds
 
   // Get the host from the request to construct the full URL
@@ -668,7 +720,7 @@ app.get('/kml/network-link', (req, res) => {
   const kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>GPS Tracker - Live Network Link${groupName ? ` (${groupName})` : ''}</name>
+    <name>GPS Tracker - Live Network Link${groupName ? ` (${escapeXml(groupName)})` : ''}</name>
     <description>Auto-refreshing network link showing real-time GPS positions</description>
 
     <NetworkLink>
@@ -693,7 +745,7 @@ app.get('/kml/network-link', (req, res) => {
 
 // GET endpoint for KML user data (refreshed by NetworkLink)
 app.get('/kml/users', (req, res) => {
-  const groupName = req.query.group;
+  const groupName = req.query.group ? normalizeGroupName(req.query.group) : null;
 
   const kml = generateUsersKML(groupName);
 
