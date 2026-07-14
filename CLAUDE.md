@@ -20,7 +20,7 @@ All clients speak the same WebSocket JSON protocol to the same server and can in
 cd server
 npm install
 npm start                 # runs server.js on $PORT (default 3001)
-node --test test/         # run server tests (Node built-in test runner)
+node --test                # run server tests (Node built-in test runner; auto-discovers test/)
 node --test test/server.test.js
 ```
 Requires `DATABASE_URL` env var (PostgreSQL, SSL always on for cloud DBs). See `server/.env.example`. Without it, the server still runs but persistence (`speed_history`, `waypoints` tables) is disabled — `db.initializeDatabase()` failure is caught and logged, not fatal.
