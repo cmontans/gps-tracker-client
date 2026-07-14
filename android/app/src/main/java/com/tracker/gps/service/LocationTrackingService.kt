@@ -29,6 +29,7 @@ import com.tracker.gps.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
 import com.tracker.gps.shared.util.Constants
 import com.tracker.gps.shared.util.SessionSpeedStats
+import com.tracker.gps.shared.util.SpeedCalculator
 import java.net.URI
 import java.util.Locale
 
@@ -211,12 +212,17 @@ class LocationTrackingService : Service() {
 
         Log.d(TAG, "✓ Accepted GPS reading: accuracy=${location.accuracy}m")
 
-        // Calculate speed in km/h
-        var rawSpeed = if (location.hasSpeed()) {
-            (location.speed * Constants.MS_TO_KMH).coerceAtLeast(0.0) // Convert m/s to km/h
-        } else {
-            0.0
-        }
+        // Distance/time since the PREVIOUS accepted fix (0 for the first fix).
+        // Measured before updating lastLocation so the 500m window is not measured
+        // against the same point (previously always 0).
+        val now = System.currentTimeMillis()
+        val prev = previousLocation
+        val distanceMeters = prev?.distanceTo(location)?.toDouble() ?: 0.0
+        val elapsedMs = if (prev != null) location.time - prev.time else 0L
+
+        // Calculate speed in km/h, falling back to distance/time when the fix has
+        // no hardware speed (matches the web client).
+        val rawSpeed = SpeedCalculator.deriveSpeedKmh(location.hasSpeed(), location.speed, distanceMeters, elapsedMs)
 
         // Apply minimum speed threshold to filter out GPS noise when stationary
         currentSpeed = if (rawSpeed < Constants.MIN_SPEED_THRESHOLD) {
@@ -224,12 +230,6 @@ class LocationTrackingService : Service() {
         } else {
             rawSpeed
         }
-
-        // Distance travelled since the PREVIOUS accepted fix (0 for the first fix).
-        // Measured before updating lastLocation so the 500m window is not measured
-        // against the same point (previously always 0).
-        val now = System.currentTimeMillis()
-        val distanceMeters = previousLocation?.distanceTo(location)?.toDouble() ?: 0.0
 
         // Feed the pure rolling-stats calculator (avg / 10s / 500m + peaks)
         val stats = speedStats.update(rawSpeed, currentSpeed, now, distanceMeters)

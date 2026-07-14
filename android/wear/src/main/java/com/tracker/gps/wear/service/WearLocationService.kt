@@ -19,6 +19,7 @@ import com.google.android.gms.wearable.*
 import com.tracker.gps.shared.model.*
 import com.tracker.gps.shared.util.Constants
 import com.tracker.gps.shared.util.DataSerializer
+import com.tracker.gps.shared.util.SpeedCalculator
 import com.tracker.gps.wear.MainActivity
 import com.tracker.gps.wear.R
 import kotlinx.coroutines.*
@@ -54,6 +55,7 @@ class WearLocationService : Service() {
     private var currentSpeed = 0.0
     private var maxSpeed = 0.0
     private val speedReadings = mutableListOf<Double>()
+    private var previousLocation: Location? = null
     private var currentAltitude = 0.0
     private var lastJumpHeight = 0.0
     private var sessionMaxJumpHeight = 0.0
@@ -280,6 +282,7 @@ class WearLocationService : Service() {
     fun resetStats() {
         maxSpeed = 0.0
         speedReadings.clear()
+        previousLocation = null
         sessionMaxJumpHeight = 0.0
         jumpHistory.clear()
         lastAnnouncedSpeed = -1
@@ -359,11 +362,15 @@ class WearLocationService : Service() {
         hasGps = true
         listener?.onGpsStatusChanged(true)
 
-        var rawSpeed = if (location.hasSpeed()) {
-            (location.speed * Constants.MS_TO_KMH).coerceAtLeast(0.0)
-        } else {
-            0.0
-        }
+        // Distance/time since the previous accepted fix, for the speed fallback.
+        val prev = previousLocation
+        val distanceMeters = prev?.distanceTo(location)?.toDouble() ?: 0.0
+        val elapsedMs = if (prev != null) location.time - prev.time else 0L
+        previousLocation = location
+
+        // Calculate speed in km/h, falling back to distance/time when the fix has
+        // no hardware speed (matches the web and phone clients).
+        val rawSpeed = SpeedCalculator.deriveSpeedKmh(location.hasSpeed(), location.speed, distanceMeters, elapsedMs)
 
         // Apply minimum speed threshold to filter out GPS noise when stationary
         currentSpeed = if (rawSpeed < Constants.MIN_SPEED_THRESHOLD) {
