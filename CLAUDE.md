@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Multi-platform real-time GPS speed/jump tracking system with four independent clients sharing one WebSocket protocol and one backend:
 
 - `netlify/` — Vanilla JS/HTML/CSS web app (PWA), deployed to Netlify. `index.html` is a single monolithic file containing all HTML, CSS, and JS (~3000 lines). `waypoints.html` is a separate standalone page.
+- `web-v2/` — Version 2.0 web app: a Surfr-style, map-forward rebuild using Vite + ES modules (bundled Tailwind-free CSS/Leaflet, no CDN). Same WebSocket/REST protocol as the others; deployed as a separate Netlify site (base `web-v2`, build `npm run build`, publish `web-v2/dist`). See `web-v2/README.md`.
 - `android/` — Native Android app (Kotlin), a multi-module Gradle project: `app` (phone UI/foreground service), `wear` (Wear OS companion), `shared` (code shared between `app` and `wear`).
 - `garmin/` — Garmin Connect IQ (Monkey C) companion app, mirrors the Wear OS app's speed tracking and kitesurf jump detection/history.
 - `server/` — Node.js WebSocket + REST backend (Express + `ws` + PostgreSQL), deployed via Docker to Koyeb.
