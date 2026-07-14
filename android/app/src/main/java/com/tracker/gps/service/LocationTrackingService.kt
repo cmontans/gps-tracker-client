@@ -28,6 +28,7 @@ import com.tracker.gps.api.SpeedHistoryRecord
 import com.tracker.gps.model.UserData
 import com.tracker.gps.websocket.GPSWebSocketClient
 import com.tracker.gps.shared.util.Constants
+import com.tracker.gps.shared.util.SessionSpeedStats
 import java.net.URI
 import java.util.Locale
 
@@ -44,18 +45,15 @@ class LocationTrackingService : Service() {
     private var serverUrl: String = ""
 
     private var currentSpeed: Double = 0.0
-    private var maxSpeed: Double = 0.0
-    private var speedReadings = mutableListOf<Double>()
-    private val maxSpeedReadings = 20
 
-    // 10s and 500m Speed tracking
-    private var avg10s: Double = 0.0
-    private var max10s: Double = 0.0
-    private var avg500m: Double = 0.0
-    private var max500m: Double = 0.0
-    private val speedHistory10s = mutableListOf<Pair<Long, Double>>()
-    private val speedHistory500m = mutableListOf<Triple<Long, Double, Double>>() // timestamp, speed, cumulativeDistance
-    private var totalDistance: Double = 0.0
+    // Rolling speed statistics (avg / 10s / 500m). Pure math lives in the shared
+    // module so it is unit-testable; see SessionSpeedStats.
+    private val speedStats = SessionSpeedStats()
+
+    // Previous accepted fix, used to measure the distance delta between fixes.
+    // Kept separate from lastLocation (the most recent fix) so the 500m window
+    // is not measured against the same point.
+    private var previousLocation: Location? = null
 
     // FIT track recording
     private val sessionTrack = mutableListOf<Pair<Location, Long>>()
@@ -68,10 +66,6 @@ class LocationTrackingService : Service() {
 
     private var lastLocation: Location? = null
     private val userTracks = mutableMapOf<String, MutableList<Pair<Double, Double>>>()
-
-    private var lastSubmittedMaxSpeed: Double = 0.0
-    private var lastSubmissionTime: Long = 0
-    private val submissionThrottleMs = 60000L // 1 minute throttle
 
     private val jumpReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -131,7 +125,7 @@ class LocationTrackingService : Service() {
 
     fun stopTracking() {
         // Submit max speed record if we have a valid max speed and location
-        if (maxSpeed > 0 && lastLocation != null) {
+        if (speedStats.max > 0 && lastLocation != null) {
             submitMaxSpeedRecord()
         }
 
@@ -148,9 +142,9 @@ class LocationTrackingService : Service() {
                 userId = userId,
                 userName = userName,
                 groupName = groupName,
-                maxSpeed = maxSpeed,
-                maxSpeed10s = max10s,
-                maxSpeed500m = max500m,
+                maxSpeed = speedStats.max,
+                maxSpeed10s = speedStats.max10s,
+                maxSpeed500m = speedStats.max500m,
                 latitude = location.latitude,
                 longitude = location.longitude,
                 timestamp = System.currentTimeMillis()
@@ -159,7 +153,7 @@ class LocationTrackingService : Service() {
             speedHistoryApi.submitSpeedHistory(
                 record = record,
                 onSuccess = {
-                    Log.d(TAG, "Max speed record submitted successfully: $maxSpeed km/h")
+                    Log.d(TAG, "Max speed record submitted successfully: ${speedStats.max} km/h")
                 },
                 onError = { error ->
                     Log.e(TAG, "Failed to submit max speed record: $error")
@@ -217,8 +211,6 @@ class LocationTrackingService : Service() {
 
         Log.d(TAG, "✓ Accepted GPS reading: accuracy=${location.accuracy}m")
 
-        lastLocation = location
-
         // Calculate speed in km/h
         var rawSpeed = if (location.hasSpeed()) {
             (location.speed * Constants.MS_TO_KMH).coerceAtLeast(0.0) // Convert m/s to km/h
@@ -233,49 +225,17 @@ class LocationTrackingService : Service() {
             rawSpeed
         }
 
-        // Update max speed (use raw speed before threshold for max tracking)
-        if (rawSpeed > maxSpeed) {
-            maxSpeed = rawSpeed
-        }
-
-        // Update average speed
-        speedReadings.add(currentSpeed)
-        if (speedReadings.size > maxSpeedReadings) {
-            speedReadings.removeAt(0)
-        }
-        val avgSpeed = if (speedReadings.isNotEmpty()) {
-            speedReadings.average()
-        } else {
-            0.0
-        }
-
-        // Calculate 10s average
+        // Distance travelled since the PREVIOUS accepted fix (0 for the first fix).
+        // Measured before updating lastLocation so the 500m window is not measured
+        // against the same point (previously always 0).
         val now = System.currentTimeMillis()
-        speedHistory10s.add(Pair(now, currentSpeed))
-        while (speedHistory10s.isNotEmpty() && now - speedHistory10s[0].first > Constants.AVG_SPEED_TIME_WINDOW) {
-            speedHistory10s.removeAt(0)
-        }
-        avg10s = if (speedHistory10s.isNotEmpty()) speedHistory10s.map { it.second }.average() else 0.0
-        if (avg10s > max10s) max10s = avg10s
+        val distanceMeters = previousLocation?.distanceTo(location)?.toDouble() ?: 0.0
 
-        // Calculate 500m average
-        lastLocation?.let { last ->
-            val dist = last.distanceTo(location).toDouble()
-            totalDistance += dist
-            speedHistory500m.add(Triple(now, currentSpeed, totalDistance))
-            
-            while (speedHistory500m.size > 1 && totalDistance - speedHistory500m[0].third > Constants.AVG_SPEED_DISTANCE_WINDOW) {
-                speedHistory500m.removeAt(0)
-            }
-            
-            if (speedHistory500m.size > 1) {
-                val windowDist = speedHistory500m.last().third - speedHistory500m.first().third
-                if (windowDist > 50.0) { // Only calculate if we have at least 50m of data
-                    avg500m = speedHistory500m.map { it.second }.average()
-                    if (avg500m > max500m) max500m = avg500m
-                }
-            }
-        }
+        // Feed the pure rolling-stats calculator (avg / 10s / 500m + peaks)
+        val stats = speedStats.update(rawSpeed, currentSpeed, now, distanceMeters)
+
+        previousLocation = location
+        lastLocation = location
 
         // Record for FIT track
         sessionTrack.add(Pair(location, now))
@@ -286,7 +246,7 @@ class LocationTrackingService : Service() {
         notificationManager.notify(NOTIFICATION_ID, notification)
 
         // Notify listeners
-        serviceListener?.onSpeedUpdate(currentSpeed, maxSpeed, avgSpeed, avg10s, max10s, avg500m, max500m)
+        serviceListener?.onSpeedUpdate(currentSpeed, stats.max, stats.avg, stats.avg10s, stats.max10s, stats.avg500m, stats.max500m)
         serviceListener?.onLocationUpdate(location)
 
         // Voice announcement
@@ -300,17 +260,12 @@ class LocationTrackingService : Service() {
             webSocketClient?.let {
                 if (it.isOpen) {
                     val bearing = if (location.hasBearing()) location.bearing else 0f
-                    it.sendSpeed(userId, userName, groupName, currentSpeed, maxSpeed, location.latitude, location.longitude, bearing)
+                    it.sendSpeed(userId, userName, groupName, currentSpeed, stats.max, location.latitude, location.longitude, bearing)
                 }
             }
-            
-            // Periodically submit high scores (history) even if tracking hasn't stopped
-            // Only if max speed increased significantly or enough time passed
-            if (maxSpeed > lastSubmittedMaxSpeed && (now - lastSubmissionTime) > submissionThrottleMs) {
-                lastSubmittedMaxSpeed = maxSpeed
-                lastSubmissionTime = now
-                submitMaxSpeedRecord()
-            }
+            // Note: the speed-history record is submitted once, on stopTracking().
+            // Mid-session submission was removed because it created duplicate session
+            // rows (one per max-speed increase), inflating the aggregate statistics.
         }
 
         Log.d(TAG, "Location: ${location.latitude}, ${location.longitude}, Speed: $currentSpeed km/h")
@@ -365,16 +320,9 @@ class LocationTrackingService : Service() {
     }
 
     fun resetStatistics() {
-        maxSpeed = 0.0
-        speedReadings.clear()
-        max10s = 0.0
-        avg10s = 0.0
-        max500m = 0.0
-        avg500m = 0.0
-        speedHistory10s.clear()
-        speedHistory500m.clear()
+        speedStats.reset()
+        previousLocation = null
         sessionTrack.clear()
-        totalDistance = 0.0
     }
 
     fun getSessionTrack(): List<Pair<Location, Long>> = sessionTrack
