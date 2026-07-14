@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#16233B"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- speed gauge arc -->
+  <path d="M136 328 A128 128 0 1 1 376 328" fill="none" stroke="#1F2C44" stroke-width="34" stroke-linecap="round"/>
+  <path d="M136 328 A128 128 0 0 1 196 214" fill="none" stroke="url(#accent)" stroke-width="34" stroke-linecap="round"/>
+  <!-- needle -->
+  <g stroke="url(#accent)" stroke-linecap="round">
+    <line x1="256" y1="300" x2="330" y2="180" stroke-width="20"/>
+  </g>
+  <circle cx="256" cy="300" r="26" fill="#22D3EE"/>
+  <circle cx="256" cy="300" r="11" fill="#0B1220"/>
+</svg>
