@@ -15,6 +15,19 @@ dist/
 build/
 *.log
 
+# Android/Gradle build artifacts and debug logs
+.gradle/
+android/**/*.txt
+android/screen.png
+*.apk
+*.aab
+
+# Garmin Connect IQ build outputs
+garmin/bin/
+garmin/compiled/
+*.prg
+*.prg.debug.xml
+
 # IDE files
 .vscode/
 .idea/

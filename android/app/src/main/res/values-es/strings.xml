@@ -73,4 +73,11 @@
     <string name="min_speed_threshold">Velocidad Mínima para Anunciar</string>
     <string name="visualizer_mode">Modo Visualizador (solo ver, no publicar)</string>
     <string name="visualizer_mode_active">👁️ Modo Visualizador Activo</string>
+
+    <!-- Notification / toast messages -->
+    <string name="notification_speed">Velocidad: %1$.1f %2$s</string>
+    <string name="fullscreen_coming_soon">Mapa en pantalla completa - próximamente</string>
+    <string name="group_horn_sent">🔔 ¡Bocina Grupal!</string>
+    <string name="fit_saved">Track FIT guardado correctamente</string>
+    <string name="fit_save_error">Error al guardar el archivo FIT: %1$s</string>
 </resources>

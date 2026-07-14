@@ -41,6 +41,21 @@ function extractFunction(name) {
 // Extract functions
 const getDistance = extractFunction('getDistance');
 const getHttpUrl = extractFunction('getHttpUrl');
+const escapeHtml = extractFunction('escapeHtml');
+
+test('escapeHtml - neutralizes HTML/XSS payloads', () => {
+  assert.strictEqual(
+    escapeHtml('<img src=x onerror=alert(1)>'),
+    '&lt;img src=x onerror=alert(1)&gt;'
+  );
+  assert.strictEqual(escapeHtml('a & b'), 'a &amp; b');
+  assert.strictEqual(escapeHtml(`"'`), '&quot;&#39;');
+  // Plain text is unchanged
+  assert.strictEqual(escapeHtml('José'), 'José');
+  // Null/undefined are handled safely
+  assert.strictEqual(escapeHtml(null), '');
+  assert.strictEqual(escapeHtml(undefined), '');
+});
 
 test('getDistance - calculates distance between two coordinates correctly', () => {
   // Test case: Paris to London

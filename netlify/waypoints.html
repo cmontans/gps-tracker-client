@@ -182,11 +182,23 @@
     </style>
 
     <script>
+        // Escape user-controlled text before inserting into innerHTML. Waypoint
+        // name/description are group-shared and set by any user, so untrusted.
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         // Configuration & State
         let userId = localStorage.getItem('userId');
         let groupName = localStorage.getItem('groupName') || 'default';
-        let serverUrl = localStorage.getItem('serverUrl') || 'wss://urban-ricca-cmontans-34613e13.koyeb.app/';
-        let httpUrl = serverUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+        let serverUrl = localStorage.getItem('serverUrl') || 'wss://urban-ricca-cmontans-34613e13.koyeb.app';
+        // Strip any trailing slash so API paths don't become https://host//api/...
+        let httpUrl = serverUrl.trim().replace(/\/+$/, '').replace('wss://', 'https://').replace('ws://', 'http://');
         let waypoints = [];
         let map = null;
         let markers = {};
@@ -292,8 +304,8 @@
         <div class="bg-white/40 dark:bg-gray-800/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl hover:bg-white dark:hover:bg-gray-800 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div class="flex justify-between items-center">
             <div class="flex-1 min-w-0 pr-4">
-              <h3 class="font-bold text-gray-800 dark:text-white truncate">${wp.name}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${wp.description || '<i>Sin descripción</i>'}</p>
+              <h3 class="font-bold text-gray-800 dark:text-white truncate">${escapeHtml(wp.name)}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${wp.description ? escapeHtml(wp.description) : '<i>Sin descripción</i>'}</p>
               <div class="flex items-center gap-3 mt-3">
                 <span class="text-[10px] bg-indigo-100 dark:bg-indigo-900/40 text-primary dark:text-indigo-300 px-2 py-1 rounded-lg font-mono tracking-tight cursor-pointer hover:bg-primary hover:text-white transition-colors" onclick="focusOn(${wp.latitude}, ${wp.longitude})">
                   ${wp.latitude}, ${wp.longitude}
@@ -326,8 +338,8 @@
                 const marker = L.marker([wp.latitude, wp.longitude], { icon: customIcon })
                     .bindPopup(`
             <div class="p-2">
-              <h4 class="font-bold text-lg">${wp.name}</h4>
-              <p class="text-sm text-gray-600">${wp.description || ''}</p>
+              <h4 class="font-bold text-lg">${escapeHtml(wp.name)}</h4>
+              <p class="text-sm text-gray-600">${wp.description ? escapeHtml(wp.description) : ''}</p>
               <div class="mt-2 pt-2 border-t flex gap-4">
                 <span class="text-xs font-mono text-primary">${wp.latitude}, ${wp.longitude}</span>
               </div>

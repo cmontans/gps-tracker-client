@@ -13,16 +13,24 @@ class JumpDetector {
     private var lastJumpTime = 0;
     
     // Config
-    private var takeoffGForce = 22.0f; // media
+    // Thresholds are on NET (gravity-removed) acceleration in m/s^2, matching the
+    // Android JumpDetector which uses TYPE_LINEAR_ACCELERATION (gravity already
+    // removed). Garmin's Sensor.Info.accel includes gravity, so we subtract 1g
+    // (EARTH_GRAVITY) from the magnitude before comparing. This is an approximation
+    // of Android's rotation-projected vertical acceleration — see docs/PROTOCOL.md.
+    private var takeoffGForce = 22.0f; // media (net m/s^2)
+    private var landingGForce = 15.0f; // net m/s^2 impact spike
     private var minHeight = 1.0f; // media
     private var JUMP_COOLDOWN_MS = 2000;
-    
+    private const EARTH_GRAVITY = 9.81f;
+
     // Callback targets
     private var parentApp;
 
     function initialize(app) {
         parentApp = app;
-        kalmanFilter = new AltitudeKalmanFilter(0.01f, 2.0f); // Default values
+        // Kalman tuning aligned with the Kotlin reference (processNoise, measurementNoise)
+        kalmanFilter = new AltitudeKalmanFilter(0.05f, 2.5f);
     }
 
     function start() {
@@ -63,19 +71,27 @@ class JumpDetector {
                 var ay = accel[1];
                 var az = accel[2];
                 var accMagnitude = Math.sqrt(ax*ax + ay*ay + az*az);
-            
+
+                // Net acceleration above gravity (approximates Android's
+                // gravity-removed linear acceleration magnitude).
+                var netAccel = accMagnitude - EARTH_GRAVITY;
+                if (netAccel < 0) { netAccel = -netAccel; }
+
             if (!isJumping) {
                 // Takeoff Detection
-                if (accMagnitude > takeoffGForce && (currentTime - lastJumpTime > JUMP_COOLDOWN_MS)) {
+                if (netAccel > takeoffGForce && (currentTime - lastJumpTime > JUMP_COOLDOWN_MS)) {
                     isJumping = true;
                     takeoffTime = currentTime;
-                    baselineAltitude = kalmanFilter.update(info.altitude != null ? info.altitude.toFloat() : 0.0f);
+                    // Capture the baseline from the filter's current smoothed altitude.
+                    // Never feed 0.0 into the filter when altitude is unavailable, as
+                    // that corrupts the baseline and all subsequent height readings.
+                    baselineAltitude = kalmanFilter.getCurrentAltitude();
                     maxAltitude = baselineAltitude;
                     System.println("Takeoff detected");
                 }
             } else {
                 // Landing Detection
-                if (accMagnitude > 15.0f && (currentTime - takeoffTime) > 800) {
+                if (netAccel > landingGForce && (currentTime - takeoffTime) > 800) {
                     completeJump(currentTime);
                 } else if (currentTime - takeoffTime > 10000) {
                     // Safety timeout 10s

@@ -98,4 +98,11 @@
     <string name="no_history_records">No speed history records yet</string>
     <string name="loading">Loading...</string>
     <string name="error_user_id_not_found">User ID not found. Please start tracking first.</string>
+
+    <!-- Notification / toast messages -->
+    <string name="notification_speed">Speed: %1$.1f %2$s</string>
+    <string name="fullscreen_coming_soon">Fullscreen map - coming soon</string>
+    <string name="group_horn_sent">🔔 Group Horn!</string>
+    <string name="fit_saved">FIT track saved successfully</string>
+    <string name="fit_save_error">Error saving FIT file: %1$s</string>
 </resources>

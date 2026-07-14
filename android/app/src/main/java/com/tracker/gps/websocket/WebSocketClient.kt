@@ -9,6 +9,9 @@ import com.tracker.gps.model.WebSocketMessage
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class GPSWebSocketClient(
@@ -20,6 +23,35 @@ class GPSWebSocketClient(
     private var reconnectAttempts = 0
     private val maxReconnectAttempts = 10
     private var isManualClose = false
+
+    // Application-level keep-alive: send {"type":"ping"} every 25s so idle
+    // connections are not dropped by proxies during GPS-quiet periods. Mirrors
+    // the web client; the server replies with {"type":"pong"}.
+    private var keepAliveExecutor: ScheduledExecutorService? = null
+    private var keepAliveTask: ScheduledFuture<*>? = null
+
+    private fun startKeepAlive() {
+        stopKeepAlive()
+        val executor = Executors.newSingleThreadScheduledExecutor()
+        keepAliveExecutor = executor
+        keepAliveTask = executor.scheduleWithFixedDelay({
+            try {
+                if (isOpen) {
+                    send(gson.toJson(WebSocketMessage.Ping()))
+                    Log.d(TAG, "Keep-alive ping")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Keep-alive ping failed", e)
+            }
+        }, KEEP_ALIVE_INTERVAL_SEC, KEEP_ALIVE_INTERVAL_SEC, TimeUnit.SECONDS)
+    }
+
+    private fun stopKeepAlive() {
+        keepAliveTask?.cancel(false)
+        keepAliveTask = null
+        keepAliveExecutor?.shutdownNow()
+        keepAliveExecutor = null
+    }
 
     interface WebSocketListener {
         fun onConnected()
@@ -33,6 +65,7 @@ class GPSWebSocketClient(
     override fun onOpen(handshakedata: ServerHandshake?) {
         Log.d(TAG, "WebSocket connected")
         reconnectAttempts = 0
+        startKeepAlive()
         listener.onConnected()
     }
 
@@ -80,6 +113,7 @@ class GPSWebSocketClient(
 
     override fun onClose(code: Int, reason: String?, remote: Boolean) {
         Log.d(TAG, "WebSocket closed: $reason")
+        stopKeepAlive()
         listener.onDisconnected()
 
         if (!isManualClose && reconnectAttempts < maxReconnectAttempts) {
@@ -157,10 +191,12 @@ class GPSWebSocketClient(
 
     fun closeManually() {
         isManualClose = true
+        stopKeepAlive()
         close()
     }
 
     companion object {
         private const val TAG = "GPSWebSocketClient"
+        private const val KEEP_ALIVE_INTERVAL_SEC = 25L
     }
 }

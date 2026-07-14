@@ -382,7 +382,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         btnFullscreenMap.setOnClickListener {
             // TODO: Implement fullscreen map activity
-            Toast.makeText(this, "Fullscreen map - coming soon", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.fullscreen_coming_soon, Toast.LENGTH_SHORT).show()
         }
 
         btnGroupHorn.setOnClickListener {
@@ -562,7 +562,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             toneGenerator?.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 500)
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Error playing tone", e)
-            Toast.makeText(this, "🔔 Group Horn!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.group_horn_sent, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -682,11 +682,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 val fitWriter = com.tracker.gps.util.FitFileWriter()
                 val userName = etUserName.text.toString().ifBlank { "User" }
                 fitWriter.writeFitFile(outputStream, track, userName)
-                Toast.makeText(this, "FIT track saved successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.fit_saved, Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error saving FIT file", e)
-            Toast.makeText(this, "Error saving FIT file: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.fit_save_error, e.message ?: ""), Toast.LENGTH_LONG).show()
         }
     }
 }

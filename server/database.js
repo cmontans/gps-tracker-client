@@ -13,9 +13,27 @@ if (!connectionString) {
   console.log('🔌 Configurando Pool con:', masked);
 }
 
+// TLS handling:
+// - By default we verify the server certificate (rejectUnauthorized: true).
+// - Some managed Postgres providers (Koyeb, Railway, Heroku) present certs that
+//   don't validate against the public CA set. If your provider needs it, either
+//   supply the provider CA via DATABASE_CA_CERT, or explicitly opt out of
+//   verification by setting DATABASE_SSL_NO_VERIFY=true (understanding the MITM risk).
+function buildSslConfig() {
+  if (!connectionString) return false;
+  if (process.env.DATABASE_CA_CERT) {
+    return { ca: process.env.DATABASE_CA_CERT, rejectUnauthorized: true };
+  }
+  if (process.env.DATABASE_SSL_NO_VERIFY === 'true') {
+    console.warn('⚠️  DATABASE_SSL_NO_VERIFY=true: TLS certificate verification is DISABLED for the DB connection.');
+    return { rejectUnauthorized: false };
+  }
+  return { rejectUnauthorized: true };
+}
+
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: connectionString ? { rejectUnauthorized: false } : false
+  ssl: buildSslConfig()
 });
 
 // Test connection
@@ -99,6 +117,10 @@ async function initializeDatabase() {
       END
       $$;
     `);
+
+    // Migrate: normalize existing waypoint group names to lowercase so they remain
+    // findable now that the server normalizes group names on read/write (idempotent).
+    await client.query(`UPDATE waypoints SET group_name = LOWER(group_name) WHERE group_name <> LOWER(group_name)`);
 
     await client.query('COMMIT');
     console.log('✅ Esquema de base de datos verificado/inicializado');

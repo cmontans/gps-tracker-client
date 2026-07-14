@@ -1419,6 +1419,17 @@
     let lastSubmittedMaxSpeed = 0;
     let lastSubmissionTime = 0;
 
+    // Escape user-controlled text before inserting it into innerHTML/marker HTML.
+    // Group members choose their own userName/userId, so these are untrusted.
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function getHttpUrl(wsUrl) {
       if (!wsUrl) return '';
       let url = wsUrl.trim().replace(/\/+$/, '');
@@ -2109,7 +2120,7 @@
     function createArrowIcon(speed, isCurrentUser, bearing = 0, userName = '') {
       const color = isCurrentUser ? '#4F46E5' : '#10B981';
       const size = isCurrentUser ? 40 : 35;
-      const displayName = userName || 'Usuario';
+      const displayName = escapeHtml(userName || 'Usuario');
 
       const html = `
         <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
@@ -2156,7 +2167,7 @@
 
             marker.bindPopup(`
               <div style="text-align: center;">
-                <strong>${displayName}</strong><br>
+                <strong>${escapeHtml(displayName)}</strong><br>
                 <span style="font-size: 18px; font-weight: bold;">${getConvertedSpeed(user.speed).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
                 <span style="font-size: 14px;">🏆 Max: ${getConvertedSpeed(user.maxSpeed || 0).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
                 <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
@@ -2180,7 +2191,7 @@
 
             marker.setPopupContent(`
               <div style="text-align: center;">
-                <strong>${displayName}</strong><br>
+                <strong>${escapeHtml(displayName)}</strong><br>
                 <span style="font-size: 18px; font-weight: bold;">${getConvertedSpeed(user.speed).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
                 <span style="font-size: 14px;">🏆 Max: ${getConvertedSpeed(user.maxSpeed || 0).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</span><br>
                 <span style="font-size: 11px; color: #666;">${new Date(user.timestamp).toLocaleTimeString()}</span>
@@ -2559,7 +2570,8 @@
       }
 
       elements.usersList.innerHTML = users.map(user => {
-        const displayName = user.userName || user.userId.substring(0, 15);
+        const displayName = escapeHtml(user.userName || user.userId.substring(0, 15));
+        const safeUserId = escapeHtml(user.userId.substring(0, 20));
         const isCurrentUser = user.userId === userId;
 
         // Calcular dirección en texto
@@ -2579,7 +2591,7 @@
                 ${isCurrentUser ? `<span class="text-xs bg-indigo-500 dark:bg-indigo-600 text-white px-2 py-1 rounded-full">${t('you')}</span>` : ''}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate">
-                ID: ${user.userId.substring(0, 20)}...
+                ID: ${safeUserId}...
               </div>
               <div class="flex items-center gap-3 mt-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>🧭 ${direction || '--'}</span>
@@ -2948,7 +2960,7 @@
                   ${record.max_speed_10s ? `<div class="text-[10px] bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">10s: ${getConvertedSpeed(parseFloat(record.max_speed_10s)).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</div>` : ''}
                   ${record.max_speed_500m ? `<div class="text-[10px] bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded">500m: ${getConvertedSpeed(parseFloat(record.max_speed_500m)).toFixed(1)} ${speedUnit === 'kmh' ? 'km/h' : speedUnit}</div>` : ''}
                 </div>
-                ${record.group_name && record.group_name !== 'default' ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">${t('historyGroup')}: ${record.group_name}</div>` : ''}
+                ${record.group_name && record.group_name !== 'default' ? `<div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">${t('historyGroup')}: ${escapeHtml(record.group_name)}</div>` : ''}
               `;
               elements.historyRecordsList.appendChild(recordElement);
             });
