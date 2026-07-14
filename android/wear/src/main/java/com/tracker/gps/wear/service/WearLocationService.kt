@@ -194,13 +194,25 @@ class WearLocationService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, createNotification())
         }
-        
+
+        // Start tracking from the intent so the first tap after launch isn't a no-op
+        // when the Activity hasn't finished binding yet (startTracking is idempotent).
+        val uname = intent?.getStringExtra(EXTRA_USER_NAME)
+        if (!uname.isNullOrEmpty() && !isTracking) {
+            startTracking(uname, intent.getStringExtra(EXTRA_GROUP_NAME) ?: "")
+        }
+
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         stopTracking()
+        try {
+            messageClient.removeListener(messageListener)
+        } catch (e: Exception) {
+            android.util.Log.w("WearLocationService", "Error removing data-layer listener", e)
+        }
         textToSpeech?.shutdown()
         serviceScope.cancel()
     }
@@ -300,8 +312,10 @@ class WearLocationService : Service() {
         }
     }
 
-    private fun setupDataLayerListeners() {
-        messageClient.addListener { messageEvent ->
+    // Held as a field so it can be removed in onDestroy (an anonymous listener
+    // would leak the service and keep firing callbacks after teardown).
+    private val messageListener = MessageClient.OnMessageReceivedListener { messageEvent ->
+        try {
             when (messageEvent.path) {
                 WearPaths.TRACKING_STATE -> {
                     val state = DataSerializer.fromBytes<TrackingState>(messageEvent.data)
@@ -321,7 +335,13 @@ class WearLocationService : Service() {
                     handleJumpStateUpdate(jumpState)
                 }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("WearLocationService", "Error handling data-layer message", e)
         }
+    }
+
+    private fun setupDataLayerListeners() {
+        messageClient.addListener(messageListener)
     }
 
     private fun startLocationUpdates() {
@@ -580,5 +600,8 @@ class WearLocationService : Service() {
     companion object {
         private const val CHANNEL_ID = "gps_tracking_channel"
         private const val NOTIFICATION_ID = 1
+
+        const val EXTRA_USER_NAME = "extra_user_name"
+        const val EXTRA_GROUP_NAME = "extra_group_name"
     }
 }

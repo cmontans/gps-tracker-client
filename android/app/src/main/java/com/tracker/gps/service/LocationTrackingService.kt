@@ -9,6 +9,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.location.Location
@@ -44,6 +45,7 @@ class LocationTrackingService : Service() {
     private var userName: String = ""
     private var groupName: String = ""
     private var serverUrl: String = ""
+    private var isTracking = false
 
     private var currentSpeed: Double = 0.0
 
@@ -113,13 +115,42 @@ class LocationTrackingService : Service() {
         return binder
     }
 
+    // Promote to a foreground service immediately so the startForegroundService()
+    // contract is always satisfied within the ~5s window, regardless of whether a
+    // client has finished binding yet (prevents ForegroundServiceDidNotStartInTime).
+    private fun startAsForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, createNotification(0.0), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification(0.0))
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startAsForeground()
+        // Start tracking from the intent extras rather than relying on a bound call
+        // racing a fixed delay (the previous cause of no-op starts / FGS timeouts).
+        val uid = intent?.getStringExtra(EXTRA_USER_ID)
+        if (!uid.isNullOrEmpty() && !isTracking) {
+            startTracking(
+                uid,
+                intent.getStringExtra(EXTRA_USER_NAME) ?: "",
+                intent.getStringExtra(EXTRA_GROUP_NAME) ?: "",
+                intent.getStringExtra(EXTRA_SERVER_URL) ?: ""
+            )
+        }
+        return START_STICKY
+    }
+
     fun startTracking(userId: String, userName: String, groupName: String, serverUrl: String) {
+        if (isTracking) return
         this.userId = userId
         this.userName = userName
         this.groupName = groupName
         this.serverUrl = serverUrl
+        isTracking = true
 
-        startForeground(NOTIFICATION_ID, createNotification(0.0))
+        startAsForeground()
         startLocationUpdates()
         connectWebSocket()
     }
@@ -130,6 +161,7 @@ class LocationTrackingService : Service() {
             submitMaxSpeedRecord()
         }
 
+        isTracking = false
         stopLocationUpdates()
         disconnectWebSocket()
         stopForeground(true)
@@ -443,5 +475,10 @@ class LocationTrackingService : Service() {
         private const val TAG = "LocationTrackingService"
         private const val CHANNEL_ID = "gps_tracking_channel"
         private const val NOTIFICATION_ID = 1
+
+        const val EXTRA_USER_ID = "extra_user_id"
+        const val EXTRA_USER_NAME = "extra_user_name"
+        const val EXTRA_GROUP_NAME = "extra_group_name"
+        const val EXTRA_SERVER_URL = "extra_server_url"
     }
 }

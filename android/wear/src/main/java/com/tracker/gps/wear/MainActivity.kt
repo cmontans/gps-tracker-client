@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.os.PowerManager
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -189,13 +188,18 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        val intent = Intent(this, WearLocationService::class.java)
+        val intent = Intent(this, WearLocationService::class.java).apply {
+            putExtra(WearLocationService.EXTRA_USER_NAME, userName)
+            putExtra(WearLocationService.EXTRA_GROUP_NAME, groupName)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
             startService(intent)
         }
 
+        // Idempotent fallback if the service is already bound; onStartCommand also
+        // starts tracking from the extras above.
         locationService?.startTracking(userName, groupName)
     }
 
@@ -214,13 +218,20 @@ class MainActivity : ComponentActivity() {
     }
 
     fun wakeScreen(duration: Long) {
+        // FULL_WAKE_LOCK is deprecated (and throws/ignored on many watch ROMs).
+        // Use the supported window APIs to turn the screen on instead; keep-screen-on
+        // is managed by the jump LaunchedEffect in the composable.
         try {
-            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            val wakeLock = powerManager.newWakeLock(
-                PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE,
-                "GPSTracker:JumpWake"
-            )
-            wakeLock.acquire(duration)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setTurnScreenOn(true)
+                setShowWhenLocked(true)
+            } else {
+                @Suppress("DEPRECATION")
+                window.addFlags(
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                )
+            }
         } catch (e: Exception) {
             Log.e("WEAR_APP", "Error waking screen: ${e.message}")
         }

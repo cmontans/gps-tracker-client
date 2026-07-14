@@ -265,9 +265,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun initMap() {
+        // Null-safe: a hard cast here crashes onCreate if the fragment is missing
+        // or restored differently (e.g. Play Services unavailable/updating).
         val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.mapFragment) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+            .findFragmentById(R.id.mapFragment) as? SupportMapFragment
+        mapFragment?.getMapAsync(this)
     }
 
     private fun initSound() {
@@ -462,28 +464,33 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val userName = etUserName.text.toString().trim()
         val groupName = etGroupName.text.toString().trim()
 
-        val intent = Intent(this, LocationTrackingService::class.java)
+        // Pass tracking params as extras so the service starts tracking (and calls
+        // startForeground) from onStartCommand — no race against binding.
+        val intent = Intent(this, LocationTrackingService::class.java).apply {
+            putExtra(LocationTrackingService.EXTRA_USER_ID, userId)
+            putExtra(LocationTrackingService.EXTRA_USER_NAME, userName)
+            putExtra(LocationTrackingService.EXTRA_GROUP_NAME, groupName)
+            putExtra(LocationTrackingService.EXTRA_SERVER_URL, serverUrl)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
             startService(intent)
         }
 
+        // Bind only to receive live updates via the listener.
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
-        // Wait a bit for service to bind, then start tracking
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            trackingService?.startTracking(userId, userName, groupName, serverUrl)
-            isTracking = true
-            updateUIForTracking(true)
-            acquireWakeLock()
-        }, 500)
+        isTracking = true
+        updateUIForTracking(true)
+        acquireWakeLock()
     }
 
     private fun stopTracking() {
         trackingService?.stopTracking()
 
         if (serviceBound) {
+            trackingService?.serviceListener = null // avoid callbacks + leak after unbind
             unbindService(serviceConnection)
             serviceBound = false
         }
@@ -661,7 +668,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onDestroy() {
         super.onDestroy()
         if (serviceBound) {
+            trackingService?.serviceListener = null // don't leak the Activity via the running service
             unbindService(serviceConnection)
+            serviceBound = false
         }
         releaseWakeLock()
         soundPool?.release()
