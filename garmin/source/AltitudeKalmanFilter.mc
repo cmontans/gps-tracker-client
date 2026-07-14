@@ -42,7 +42,13 @@ class AltitudeKalmanFilter {
         
         altitude = altitude + kalmanGain * (measurement - altitude);
         variance = (1.0f - kalmanGain) * predictedVariance;
-        
+
+        return altitude;
+    }
+
+    // Current smoothed altitude without feeding a new measurement.
+    // Used to capture the jump baseline (mirrors the Kotlin implementation).
+    function getCurrentAltitude() {
         return altitude;
     }
 }
