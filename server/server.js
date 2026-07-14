@@ -51,6 +51,12 @@ const WS_RATE_LIMIT_WINDOW = 1000; // ms
 const WS_RATE_LIMIT_MAX = 30;      // max messages per window per connection
 const USER_IDLE_TIMEOUT = 10000;   // ms - evict users not heard from in this long
 const KML_FRESHNESS_WINDOW = 30000; // ms - hide users staler than this in KML
+const BROADCAST_INTERVAL = 1000;   // ms - coalesce high-frequency speed updates to 1 Hz
+
+// Groups with pending user-list changes to broadcast on the next tick.
+// Coalescing avoids the O(N^2) storm of re-broadcasting the full list on every
+// per-user 'speed' message (N users * 1 Hz each => N^2 messages/s per group).
+const dirtyGroups = new Set();
 
 // Función para broadcast a un grupo específico
 function broadcastToGroup(groupName, data) {
@@ -62,7 +68,7 @@ function broadcastToGroup(groupName, data) {
   });
 }
 
-// Función para enviar lista actualizada de usuarios a un grupo
+// Función para enviar lista actualizada de usuarios a un grupo (inmediato)
 function sendUsersListToGroup(groupName) {
   const groupUsers = groups.get(groupName);
   if (!groupUsers) return;
@@ -73,6 +79,22 @@ function sendUsersListToGroup(groupName) {
     users: usersList
   });
 }
+
+// Mark a group as needing a user-list broadcast on the next 1 Hz tick.
+function scheduleUsersBroadcast(groupName) {
+  dirtyGroups.add(groupName);
+}
+
+// Flush coalesced user-list broadcasts once per BROADCAST_INTERVAL.
+setInterval(() => {
+  if (dirtyGroups.size === 0) return;
+  dirtyGroups.forEach(groupName => {
+    if (groups.has(groupName)) {
+      sendUsersListToGroup(groupName);
+    }
+  });
+  dirtyGroups.clear();
+}, BROADCAST_INTERVAL);
 
 // Limpiar usuarios inactivos (más de 10 segundos sin actualizar)
 setInterval(() => {
@@ -148,17 +170,9 @@ wss.on('connection', (ws, req) => {
           sendUsersListToGroup(groupName);
           break;
 
-        case 'join':
-          // Modo visualizador - solo escuchar, no registrar como usuario
-          const viewerGroup = normalizeGroupName(data.groupName);
-          ws.groupName = viewerGroup;
-          ws.viewerMode = true;
-
-          console.log(`👁️ Visualizador conectado al grupo: ${viewerGroup}`);
-
-          // Enviar lista actual de usuarios
-          sendUsersListToGroup(viewerGroup);
-          break;
+        // Note: viewer/visualizer mode is implemented client-side as "register but
+        // never send speed" — such a connection simply never appears in the users
+        // map. There is no separate 'join' message (it was unused dead code).
 
         case 'speed':
           const group = normalizeGroupName(data.groupName);
@@ -197,8 +211,9 @@ wss.on('connection', (ws, req) => {
 
           console.log(`📊 [${group}] ${speedUserId}: ${data.speed} km/h | Rumbo: ${data.bearing}° | Max: ${newMaxSpeed} km/h`);
 
-          // Enviar lista actualizada solo a usuarios del mismo grupo
-          sendUsersListToGroup(group);
+          // Coalesce the broadcast: mark the group dirty and let the 1 Hz flush
+          // send one combined 'users' update instead of one per speed message.
+          scheduleUsersBroadcast(group);
           break;
 
         case 'ping':
