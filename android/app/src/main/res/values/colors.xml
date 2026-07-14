@@ -1,29 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Light Mode Colors -->
-    <color name="primary">#1976D2</color>
-    <color name="primary_dark">#115293</color>
-    <color name="primary_light">#4791DB</color>
-    <color name="accent">#FF9800</color>
+    <!-- Surfr palette (aligned with web-v2 design tokens) -->
+    <!-- Accent / primary -->
+    <color name="primary">#22D3EE</color>
+    <color name="primary_dark">#0891B2</color>
+    <color name="primary_light">#38BDF8</color>
+    <color name="accent">#38BDF8</color>
 
     <!-- Status Colors -->
-    <color name="status_connected">#4CAF50</color>
-    <color name="status_disconnected">#F44336</color>
-    <color name="status_connecting">#FF9800</color>
-    <color name="gps_active">#4CAF50</color>
-    <color name="gps_searching">#FFC107</color>
+    <color name="status_connected">#34D399</color>
+    <color name="status_disconnected">#F87171</color>
+    <color name="status_connecting">#FBBF24</color>
+    <color name="gps_active">#34D399</color>
+    <color name="gps_searching">#FBBF24</color>
 
     <!-- Background Colors -->
-    <color name="background_light">#FFFFFF</color>
-    <color name="background_dark">#121212</color>
-    <color name="surface_light">#F5F5F5</color>
-    <color name="surface_dark">#1E1E1E</color>
+    <color name="background_light">#EEF2F8</color>
+    <color name="background_dark">#0B1220</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_dark">#121C2E</color>
+    <color name="surface_variant_dark">#17223A</color>
+    <color name="outline_dark">#243149</color>
 
     <!-- Text Colors -->
-    <color name="text_primary_light">#212121</color>
-    <color name="text_primary_dark">#FFFFFF</color>
-    <color name="text_secondary_light">#757575</color>
-    <color name="text_secondary_dark">#B0B0B0</color>
+    <color name="text_primary_light">#0F1B2D</color>
+    <color name="text_primary_dark">#E8EEF8</color>
+    <color name="text_secondary_light">#56657E</color>
+    <color name="text_secondary_dark">#93A4C0</color>
 
     <!-- Common -->
     <color name="white">#FFFFFF</color>

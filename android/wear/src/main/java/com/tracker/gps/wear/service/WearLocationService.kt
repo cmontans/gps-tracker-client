@@ -571,7 +571,7 @@ class WearLocationService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("GPS Tracking Active")
             .setContentText("Speed: %.1f km/h".format(currentSpeed))
-            .setSmallIcon(android.R.drawable.ic_dialog_map)
+            .setSmallIcon(R.drawable.ic_stat_speed)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()

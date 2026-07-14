@@ -202,7 +202,7 @@ class JumpTrackingService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Jump Tracker Active")
             .setContentText(content)
-            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .setSmallIcon(R.drawable.ic_stat_jump)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
             .build()
