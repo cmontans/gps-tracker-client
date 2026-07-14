@@ -52,15 +52,18 @@ Built and run via the Monkey C VS Code extension (no CLI build documented) — o
 ## Architecture
 
 ### WebSocket protocol (shared across all clients and the server)
-Groups are the isolation boundary: users only see others in the same `groupName` (case-insensitive, normalized to lowercase server-side). Message `type` values, handled in `server/server.js`:
-- `register` — client joins with `userId`, `userName`, `groupName`; creates the group if needed and triggers a `users` broadcast.
-- `join` — viewer-only mode (`ws.viewerMode = true`), listens without appearing in the user list.
-- `speed` — position/speed/bearing update; server tracks running `maxSpeed` per user in-memory and re-broadcasts the full `users` list to the group.
-- `ping` / `pong` — keep-alive heartbeat (client pings every 25s).
+**See `docs/PROTOCOL.md` for the authoritative message schemas, tuning constants, and jump-algorithm reference — keep it in sync when changing behavior.**
+
+Groups are the isolation boundary: users only see others in the same `groupName` (case-insensitive, normalized to lowercase at every server entry point). Message `type` values, handled in `server/server.js`:
+- `register` — client joins with `userId`, `userName`, `groupName`; creates the group if needed and triggers a `users` broadcast. (Does not by itself add the user to the visible list — only `speed` does.)
+- `speed` — position/speed/bearing update; server tracks running `maxSpeed` per user in-memory, stamps a server-side `receivedAt`, and marks the group dirty for the next broadcast.
+- `ping` / `pong` — keep-alive heartbeat (all clients ping every 25s, including Android).
 - `group-horn` — audio/notification alert to the group; server enforces a 5s per-user cooldown (`hornRateLimit` map) and replies with an `error` message if rate-limited.
 - `group-jump` — kitesurf jump event (height/hangtime) broadcast to the group, added for the Wear/Garmin jump-tracking feature.
 
-Server state is in-memory only (`groups: Map<groupName, Map<userId, userData>>`); a background interval (every 5s) evicts users idle >10s and deletes empty groups. Nothing here is persisted — persistence is a separate, explicit path.
+Viewer/visualizer mode is client-side only ("register but never send `speed`"); there is no `join` message. `users` broadcasts are coalesced to 1 Hz per group (a dirty-set flushed on an interval) rather than sent per incoming `speed`.
+
+Server state is in-memory only (`groups: Map<groupName, Map<userId, userData>>`); a background interval (every 5s) evicts users idle >10s (by server-side `receivedAt`) and deletes empty groups. Nothing here is persisted — persistence is a separate, explicit path.
 
 ### Server persistence (`server/database.js`)
 PostgreSQL is used only for two durable records, both written via explicit REST calls (not automatically from WebSocket traffic):
@@ -73,7 +76,8 @@ The server also exposes a live KML feed (`/kml/network-link`, `/kml/users`) that
 - `shared/` holds code used by both the phone (`app`) and the watch (`wear`): WebSocket message models (`shared/model/WebSocketMessages.kt`), the Room DB for track/jump storage (`shared/db/`), `AltitudeKalmanFilter`, `JumpDetector`, and `DataSerializer` (used to pass data over the Wearable Data Layer API between phone and watch).
 - `app/` is the phone client: `LocationTrackingService` (foreground service) + `WebSocketClient` talk to the server directly; `WearableDataService` / `PhoneDataLayerListenerService` relay data to/from the paired watch via the Data Layer API; `JumpTrackingService` handles kitesurf jump detection on-phone.
 - `wear/` is the Wear OS companion: `WearLocationService` + `DataLayerListenerService` mirror tracking locally and sync with the phone; it does not talk to the WebSocket server directly (relies on the phone for that — see `garmin/README.md`'s note on Connect IQ lacking long-lived WebSocket support, which is why the Garmin app instead relies on `CommListener.mc` + Bluetooth `Communications.transmit()` to reach the phone, unlike Wear OS which can use Data Layer sync).
-- `JumpDetector` / `AltitudeKalmanFilter` logic exists in three parallel implementations: `shared/util/` (Android, Kotlin), `garmin/source/*.mc` (Monkey C), and the root `kalman_test.py`/`kalman_test.js` (reference/experimentation only). Keep behavior in sync manually if you change the jump-detection algorithm — there's no shared source of truth across languages.
+- `JumpDetector` / `AltitudeKalmanFilter` logic exists in three parallel implementations: `shared/util/` (Android, Kotlin, the reference), `garmin/source/*.mc` (Monkey C), and the root `kalman_test.py`/`kalman_test.js` (experimentation only). There is no shared source code across languages — `docs/PROTOCOL.md` §4 holds the tuned constants; keep all three in sync when changing the algorithm. Note Garmin subtracts gravity from its raw accelerometer magnitude to approximate Android's gravity-removed vertical acceleration.
+- Android speed math is extracted into shared, unit-tested helpers: `SessionSpeedStats` (rolling avg / 10s / 500m + peaks) and `SpeedCalculator` (hardware-speed with distance/time fallback). The web client mirrors the same math inline in `index.html`.
 
 ### Default production server
 All three clients (web, Android, Garmin via phone bridge) default to `wss://urban-ricca-cmontans-34613e13.koyeb.app`; overridable per-client at runtime via in-app settings, not a build-time config.
