@@ -425,7 +425,7 @@ class LocationTrackingService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.tracking_active))
-            .setContentText(String.format("Velocidad: %.1f %s", convertedSpeed, unitLabel))
+            .setContentText(getString(R.string.notification_speed, convertedSpeed, unitLabel))
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setOngoing(true)
             .setContentIntent(

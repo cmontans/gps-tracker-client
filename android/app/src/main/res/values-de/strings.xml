@@ -85,4 +85,11 @@
     <string name="no_history_records">Noch keine Verlaufsaufzeichnungen vorhanden</string>
     <string name="loading">Laden...</string>
     <string name="error_user_id_not_found">Benutzer-ID nicht gefunden. Bitte starte zuerst das Tracking.</string>
+
+    <!-- Notification / toast messages -->
+    <string name="notification_speed">Geschwindigkeit: %1$.1f %2$s</string>
+    <string name="fullscreen_coming_soon">Vollbildkarte - demnächst verfügbar</string>
+    <string name="group_horn_sent">🔔 Gruppenhupe!</string>
+    <string name="fit_saved">FIT-Track erfolgreich gespeichert</string>
+    <string name="fit_save_error">Fehler beim Speichern der FIT-Datei: %1$s</string>
 </resources>
